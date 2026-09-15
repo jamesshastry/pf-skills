@@ -65,7 +65,7 @@ answer.
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped — closes `REVIEW.md` A1 |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |
-| 8 · Housing | `rent-vs-buy` · `mortgage-review` | ✅ shipped |
+| 8 · Housing | `rent-vs-buy` · `mortgage-review` · `ca-sfh-disclosure-review` · `ca-condo-hoa-disclosure-review` | ✅ shipped |
 | 9 · Education | `education-funding` | ✅ shipped |
 | 10 · Cross-border planning | ~~`roth-portability-check`~~ ✅ · ~~`geo-arbitrage-model`~~ ✅ · ~~`cross-border-healthcare`~~ ✅ | ✅ shipped |
 | 11 · Expat tax filing | ~~`feie-vs-ftc`~~ ✅ · ~~`foreign-presence-tests`~~ ✅ · ~~`state-domicile-exit`~~ ✅ · ~~`cfc-gilti-screen`~~ ✅ | ✅ shipped |

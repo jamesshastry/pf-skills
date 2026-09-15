@@ -1512,6 +1512,53 @@ which is the quieter failure: the skills reading the other key refuse the
 figure, and that refusal reads as missing data even though the household has
 already supplied it under the other name.
 
+## `property_review` — required by the disclosure-review skills
+
+The property currently under offer, as the **disclosure package** describes it.
+Distinct from `housing.purchase`, which holds the rent-versus-buy arithmetic for
+the same candidate: one is the deal, the other is the paperwork.
+
+```yaml
+property_review:
+  state: CA                    # optional; the PROPERTY's state, which
+                               # overrides meta.jurisdiction.state
+  property_type: townhome      # single_family | condo | townhome
+  year_built: 1974
+  unit_count: 36               # building units; omit for detached
+  elevated_elements: true      # wood-supported balconies/decks over 6ft
+  documents_provided: [tds, spq, nhd, general_inspection, pest, title]
+  hoa:                         # omit entirely for a detached home
+    monthly_dues: 420
+    reserve_percent_funded: 0.24
+    delinquency_rate: 0.18
+    reserve_contribution_share: 0.07
+    litigation: construction_defect   # none | construction_defect | other
+    special_assessment_pending: true
+    master_policy_non_renewed: false
+    rental_cap: 0.15
+    packet_provided: [governing_documents, budget, minutes]
+    sb326_report: none         # clean | findings | none
+```
+
+**`state` follows the property, not the buyer.** Disclosure law is a property
+of where the house is; a household in one state reviewing a listing in another
+is ordinary. Absent, `meta.jurisdiction.state` is used. The review skills encode
+California only and refuse outright for anything else rather than reaching for
+the nearest regime they know.
+
+**`year_built` absent does not drop the year-gated disclosures.** Lead-based
+paint stays on the checklist, flagged as "kept because the build year is
+unrecorded". "We do not know whether this is pre-1978" is a question to ask, not
+a reason to stop asking it.
+
+**`documents_provided` and `packet_provided` are what you actually received**,
+not what was promised. The review names what is absent, and for the §4525 packet
+that absence is a statutory finding rather than a gap in the analysis.
+
+**Every unrecorded association field produces a note, never a pass.** An
+association whose delinquency rate nobody has requested is not an association
+with a low delinquency rate.
+
 ## Extending
 
 Skills declare their inputs in frontmatter:

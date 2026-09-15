@@ -36,6 +36,8 @@ that run entirely on your own machine against your own data.
 | `withdrawal-sequencing` | Which account to spend first, and why not strictly |
 | `roth-conversion-window` | The low-tax years between work and RMDs |
 | `social-security-timing` | Claiming age as longevity insurance, and the survivor decision |
+| `ca-sfh-disclosure-review` | California detached home: which disclosures apply, what the package is missing, what to read the TDS and SPQ for |
+| `ca-condo-hoa-disclosure-review` | California condo: the §4525 packet, reserves and delinquency against thresholds, SB 326, warrantability |
 | `rent-vs-buy` | Total cost of occupancy and the break-even holding period |
 | `mortgage-review` | Removable PMI, prepayment, and the refinance break-even |
 | `education-funding` | The college gap per child, the retirement-first rule, and 529 mechanics |
@@ -147,7 +149,6 @@ anyone without exposing anyone.
 skills/     the skills themselves
 lib/        tested arithmetic — ratios, IRR, unit conversion
 scripts/    setup and safety — doctor, init_facts, privacy_audit
-prompts/    long-form document-review prompts; not skills, and says why
 inputs/     facts.example.yml ships; facts.yml is yours and gitignored
 documents/  your statements; the README ships, nothing else does
 outputs/    generated reports; gitignored

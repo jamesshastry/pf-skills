@@ -913,6 +913,44 @@ transitions:
 # properties. Two branches on purpose: one activity where the §469 gate
 # stays shut and one where the short-stay exception opens it; one deal that
 # clears the DSCR floor and one that does not.
+# ── the property currently under offer ──────────────────────────────────────
+# Distinct from `housing.purchase`, which holds the rent-vs-buy arithmetic.
+# This holds what the disclosure package says about the same candidate.
+#
+# One block means one case, so this fixture is the DIFFICULT one: a pre-1978
+# townhome in an association with weak reserves. The strong-association and
+# detached-single-family branches are covered in tests/test_disclosure.py.
+property_review:
+  # The household lives in TX; this candidate is in California. Disclosure law
+  # follows the property, so `state` here overrides meta.jurisdiction.state —
+  # reviewing a California package against Texas rules would be worse than
+  # refusing. The WRONG-STATE refusal branch is covered in tests.
+  state: CA
+  # TYPE-MISMATCH CASE for ca-sfh-disclosure-review, which should say so and
+  # point at the condo skill rather than reviewing a townhome as detached.
+  property_type: townhome
+  # PRE-1978 CASE — federal lead-based paint disclosure applies.
+  year_built: 1974
+  unit_count: 36
+  # SB 326 CASE — wood-supported walkways over six feet, so Civ. Code §5551
+  # applies and no report has been produced.
+  elevated_elements: true
+  documents_provided: [tds, spq, nhd, general_inspection, pest, title]
+  hoa:
+    monthly_dues: 420
+    # WEAK-RESERVE CASE — below the 30% band.
+    reserve_percent_funded: 0.24
+    # ABOVE-FINANCING-THRESHOLD CASE — over 15%.
+    delinquency_rate: 0.18
+    reserve_contribution_share: 0.07
+    litigation: construction_defect
+    special_assessment_pending: true
+    master_policy_non_renewed: false
+    # BELOW-§4741-FLOOR CASE — a cap under 25%.
+    rental_cap: 0.15
+    packet_provided: [governing_documents, budget, minutes]
+    sb326_report: none
+
 real_estate:
   participation:
     # GATE-SHUT DRIVERS — MAGI is above the phase-out ceiling, and 260 of

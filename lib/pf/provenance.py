@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from . import charity as _cha
 from . import crossborder as _xb
 from . import depreciation as _dep
+from . import disclosure as _dis
 from . import education as _edu
 from . import entity as _ent
 from . import expat as _exp
@@ -128,6 +129,22 @@ def registry() -> list[Table]:
             values={k: getattr(pr, k) for k in (
                 "basis", "fee_schedule", "fee_claimable_twice",
                 "small_estate_threshold", "spousal_simplified")}))
+
+    dis_on, dis_unver = _parse(_dis.DISCLOSURE_VERIFIED)
+    dis_entries = [
+        Entry("California disclosure and Davis-Stirling thresholds",
+              _dis.DISCLOSURE_SOURCE, dis_on, dis_unver,
+              values={k: getattr(_dis, k) for k in (
+                  "LEAD_PAINT_YEAR", "RESERVE_STRONG", "RESERVE_WEAK",
+                  "DELINQUENCY_FINANCING_RISK", "RESERVE_CONTRIBUTION_MIN",
+                  "REGULAR_ASSESSMENT_INCREASE_CAP",
+                  "SPECIAL_ASSESSMENT_BUDGET_CAP", "RENTAL_CAP_FLOOR",
+                  "SB326_MIN_UNITS", "SB326_MIN_HEIGHT_FEET",
+                  "SB326_CYCLE_YEARS", "RESERVE_STUDY_MAX_AGE_YEARS")}),
+        Entry("required disclosures by property type and year",
+              _dis.DISCLOSURE_SOURCE, dis_on, dis_unver,
+              values={d.key: d.authority for d in _dis.DISCLOSURES}),
+    ]
 
     ages_on, ages_unver = _parse(_lim.RETIREMENT_AGES_VERIFIED)
     rep_on, rep_unver = _parse(_rep.REPORTING_VERIFIED)
@@ -248,6 +265,17 @@ def registry() -> list[Table]:
             url="https://www.ssa.gov/international/agreements_overview.html",
             cadence=LEGISLATIVE,
             entries=tot_entries,
+        ),
+        Table(
+            name="California property disclosure requirements",
+            module="lib/pf/disclosure.py",
+            holds="which disclosures a property attracts, the §4525 packet, "
+                  "SB 326 applicability, and association health thresholds",
+            authority="California Civil Code and Health & Safety Code; "
+                      "42 U.S.C. §4852d",
+            url="https://leginfo.legislature.ca.gov",
+            cadence=LEGISLATIVE,
+            entries=dis_entries,
         ),
         Table(
             name="state probate cost and small-estate rules",

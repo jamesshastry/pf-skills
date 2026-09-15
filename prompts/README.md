@@ -1,67 +1,42 @@
 # prompts/
 
-Long-form prompts for document review. **These are not skills**, and the distinction
-is deliberate.
+**Empty, and deliberately kept as a note rather than deleted.**
 
-| | Skills (`skills/`) | Prompts (here) |
-|---|---|---|
-| Input | `inputs/facts.yml` — a typed contract | A pile of PDFs |
-| Logic | Tested Python in `lib/pf/` | The agent's reading |
-| Output | Deterministic, golden-tested | Synthesis, different every time |
-| Fails when | A field is missing | A document is missing or says something odd |
+Two long-form California property review prompts lived here briefly. They are now
+skills:
 
-`CONTRIBUTING.md` sets four tests for a skill. These pass two and fail two: there is a
-real decision with a defensible rule, but **the arithmetic does not fit in tested
-code** and **there is no schema slice at all**. A `run.py` here would do nothing, and
-a golden fixture cannot exist for output that is a reading rather than a computation.
-
-Rather than weaken the skill contract to admit them, they live here and say what they
-are.
-
-## What is here
-
-| Prompt | For |
+| Skill | For |
 |---|---|
-| [`ca-sfh-disclosure-review.md`](ca-sfh-disclosure-review.md) | California detached single-family home |
-| [`ca-condo-hoa-disclosure-review.md`](ca-condo-hoa-disclosure-review.md) | California condo or townhome, where the HOA is usually the larger risk |
+| [`ca-sfh-disclosure-review`](../skills/ca-sfh-disclosure-review/) | Detached single-family |
+| [`ca-condo-hoa-disclosure-review`](../skills/ca-condo-hoa-disclosure-review/) | Condo or townhome, where the association is usually the larger risk |
 
-Both are California-specific by design. The statutory citations — Civ. Code §1102 for
-the TDS, §1103 for the NHD, Davis-Stirling for associations, §5551 for balcony
-inspections — do not transfer to other states, and a prompt that pretended to be
-general would quietly apply the wrong law. That is the same rule the skills follow for
-jurisdiction tables: **encoded only where checked, never by analogy.**
+## Why they moved
 
-## Using one
+The original argument for keeping them out of `skills/` was that they fail two of
+`CONTRIBUTING.md`'s four tests — the arithmetic does not fit in tested code, and
+there is no schema slice. That was half right and it produced the wrong answer.
 
-Paste everything below the horizontal rule into a fresh conversation and attach the
-PDFs. Both prompts open by requiring a **document inventory** before any analysis,
-because a conclusion drawn from an unstated sample is the most common failure in
-document review — and the absence of a standard report is itself a finding.
+**What it missed:** a skill's frontmatter description is how an agent finds the
+thing without being told. A prompt in a folder has to be located and pasted by a
+human, which is the delivery mechanism of this whole repository, given up to
+protect a contract that had already bent in the same direction — `document-intake`
+is a skill, takes no computation, and organises reading rather than doing it.
 
-## Where the output goes
+**And the premise was wrong.** There *is* testable logic: which disclosures a
+property attracts given its type and build year, the Civ. Code §4525 packet as a
+named list, SB 326 applicability, reserve and delinquency thresholds. All of it
+now lives in `lib/pf/disclosure.py`, cited and registered with `provenance.py`,
+where it can be checked and go stale visibly. As prose it was neither.
 
-Both prompts direct output to `documents/analysis/`, which is gitignored, under a
-**non-identifying filename**.
+The schema slice turned out to be small too: `property_review`, six fields and a
+nested `hoa` block.
 
-The obvious instruction — save it as `<Property Address>analysis.md` — puts a real
-address into a directory listing, shell history, and every screen share of that
-terminal. The file contents may be protected by `.gitignore`; the filename is not. It
-is also a small thing to get right once rather than remember every time.
+## What is left here
 
-## Relationship to the skills
+Nothing. This file exists so the question does not get re-litigated from scratch,
+and because a directory that vanishes without explanation invites someone to
+recreate it.
 
-These answer *"should I buy this specific property, given these documents"*. The
-skills answer the questions either side of that:
-
-- [`rent-vs-buy`](../skills/rent-vs-buy/) — whether to buy at all, at this
-  price-to-rent ratio, for this holding period
-- [`rental-deal-underwriting`](../skills/rental-deal-underwriting/) — whether an
-  investment property pencils on NOI, DSCR and IRR
-- [`passive-loss-eligibility`](../skills/passive-loss-eligibility/) — whether the tax
-  benefits an investment case assumes are usable at all
-- [`probate-exposure`](../skills/probate-exposure/) — how to take title once you own it
-
-A prompt here plus `rent-vs-buy` is a reasonable pre-offer workflow: the skill sizes
-the decision, the prompt reviews the specific property.
-
-*Not legal, tax or engineering advice.*
+If a future artefact genuinely cannot be a skill — no decision, no rule, nothing
+testable — this is where it would go. Check first whether that is true or just
+how it was written the first time.
