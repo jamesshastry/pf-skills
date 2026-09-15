@@ -147,6 +147,7 @@ anyone without exposing anyone.
 skills/     the skills themselves
 lib/        tested arithmetic — ratios, IRR, unit conversion
 scripts/    setup and safety — doctor, init_facts, privacy_audit
+prompts/    long-form document-review prompts; not skills, and says why
 inputs/     facts.example.yml ships; facts.yml is yours and gitignored
 documents/  your statements; the README ships, nothing else does
 outputs/    generated reports; gitignored
