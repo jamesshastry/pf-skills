@@ -1,0 +1,997 @@
+# ─────────────────────────────────────────────────────────────────────
+# EXAMPLE FACTS — the Rivera household (fictional)
+#
+# Every figure here is invented. Copy this file, replace the values:
+#
+#     cp inputs/facts.example.yml inputs/facts.yml
+#
+# inputs/facts.yml is gitignored. It never leaves your machine.
+# Field definitions: SCHEMA.md
+# ─────────────────────────────────────────────────────────────────────
+
+meta:
+  schema_version: 1
+  as_of: 2026-08-30
+  currency: USD
+  jurisdiction:
+    country: US
+    state: TX
+
+household:
+  members:
+    - id: a1
+      role: primary
+      citizenship: [US]
+      us_status: citizen
+      age: 41
+      birth_year: 1985
+      income_annual: 180000
+      employer: Northwind
+      income_variable_share: 0.28
+      income_components: { base: 130000, bonus: 25000, equity: 25000 }
+    # NON-CITIZEN SPOUSE CASE — exercises the marital-deduction branch.
+    - { id: a2, role: spouse, citizenship: [CA], us_status: permanent_resident,
+        age: 39, birth_year: 1987, income_annual: 0 }
+    - { id: c1, role: dependent, age: 8 }
+    - { id: c2, role: dependent, age: 5 }
+
+  balance_sheet:
+    # Joint checking — no designation possible, so the audit stays quiet.
+    # NEAR-ZERO YIELD CASE — the most common unforced error on a balance sheet.
+    - { name: cash, value: 40000, tier: liquid, asset_class: cash,
+        account_type: taxable, wash_sale_policy_applied: true,
+        yield_gross: 0.0001, state_tax_exempt: false,
+        beneficiary_applicable: false }
+
+    # CLEAN CASE — primary and contingent both named.
+    - name: brokerage
+      value: 45000
+      tier: liquid
+      # TAXABLE CASE — a prime fund, so the state exemption does not apply.
+      asset_class: cash
+      # The direct-indexed account. COVERED CASE for the wash-sale policy.
+      account_type: taxable
+      wash_sale_policy_applied: true
+      yield_gross: 0.0415
+      state_tax_exempt: false
+      beneficiaries:
+        - { name: Ana Rivera, member_id: a2, relationship: spouse,
+            share: 100, type: primary }
+        - { name: Rivera Family Trust, relationship: trust,
+            share: 100, type: contingent }
+
+    # DEFECT CASE — checked, and nothing is named. Not the same as unknown.
+    # MIXED-HOLDINGS CASE — one account, three asset classes.
+    # WASH-SALE GAP CASE — coverage unrecorded on a retirement account, which
+    # is the expensive one: a purchase here disallows the loss permanently.
+    - name: retirement_401k
+      value: 310000
+      tier: age_restricted
+      account_type: tax_deferred
+      wash_sale_policy_applied: null
+      holdings:
+        - { asset_class: us_equity,   value: 200000 }
+        - { asset_class: intl_equity, value: 50000 }
+        - { asset_class: bond,        value: 60000 }
+      beneficiaries: []
+
+    # DEFECT CASE — minors named directly. Forces a court guardianship
+    # instead of the trust that exists for exactly this.
+    # EARMARKED CASE — excluded from the household allocation entirely.
+    - name: college_529
+      value: 28000
+      tier: illiquid
+      account_type: education
+      # A 529 holds plan portfolios rather than individual securities, so the
+      # exclusion is trivially satisfied — recorded rather than left unknown.
+      wash_sale_policy_applied: true
+      beneficiaries:
+        - { name: Mateo Rivera, member_id: c1, relationship: child,
+            share: 50, type: primary }
+        - { name: Lucia Rivera, member_id: c2, relationship: child,
+            share: 50, type: primary }
+
+  annual_spending: 96000
+
+  domicile: { country: US, state: TX, determined: true }
+
+auto:
+  vehicles:
+    # KEEP CASE — 7.6% of value. Meaningful loss against $85K liquid.
+    - id: v1
+      label: 2019 Subaru Outback
+      value: 14500
+      value_basis: acv
+      value_as_of: 2026-08-01
+      lienholder: false
+      comprehensive_premium_annual: 340
+      collision_premium_annual: 760
+      deductible_comprehensive: 500
+      deductible_collision: 500
+      primary_driver: a1
+
+    # DROP CASE — 15.2% at the offer, still ~12% at a realistic ACV.
+    # Note value_basis: instant_offer. A skill must widen the range, not
+    # treat 4200 as settlement value.
+    - id: v2
+      label: 2012 Toyota Corolla
+      value: 4200
+      value_basis: instant_offer
+      value_as_of: 2026-08-15
+      lienholder: false
+      comprehensive_premium_annual: 190
+      collision_premium_annual: 450
+      deductible_comprehensive: 500
+      deductible_collision: 500
+      primary_driver: a2
+
+  coverage:
+    bodily_injury:
+      per_person: 100000
+      per_accident: 300000
+    property_damage:
+      per_accident: 50000
+    um_uim_bodily_injury:
+      per_person: 30000
+      per_accident: 60000
+    um_property_damage: null
+    medical_payments: null
+
+  premium_annual_total: 2680
+  term_months: 6
+
+property:
+  form: renters
+  monthly_rent: 2400
+  coverage:
+    personal_property: 10000
+    loss_of_use: 3000
+    personal_liability: 100000      # below the $300K umbrella carriers require
+    medical_payments_to_others: 1000
+    deductible: 250
+  settlement_basis: replacement_cost
+  scheduled_items: []
+  exclusions: [trampoline]
+  premium_annual: 180
+
+umbrella:
+  coverage: null
+  premium_annual: null
+
+insurance:
+  life:
+    # KEEP CASE — cheap term, correctly structured.
+    - id: l1
+      label: Level Term 20
+      type: term
+      insured: a1
+      death_benefit: 500000
+      premium_annual: 420
+      issued: 2021-06-06
+      term_expires: 2041-06-06
+      employer_provided: false
+      beneficiaries:
+        - { name: Ana Rivera, member_id: a2, relationship: spouse,
+            share: 100, type: primary }
+        - { name: Rivera Family Trust, relationship: trust,
+            share: 100, type: contingent }
+
+    # SURRENDER CASE — a cash-value policy that has returned less than the
+    # premiums paid into it. Exercises the IRR branch.
+    - id: l2
+      label: Variable Universal Life
+      type: variable_universal
+      insured: a1
+      death_benefit: 150000
+      premium_annual: 2400
+      issued: 2016-03-01
+      term_expires: null
+      employer_provided: false
+      cash_value: 18500
+      cash_value_as_of: 2026-08-01
+      premiums_paid_to_date: 25200
+      beneficiaries:
+        - { name: Ana Rivera, member_id: a2, relationship: spouse,
+            share: 100, type: primary }
+
+    # GROUP CASE — not portable, ends with the job, and the job ending is
+    # correlated with needing it.
+    - id: l3
+      label: Employer group life
+      type: group
+      insured: a1
+      death_benefit: 360000
+      premium_annual: 0
+      issued: 2020-01-01
+      term_expires: null
+      employer_provided: true
+      beneficiaries: []
+
+  disability:
+    # Individual, after-tax premiums, so the benefit is tax-free.
+    # Carries an unexercised Future Increase rider with a live deadline.
+    - id: d1
+      label: Individual DI
+      insured: a1
+      monthly_benefit: 6500
+      premium_annual: 1150
+      elimination_days: 90
+      benefit_period_years: 10
+      definition: modified_own_occupation
+      riders: [future_increase, cola, partial]
+      future_increase_deadline: 2029-04-01
+      employer_provided: false
+      premium_paid_with: after_tax
+
+estate:
+  documents:
+    - { type: will,              exists: true,  last_reviewed: 2016-05-14 }
+    - { type: revocable_trust,   exists: true,  last_reviewed: 2016-05-14, funded: false }
+    - { type: financial_poa,     exists: false }
+    - { type: healthcare_poa,    exists: true,  last_reviewed: 2016-05-14 }
+    - { type: advance_directive, exists: false }
+  digital:
+    password_manager: true
+    emergency_access_configured: false
+    account_inventory: false
+    two_factor_recovery_documented: false
+
+contributions:
+  year: 2026
+  employer_plan:
+    plan_type: 401k
+    compensation: 180000
+    pay_periods: 24
+    # FORFEITURE CASE — 40% of pay hits the §402(g) ceiling in about a
+    # third of the year, on a per-period match, with true_up unknown.
+    deferral_rate_pct: 40
+    employee_pre_tax: 24500
+    employee_roth: 0
+    employee_after_tax: 0
+    employer_match: 3600
+    employer_other: 0
+    in_plan_roth_conversion: null
+    true_up: null
+    match_formula:
+      type: percent_of_pay_per_period
+      rate: 0.5
+      cap_pct: 0.06
+
+  ira:
+    - { member: a1, type: roth_backdoor, amount: 7500 }
+
+  hsa:
+    coverage: family
+    eligible: true
+    contribution: 0
+
+debts:
+  # DIVERGENCE CASE — smallest balance AND lowest rate. Snowball targets this
+  # first, avalanche targets it last. Without a debt shaped like this the two
+  # methods agree and the trade-off the skill exists to show never appears.
+  - { name: personal_loan, kind: personal, balance: 1800, apr: 0.0300,
+      minimum_payment: 60, deductible_interest: false }
+  # Highest rate — avalanche targets this first.
+  - { name: credit_card, kind: credit_card, balance: 6200, apr: 0.2249,
+      minimum_payment: 155, deductible_interest: false }
+  # The trade-off case: larger balance, lower rate.
+  - { name: auto_loan, kind: auto, balance: 14800, apr: 0.0629,
+      minimum_payment: 410, deductible_interest: false }
+  # DEDUCTIBLE CASE — 5.85% nominal is 4.45% after tax at 24%.
+  - { name: student_loan, kind: student, balance: 21500, apr: 0.0585,
+      minimum_payment: 240, deductible_interest: true }
+
+assumptions:
+  # Benchmark is a Treasury fund, so it is state-tax exempt and the holdings
+  # above are not — which is what exercises the after-tax branch.
+  cash_benchmark_apr: 0.042
+  cash_benchmark_as_of: 2026-08-30
+  cash_benchmark_label: Treasury money market
+  cash_benchmark_state_tax_exempt: true
+  niit_rate: 0.038
+  state_tax_rate: 0.0
+  expected_return_apr: 0.07
+  marginal_tax_rate: 0.24
+  monthly_debt_extra: 600
+  # Housing inputs are nominal — see SCHEMA.md. Kept separate from
+  # expected_return_apr on purpose.
+  nominal_investment_return: 0.07
+  rent_growth: 0.03
+  home_appreciation: 0.03
+
+  # ── cluster 13: owner-operator business ──────────────────────────────
+  # INVENTED FIGURES, shaped like the real ones. Asked for rather than held
+  # in the repo: they are indexed annually and a stale one here would corrupt
+  # every number downstream while looking exactly as confident.
+  ss_wage_base: 184500
+  qbi_threshold: 394600
+  qbi_phase_in_range: 100000
+  qualified_dividend_rate: 0.15
+  deductions_total: 31500
+  section_179_limit: 1250000
+  section_179_phaseout: 3130000
+  suv_179_cap: 31300
+  bonus_depreciation_pct: 1.0
+  luxury_auto_year1_cap: 20400
+  luxury_auto_year1_cap_no_bonus: 12400
+  standard_mileage_rate: 0.70
+
+  # ── cluster 18: investment property ──────────────────────────────────
+  # Statutory figures the library refuses to carry itself.
+  # §469(i): unindexed since 1986. Verify before relying on them.
+  passive_loss_allowance: 25000
+  passive_loss_phaseout_start: 100000
+  passive_loss_phaseout_end: 150000
+  # Unrecaptured §1250 rate — higher than the long-term capital gain rate,
+  # which is the point the 1031 skill turns on.
+  depreciation_recapture_rate: 0.25
+  # Legislated and has changed in most recent years. Do not let this go stale.
+  # NOTE: this is the *property* bonus rate read by realestate.py. The
+  # owner-operator equipment figure above is `bonus_depreciation_pct`, read by
+  # depreciation.py — two separate keys, and they are not kept in step here.
+  bonus_depreciation_rate: 0.40
+
+  # ── cluster 17: life transitions ─────────────────────────────────────
+  # Long-term rate. Separate from marginal_tax_rate because the divorce split
+  # taxes pre-tax balances at one and embedded gains at the other.
+  capital_gains_rate: 0.15
+
+  # ── clusters 12 & 15: PFIC and charitable giving ─────────────────────
+  # Standard deduction, QCD limit and the LTCG rate are indexed or
+  # household-specific — all three read, none encoded.
+  ltcg_rate: 0.15
+  standard_deduction: 30000
+  other_itemized_deductions: 12000
+  qcd_annual_limit: 108000
+  pfic_form_cost_annual: 400
+  pfic_rates:
+    top_marginal_rate:
+      2016: 0.396
+      2017: 0.396
+      2018: 0.37
+      2019: 0.37
+      2020: 0.37
+      2021: 0.37
+      2022: 0.37
+      2023: 0.37
+      2024: 0.37
+      2025: 0.37
+      2026: 0.37
+    underpayment_rate:
+      # Every quarter from 2017-04-15 to the disposition year's due date.
+      # PLACEHOLDER 0.07 throughout — REPLACE with the IRS §6621 series before
+      # the golden fixture is treated as anything but a shape check.
+      2017Q2: 0.07
+      2017Q3: 0.07
+      2017Q4: 0.07
+      2018Q1: 0.07
+      2018Q2: 0.07
+      2018Q3: 0.07
+      2018Q4: 0.07
+      2019Q1: 0.07
+      2019Q2: 0.07
+      2019Q3: 0.07
+      2019Q4: 0.07
+      2020Q1: 0.07
+      2020Q2: 0.07
+      2020Q3: 0.07
+      2020Q4: 0.07
+      2021Q1: 0.07
+      2021Q2: 0.07
+      2021Q3: 0.07
+      2021Q4: 0.07
+      2022Q1: 0.07
+      2022Q2: 0.07
+      2022Q3: 0.07
+      2022Q4: 0.07
+      2023Q1: 0.07
+      2023Q2: 0.07
+      2023Q3: 0.07
+      2023Q4: 0.07
+      2024Q1: 0.07
+      2024Q2: 0.07
+      2024Q3: 0.07
+      2024Q4: 0.07
+      2025Q1: 0.07
+      2025Q2: 0.07
+      2025Q3: 0.07
+      2025Q4: 0.07
+      2026Q1: 0.07
+      2026Q2: 0.07
+      2026Q3: 0.07
+      2026Q4: 0.07
+      2027Q1: 0.07
+
+  # ── cluster 11: expat filing ─────────────────────────────────────────
+  # PLACEHOLDER BRACKETS. Round numbers, not any real year's table. They are
+  # here so feie-vs-ftc has something to run on — replace them from the IRS
+  # revenue procedure for the year you are filing. REVIEW.md A3 is why
+  # brackets are an input rather than repository data: limits.py is already an
+  # unverified tax-code mirror and must not grow before it is verified.
+  federal_brackets_as_of: "PLACEHOLDER — round numbers, not a real year's table"
+  feie_exclusion_cap: 130000
+  # UNVALUED CASE — left null on purpose, so the report has to name the lost
+  # refundable child credit without pricing it, and withhold its
+  # recommendation as a result. Supply the per-child figure to see the other
+  # branch.
+  additional_ctc_per_child: null
+  federal_brackets:
+    married_joint:
+      - { rate: 0.10, up_to: 25000 }
+      - { rate: 0.12, up_to: 100000 }
+      - { rate: 0.22, up_to: 200000 }
+      - { rate: 0.24, up_to: 400000 }
+      - { rate: 0.32, up_to: 500000 }
+      - { rate: 0.35, up_to: 750000 }
+      - { rate: 0.37, up_to: null }
+    single:
+      - { rate: 0.10, up_to: 12500 }
+      - { rate: 0.12, up_to: 50000 }
+      - { rate: 0.22, up_to: 100000 }
+      - { rate: 0.24, up_to: 200000 }
+      - { rate: 0.32, up_to: 250000 }
+      - { rate: 0.35, up_to: 600000 }
+      - { rate: 0.37, up_to: null }
+
+  # ── cluster 16: healthcare & aging ───────────────────────────────────
+  # ⚠️ PLACEHOLDER FIGURES for a fictional household. Verify against hhs.gov,
+  # healthcare.gov and cms.gov before any of them reaches a real facts file —
+  # none of them is in lib/pf/limits.py, deliberately (REVIEW.md A3).
+  fpl_base: 15650
+  fpl_per_additional_person: 5500
+  fpl_as_of: 2026-01-15
+  aca_benchmark_premium_annual: 21600
+  # CLIFF-IN-FORCE CASE. Set false to exercise the suspended-ceiling branch.
+  aca_cliff_applies: true
+  aca_applicable_pct_schedule:
+    - [1.50, 0.000]
+    - [2.00, 0.020]
+    - [2.50, 0.040]
+    - [3.00, 0.060]
+    - [4.00, 0.085]
+  # NON-EXPANSION CASE — consistent with meta.jurisdiction.state: TX. Exercises
+  # the coverage-gap branch rather than the route-to-Medicaid branch.
+  medicaid_expansion_state: false
+  # NEAR-CLIFF CASE — 367% of FPL. Both the taper and the cliff-proximity
+  # warning fire. At 96000 only the taper would, and the boundary would be
+  # invisible.
+  expected_magi_in_gap_years: 118000
+  irmaa_tiers:
+    - { magi_threshold: 218000, part_b_monthly: 74.00, part_d_monthly: 13.70 }
+    - { magi_threshold: 274000, part_b_monthly: 185.00, part_d_monthly: 35.30 }
+    - { magi_threshold: 342000, part_b_monthly: 295.90, part_d_monthly: 57.00 }
+
+equity_comp:
+  employer: Northwind
+  held_value: 22000
+  unvested_value: 41000
+  # NO-POLICY CASE — vested shares accumulate by default.
+  sell_at_vest: false
+  grants:
+    # CLIFF CASE — completes inside the 24-month horizon.
+    - { id: g2023, granted: 2023-03-20, annual_value: 9000,  completes: 2027-02-28 }
+    - { id: g2024, granted: 2024-03-20, annual_value: 11000, completes: 2028-02-28 }
+    - { id: g2025, granted: 2025-03-20, annual_value: 5000,  completes: 2029-02-28 }
+
+retirement:
+  planned_retirement_age: 60
+  annual_savings: 42000
+  ss_claim_age: null
+
+housing:
+  status: renting
+  monthly_rent: 2400
+  purchase:
+    price: 520000
+    down_payment: 104000
+    mortgage_rate: 0.0645
+    term_years: 30
+    property_tax_rate: 0.0185
+    insurance_annual: 1800
+    hoa_monthly: 0
+    maintenance_rate: 0.01
+    expected_years: 7
+
+  # Present so mortgage-review has something to run against, even though the
+  # household above is renting — the two skills are independent.
+  mortgage:
+    balance: 300000
+    rate: 0.0625
+    remaining_years: 27
+    property_value: 520000
+    # PMI CASE — LTV is 58%, well under the removal threshold, and it is
+    # still being charged.
+    pmi_monthly: 165
+    extra_monthly: 400
+
+education:
+  cost_inflation: 0.05
+  children:
+    # NEAR-TERM CASE — c1 is 8, so 10 years out. Glide path still fine.
+    - { member: c1, start_age: 18, years_of_study: 4, annual_cost_today: 28000 }
+    # c2 is 5, 13 years out.
+    - { member: c2, start_age: 18, years_of_study: 4, annual_cost_today: 28000 }
+  accounts:
+    # POOLED CASE — no beneficiary recorded, and two children. A 529 names
+    # one person; the skill reports this unallocated rather than halving it.
+    - { name: college_529, value: 28000, owner: a1, glide_path: age_based }
+
+# UNRESOLVED CASE — one account with a recorded maximum, one without, and a
+# PFIC. Exercises the "cannot be determined" branch, which is the state most
+# households are actually in.
+foreign_accounts:
+  - { name: legacy_savings, kind: bank, country: CA, max_value_during_year: 6400 }
+  - { name: family_account_signature_only, kind: bank, country: CA,
+      max_value_during_year: null }
+  - { name: overseas_balanced_fund, kind: foreign_mutual_fund, country: CA,
+      max_value_during_year: 18000 }
+foreign_gifts_received: null
+
+# ─────────────────────────────────────────────────────────────────────
+# CLUSTER 10 — cross-border retirement.
+# Exercises three branches of the country table: a non-recognising
+# destination (IN, contested), a recognising one (US, stay put), and one
+# absent from the table entirely (PT).
+# ─────────────────────────────────────────────────────────────────────
+crossborder:
+  destinations:
+    # NON-RECOGNISING CASE — India treats the Roth wrapper as contested, which
+    # is what inverts the conversion advice. Also past the 10-year treaty
+    # horizon, which is a second, independent finding.
+    - { country: IN, label: Bengaluru, years_until_move: 12,
+        ordinary_income_rate: 0.30 }
+    # RECOGNISING CASE — staying put. The US is the only jurisdiction
+    # guaranteed to honour the wrapper, and "stay" belongs in the comparison as
+    # a row rather than as an unstated assumption.
+    - { country: US, label: stay in Austin, years_until_move: null,
+        ordinary_income_rate: null }
+    # UNKNOWN CASE — not in the table. Absence must read as "nobody checked",
+    # never as "probably fine".
+    - { country: PT, label: Lisbon, years_until_move: 14,
+        ordinary_income_rate: null }
+
+  roth_balance: 42000
+  traditional_balance: 310000
+  planned_conversion_annual: 40000
+
+  locations:
+    - { name: Austin, country: US, months_per_year: 7, monthly_spending: 7000,
+        home_currency: true }
+    # DAY-TEST CASE — five months is far under 182 days and still trips India's
+    # 60-days-plus-365-over-four-years test. A cost decision that quietly
+    # created a tax residency is the expensive failure mode here.
+    - { name: Bengaluru, country: IN, months_per_year: 5,
+        monthly_spending: 2600, home_currency: false }
+  fixed_annual_costs: 18000
+  # UNRESOLVED CASE — nobody has checked whether housing is carried in both
+  # places year-round, which would erase most of the saving.
+  duplicate_housing: null
+
+  medicare:
+    enrolled_part_b: true
+    standard_premium_monthly: 185
+    months_abroad_planned: 60
+    # UNDETERMINABLE CASE — the intention decides the whole comparison, so both
+    # arms get priced rather than one being assumed.
+    will_return_to_us: null
+    years_after_return: 20
+    has_medigap: false
+    expat_policy_premium_annual: null
+
+# ─────────────────────────────────────────────────────────────────────
+# CLUSTER 11 — expat filing. Hypothetical, and deliberately so.
+#
+# The Rivera household is US-resident, so this cluster has no validation
+# case (ROADMAP.md says so; REVIEW.md A2 says why that claim is worth
+# re-checking rather than asserting). What follows is an invented year
+# abroad — tax year 2025, filed in 2026 — present so the four skills have
+# something to run against, on the same footing as the mortgage block
+# above. Read no conclusion about this household from it.
+# ─────────────────────────────────────────────────────────────────────
+
+presence:
+  tax_year: 2025
+  days:
+    # One ledger, read by foreign-presence-tests AND state-domicile-exit.
+    # `state:` on US stays is what makes the state day count answerable.
+    - { country: US, state: TX, start: 2024-12-01, end: 2025-02-19,
+        label: Austin }
+    # FAILING-CALENDAR / PASSING-WINDOW CASE. Counted January to December
+    # 2025 the 330-day test fails; counted from the departure date it
+    # passes. That gap is the entire reason the window is searched rather
+    # than the calendar year counted.
+    - { country: PT, start: 2025-02-20, end: 2025-07-03, label: Lisbon }
+    # TRANSIT CASE — a day over international waters is not a full day in a
+    # foreign country even between two foreign points.
+    - { country: XX, start: 2025-07-04, end: 2025-07-04, transit: true,
+        label: repositioning }
+    # GAP CASE — 2025-07-05 to 2025-07-07 is unaccounted for. Nobody
+    # recorded it, so it counts against the 330, which is the conservative
+    # direction and the one an examiner takes.
+    - { country: PT, start: 2025-07-08, end: 2026-06-15, label: Lisbon }
+    - { country: US, state: TX, start: 2026-06-16, end: 2026-08-30,
+        label: Austin }
+  bona_fide:
+    # FAIL CASE — arrival in February means 2025 is not covered end to end.
+    entire_tax_year_covered: false
+    # FAIL CASE — the Austin lease was kept, which defeats a foreign tax
+    # home regardless of the day count.
+    us_abode_retained: true
+    # OK CASE.
+    claimed_nonresident_on_foreign_return: false
+    # UNKNOWN CASE — nobody has answered. Not the same as satisfied.
+    indefinite_assignment: null
+  destination:
+    country: PT
+    # Asked for, never fetched. No country's rule is encoded in this repo.
+    threshold_days: 183
+    tax_year_start: 2025-01-01
+    tax_year_end: 2025-12-31
+
+expat:
+  tax_year: 2025
+  filing_status: married_joint
+  foreign_earned_income: 150000
+  foreign_tax_on_earned_income: 38000
+  us_source_income: 30000
+  foreign_unearned_income: 0
+  planned_ira_contribution: 7000
+  # Never claimed before, so choosing the credit is a free choice rather
+  # than a five-year commitment. Set this true to see that branch.
+  feie_elected_prior_year: false
+  foreign_entities:
+    # CFC CASE — a majority holding, so every obligation in the screen fires.
+    - { name: Rivera Consultoria Lda, country: PT, kind: foreign_corporation,
+        ownership_pct: 60, us_shareholder_pct: 60 }
+    # NOT-A-CFC CASE — under the 10% US shareholder threshold.
+    - { name: Iberia Tech Holdings, country: PT, kind: foreign_corporation,
+        ownership_pct: 4, us_shareholder_pct: 4 }
+    # NEITHER CASE — a disregarded entity is Form 8858, not the CFC rules.
+    # It is the filing people miss because they screen for "corporation".
+    - { name: side consulting, country: PT, kind: disregarded_entity,
+        ownership_pct: 100 }
+
+state_exit:
+  # STICKY-ORIGIN CASE — California is in the cited table and has no
+  # day-count bright line, so the checklist is the evidence.
+  from_state: CA
+  # CLEAN-DESTINATION CASE — Texas is in the table and levies no income tax.
+  to_state: TX
+  move_date: 2024-06-30
+  new_domicile_established: true
+  count_year: 2025
+  severance:
+    home: true
+    family: true
+    drivers_license: true
+    vehicle_registration: true
+    # OUTSTANDING CASE — recorded as not done.
+    voter_registration: false
+    banking: false
+    estate_documents: false
+    # business, days, professional_advisors, memberships and
+    # mailing_address are left out on purpose: "nobody has checked" is a
+    # different state from "not done", and the report keeps them apart.
+
+# ── CLUSTER 12: PFIC holdings ───────────────────────────────────────────────
+pfic_holdings:
+  # COMPUTABLE CASE — long hold, no election available, full rate series above.
+  - name: icici_india_equity
+    kind: foreign_mutual_fund
+    country: IN
+    value: 61000
+    basis: 22000
+    acquired: 2016-06-15
+    qef_statement_available: false
+    marketable_on_qualified_exchange: false
+  # UNKNOWN-REGIME CASE — nobody has asked the administrator, and the position
+  # is below basis, which is the cheapest a PFIC is ever going to be to leave.
+  - name: overseas_balanced_fund
+    kind: foreign_mutual_fund
+    country: GB
+    value: 12000
+    basis: 12500
+    acquired: 2021-03-01
+    qef_statement_available: null
+    marketable_on_qualified_exchange: null
+
+# ── CLUSTER 12: foreign pensions ────────────────────────────────────────────
+foreign_pensions:
+  # TREATY CASE — stays out of the trust forms, still inside FBAR and 8938.
+  - name: uk_employer_scheme
+    scheme: uk_workplace_pension
+    balance: 48000
+  # PROBLEM CASE — Indian EPF, employee-weighted contributions, so the table's
+  # contested default is narrowed and it tips to foreign grantor trust.
+  - name: epf_india
+    scheme: in_epf
+    balance: 31000
+    employee_contributions_to_date: 26000
+    employer_contributions_to_date: 18000
+  # CONTESTED CASE — the same scheme with no contribution split recorded. The
+  # bucket stays contested rather than resolving to the favourable reading,
+  # which is the branch the entry above does not exercise.
+  - name: epf_india_dormant
+    scheme: in_epf
+    balance: 7000
+  # UNKNOWN CASE — not in the cited table, reported as unknown rather than
+  # resolved by analogy to the UK entry above.
+  - name: kiwisaver
+    scheme: nz_kiwisaver
+    balance: 9000
+
+# ── CLUSTER 15: charitable giving ───────────────────────────────────────────
+charity:
+  annual_gift: 9000
+  candidate_holdings:
+    # IN-KIND CASE — long-term and appreciated.
+    - { name: Northwind, value: 22000, basis: 4000, held_days: 1200 }
+    # LOSS CASE — donating in kind forfeits the loss; sell first, donate cash.
+    - { name: intl_fund, value: 6000, basis: 9000, held_days: 800 }
+    # SHORT-TERM CASE — deductible at basis only, so wait or give another lot.
+    - { name: recent_lot, value: 8000, basis: 5000, held_days: 120 }
+
+# ─────────────────────────────────────────────────────────────────────
+# CLUSTER 13 — a2's design practice. Owner-operator, no employees.
+# S-CORP-WINS CASE: a2 has no outside wages, so the full Social Security
+# wage base is available to shelter, and the election nets ~$9.8k/yr after
+# its $2,400 running cost.
+# S-CORP-LOSES CASE: `alternate_scenarios` below, at a slow year's profit.
+# The verdict flips with profit and one profit level only ever shows one
+# side of it — which is the boundary CONTRIBUTING says a fixture must cross.
+# ─────────────────────────────────────────────────────────────────────
+business:
+  owners: [a2]
+  structure: schedule_c
+  gross_revenue: 265000
+  expenses: 61000
+  field: graphic_design
+  sstb: false
+  ubia: 18000
+  reasonable_salary_floor: 72000
+  owner_outside_wages: 0
+  s_corp_annual_cost: 2400
+  taxable_income: 204000
+
+  # S-CORP-LOSES BRANCH — the same household and the same $72k reasonable
+  # salary floor, at a slow year's revenue. The salary floor now consumes
+  # most of the profit, so there is little left to shelter as a distribution
+  # and the election costs more than it saves.
+  alternate_scenarios:
+    - label: A slow year
+      gross_revenue: 118000
+
+  assets:
+    # HEAVY VEHICLE, THIN MARGIN OVER THE 50% TEST — exercises the >6,000 lb
+    # GVWR branch and the recapture warning together. Also the branch where
+    # no first-year method has been chosen yet.
+    - { description: Work SUV, cost: 82000, business_use: 0.55,
+        gvwr_lbs: 7200, annual_business_miles: 14000,
+        placed_in_service: 2026-03-02, first_year_method: null }
+
+    # PASSENGER AUTO — exercises the §280F cap branch, both caps, and the
+    # case where standard mileage in year one kept both methods open.
+    - { description: Sedan, cost: 41000, business_use: 0.7,
+        gvwr_lbs: 4100, annual_business_miles: 9000,
+        actual_operating_cost: 4200, placed_in_service: 2026-01-15,
+        first_year_method: standard_mileage }
+
+    # NON-VEHICLE — no mileage option and no year-one lock, so the report
+    # stays quiet about both.
+    - { description: Large-format printer, cost: 26000, business_use: 1.0,
+        placed_in_service: 2026-05-20 }
+
+# ── CLUSTER 14: portfolio policy ────────────────────────────────────────────
+portfolio:
+  # IN-BAND CASE  — us_equity at 50.6% against a 50% target, ±5.0pp band.
+  # OUT-OF-BAND   — cash +16.5pp (relative band, 1.2pp), bond -9.8pp and
+  #                 intl_equity -7.3pp (absolute band, 5.0pp). Both branches
+  #                 in one fixture, per CONTRIBUTING.
+  target_allocation:
+    us_equity: 0.50
+    intl_equity: 0.20
+    bond: 0.25
+    cash: 0.05
+
+  annual_contributions: 34000
+
+  rebalancing:
+    policy: bands
+    # OVERDUE CASE — a quarterly band check last run in February.
+    last_reviewed: 2026-02-01
+
+  wash_sale:
+    direct_index_provider: Meridian Direct
+    # CONTINUOUS CASE — the exclusion list never reliably clears.
+    harvesting_continuous: true
+    # UNKNOWN CASE — a spouse's purchases count and nobody has checked.
+    spouse_accounts_covered: null
+    excluded_securities:
+      # LIVE CASE — inside the 30-day window as of meta.as_of.
+      - { ticker: XOM, reason: harvested_loss, sold_on: 2026-08-18, source: direct_index }
+      # CLEARED CASE — outside it, and removable but for continuous harvesting.
+      - { ticker: PFE, reason: harvested_loss, sold_on: 2026-05-02, source: direct_index }
+      # UNDATED CASE — cannot be determined, so it stays on the list.
+      - { ticker: KO,  reason: harvested_loss, source: direct_index }
+
+# ── CLUSTER 16: healthcare & aging ──────────────────────────────────────────
+healthcare:
+  # SAFE-TO-DELAY CASE — 250 employees, so the group plan is primary and an
+  # 8-month SEP opens when the coverage ends. Under 20 flips this to "Medicare
+  # is primary, enrol at 65 or be uninsured for the Medicare share".
+  working_past_65: true
+  employer_employees: 250
+  coverage_is_current_employment: true
+  part_a_quarters: 40
+  ltc:
+    # TRANSFER CASE — a 5-year episode at 110000/yr is 139% of the 395000
+    # investable (liquid 85000 + age_restricted 310000), so the portfolio is
+    # exhausted before the episode ends and the survivor test fails outright.
+    annual_cost_today: 110000
+    cost_as_of: 2026-06-30
+    survivor_annual_spending: 72000
+    policies:
+      # POLICY-IN-FORCE CASE — and a defective one: a 3-year benefit period
+      # leaves the 5-year tail uncovered, and no inflation protection.
+      - { id: ltc1, type: hybrid, insured: a1, daily_benefit: 200,
+          benefit_period_years: 3, elimination_days: 90,
+          inflation_protection: false, premium_annual: 4800 }
+
+# ─────────────────────────────────────────────────────────────────────
+# CLUSTER 17 — life transitions.
+# The Rivera household is not simultaneously inheriting, marrying and
+# divorcing. This section is a test vehicle, in the same spirit as the
+# `housing.mortgage` block on a household that rents.
+# ─────────────────────────────────────────────────────────────────────
+transitions:
+  windfall:
+    # FOREIGN-SOURCE / STEPPED-UP CASE — over the $100K Form 3520 threshold,
+    # not income on receipt, and still inside the 90-day pause at meta.as_of.
+    - { label: Inheritance from Ana's aunt, kind: inheritance, amount: 260000,
+        received: 2026-07-15, source_foreign: true }
+    # DOMESTIC / NO-STEP-UP CASE — ordinary wage income at vest, withheld at
+    # the 22% supplemental rate against a 24% marginal rate, and the pause on
+    # this one has elapsed. Both pause branches therefore appear at once.
+    - { label: Northwind RSU vest, kind: equity_vest, amount: 95000,
+        received: 2026-02-20, source_foreign: false }
+  tax_withheld_ytd: 20900
+  # HIGH-AGI CASE — over $150K, so the safe harbour is 110% not 100%.
+  prior_year_tax: 38000
+  prior_year_agi: 172000
+  aca_marketplace_coverage: false
+  medicare_within_lookback: false
+
+  marriage:
+    # SEPARATE-WINS CASE — filing separately costs $5,600 more in tax and
+    # saves $11,280 of income-driven loan payment. Flip either loan figure and
+    # the recommendation flips to joint, which is the other branch.
+    tax_if_joint: 41200
+    tax_if_separate_combined: 46800
+    idr_annual_payment_joint: 14400
+    idr_annual_payment_separate: 3120
+    stale_beneficiary_accounts: [retirement_401k]
+    independent_access: { a1: true, a2: false }
+
+  divorce:
+    parties: [a1, a2]
+    assets:
+      # EQUAL-ON-PAPER CASE — $200K each, $48K apart after tax. This is the
+      # finding the skill exists for.
+      - { name: roth_ira, kind: roth_ira, value: 200000, to: a1 }
+      - { name: retirement_401k, kind: traditional_401k, value: 200000, to: a2 }
+      # LOW-BASIS CASE — a $15K embedded gain that carries over on transfer.
+      - { name: brokerage, kind: taxable, value: 45000, basis: 30000, to: a2 }
+      # HIGH-BASIS CASE — nominally identical, worth $2,100 more after tax.
+      - { name: inherited_stock, kind: taxable, value: 45000, basis: 44000,
+          to: a1 }
+
+# ── CLUSTER 18: investment property ─────────────────────────────────────────
+# The Riveras rent their home (see `housing:` above) and own two rental
+# properties. Two branches on purpose: one activity where the §469 gate
+# stays shut and one where the short-stay exception opens it; one deal that
+# clears the DSCR floor and one that does not.
+real_estate:
+  participation:
+    # GATE-SHUT DRIVERS — MAGI is above the phase-out ceiling, and 260 of
+    # 2,340 working hours is nowhere near the REPS 50% test.
+    magi: 212000
+    active_participation: true
+    hours_real_property: 260
+    hours_all_work: 2340
+    grouping_election: false
+
+  activities:
+    # SHUT CASE — long-term rental, passive per se, loss suspends.
+    - label: Cedar Park duplex
+      avg_stay_days: 365
+      material_participation_hours: 120
+      most_hours_of_anyone: true
+      expected_loss: 22000
+      suspended_losses: 14000
+    # OPEN CASE — average stay of 4 days is inside the 7-day exception, so
+    # material participation alone unlocks the loss against W-2 income.
+    - label: Gulf Coast cabin
+      avg_stay_days: 4
+      material_participation_hours: 180
+      most_hours_of_anyone: true
+      expected_loss: 31000
+      suspended_losses: 0
+
+  deals:
+    # CLEARS — DSCR 1.34, above the 1.25 comfort level.
+    - label: Cedar Park duplex
+      price: 420000
+      closing_costs: 9000
+      down_payment: 147000
+      loan_rate: 0.0685
+      loan_term_years: 30
+      gross_rent_monthly: 4000
+      vacancy_rate: 0.06
+      credit_loss_rate: 0.01
+      capex_reserve_rate: 0.05
+      operating_expenses:
+        property_tax: 7800
+        insurance: 2400
+        management: 3100
+        maintenance: 2600
+      hold_years: 7
+      rent_growth: 0.03
+      expense_growth: 0.035
+      appreciation: 0.03
+      selling_cost_rate: 0.07
+    # FAILS — DSCR 0.44 at 10% down. Unfinanceable at this leverage; the
+    # borrower's salary would be the reserve.
+    - label: Gulf Coast cabin
+      price: 420000
+      closing_costs: 9000
+      down_payment: 42000
+      loan_rate: 0.0685
+      loan_term_years: 30
+      gross_rent_monthly: 2600
+      vacancy_rate: 0.06
+      credit_loss_rate: 0.01
+      capex_reserve_rate: 0.05
+      operating_expenses:
+        property_tax: 7800
+        insurance: 2400
+        management: 3100
+        maintenance: 2600
+      hold_years: 7
+      rent_growth: 0.03
+      expense_growth: 0.035
+      appreciation: 0.03
+      selling_cost_rate: 0.07
+
+  # FULL-DEFERRAL CASE — replacement value and equity both exceed the
+  # relinquished figures, so no boot arises. Drop replacement_debt to
+  # 150000 to exercise the mortgage-boot branch.
+  exchange:
+    sale_price: 640000
+    selling_costs: 44800
+    purchase_price: 385000
+    improvements: 22000
+    accumulated_depreciation: 96000
+    relinquished_debt: 210000
+    replacement_value: 720000
+    replacement_debt: 300000
+    sale_date: 2026-08-03
+    tax_return_due: 2027-04-15
+    deferral_years: 12
+
+  # Labels must match `real_estate.activities[].label` — that is how the
+  # screen resolves each property's §469 gate.
+  cost_segregation:
+    # GATE-SHUT CASE — benefit is zero regardless of the basis.
+    - label: Cedar Park duplex
+      depreciable_basis: 340000   # land already excluded
+      property_type: residential
+      study_cost: 6500
+      hold_years: 10
+    # GATE-OPEN CASE — the arithmetic means something, and still does not
+    # clear the 3x bar at this size. That is the honest answer for a
+    # $420k property, not a defect.
+    - label: Gulf Coast cabin
+      depreciable_basis: 355000   # land already excluded
+      property_type: residential
+      study_cost: 6500
+      hold_years: 10

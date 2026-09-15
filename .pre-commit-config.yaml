@@ -1,0 +1,18 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      # inputs/.gitignore should make this impossible. It is here because
+      # `git add -f` exists, and because a mistyped gitignore fails silently.
+      - id: no-real-facts
+        name: block non-example files in inputs/
+        entry: >-
+          bash -c 'f=$(git diff --cached --name-only --diff-filter=A
+          | grep "^inputs/" | grep -v "\.example\.yml$" | grep -v "^inputs/README.md$" || true);
+          if [ -n "$f" ]; then echo "BLOCKED — real data staged:"; echo "$f"; exit 1; fi'
+        language: system
+        pass_filenames: false

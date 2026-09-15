@@ -1,0 +1,85 @@
+title = "pf-skills leak guard"
+
+# Secret scanning is a DETECTOR, not a boundary.
+#
+# It works on shaped data — SSNs, VINs, account numbers. It will NOT catch
+# unshaped personal narrative:
+#
+#     "Jane Rivera, 44 Oak St, net worth $1,937,000"
+#
+# There is no regex for that. The real boundary is inputs/.gitignore, which
+# keeps your facts file out of the repo entirely. These rules are the second
+# layer, catching the realistic slip: pasting a real figure into a doc or
+# test while your own data is open in the next window.
+#
+# For your own name, address, and policy numbers, create .gitleaks.local.toml
+# (gitignored) and run gitleaks with both configs.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic fixtures and templates"
+paths = [
+  '''inputs/.*\.example\.yml$''',
+  '''tests/fixtures/.*''',
+  '''SCHEMA\.md$''',
+]
+
+[[rules]]
+id = "us-ssn"
+description = "US Social Security Number"
+regex = '''\b\d{3}-\d{2}-\d{4}\b'''
+tags = ["pii"]
+
+[[rules]]
+id = "vin"
+description = "Vehicle Identification Number (17 chars, no I/O/Q)"
+regex = '''\b[A-HJ-NPR-Z0-9]{17}\b'''
+tags = ["pii"]
+
+[[rules]]
+id = "labeled-account-number"
+description = "Account, policy, or member number with a real-looking value"
+# The label is case-insensitive; the VALUE is not, and must contain at least
+# two digits. Without both constraints `(?i)` leaks onto `[A-Z0-9-]{7,}` and
+# the rule fires on ordinary prose — "policy documents", "account numbers" —
+# which trains you to pass `--no-verify`, and a scanner you routinely bypass
+# is worse than no scanner.
+regex = '''(?i:\b(?:account|policy|member|contract|certificate)\s*(?:number|no\.?|#|id)?[ \t]*[:=]?[ \t]+)[A-Z0-9-]*[0-9][A-Z0-9-]*[0-9][A-Z0-9-]*'''
+tags = ["pii"]
+
+[[rules]]
+id = "us-street-address"
+description = "US street address"
+# Two constraints that are not optional here, both learned the hard way:
+#   * `[ \t]` not `\s`, so a match cannot span newlines. With `\s`, source code
+#     like `... or 0` followed by `if pl <` parses as "0 If Pl(ace)" — `pl` is
+#     in the suffix list as an abbreviation for "place".
+#   * the street NAME must be genuinely capitalised. A blanket `(?i)` makes
+#     `[A-Z][a-z]+` match any lowercase word and the rule fires on prose.
+#     Case-insensitivity is scoped to the suffix alternation only.
+# Trade-off: an all-lowercase address is missed. Accepted — the noise from the
+# permissive version is what makes people stop reading the output.
+regex = '''\b\d{1,6}[ \t]+(?:[A-Z][a-zA-Z]*[ \t]+){1,3}(?i:st|street|ave|avenue|rd|road|blvd|dr|drive|ln|lane|ct|court|way|pl|place|ter|terrace|cir|circle)\b\.?(?:[ \t]+(?i:apt|unit|ste|suite)\.?[ \t]*[A-Z0-9-]+)?'''
+tags = ["pii"]
+
+[[rules]]
+id = "personal-email"
+description = "Email address"
+# gitleaks uses Go's RE2, which has no lookaround. Exempting the documentation
+# domains has to be a rule-scoped allowlist, not a negative lookahead — a
+# `(?!...)` here does not merely fail to match, it panics gitleaks at config
+# load and takes every other rule in this file down with it.
+regex = '''\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'''
+tags = ["pii"]
+  [rules.allowlist]
+  description = "RFC 2606 documentation domains"
+  regexTarget = "match"
+  regexes = ['''@example\.(com|org|net)\b''', '''@(test|invalid|localhost)\b''']
+
+[[rules]]
+id = "us-phone"
+description = "US phone number"
+regex = '''\b(\+1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b'''
+tags = ["pii"]

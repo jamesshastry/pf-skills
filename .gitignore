@@ -1,0 +1,41 @@
+# ─── Real data. Never committed. ───────────────────────────────────
+# Only *.example.yml ships. Everything else in inputs/ is yours.
+inputs/*
+!inputs/*.example.yml
+!inputs/README.md
+
+# Generated reports. The folder ships; its contents never do.
+outputs/*
+!outputs/.gitkeep
+
+# Your statements, policies and returns. The folder and its README ship;
+# nothing you put in it ever does. Note this ignores every extension, not a
+# list of them -- a list is a promise to remember the next format.
+documents/*
+!documents/README.md
+
+# A personal deny-list of your own name/address/policy numbers, for
+# local secret scanning. MUST stay local — committing it would publish
+# exactly the strings it exists to protect.
+.gitleaks.local.toml
+
+# A local list of your own values for scripts/privacy_audit.py. Same reason:
+# committing it would publish exactly the strings it exists to protect.
+.privacy-tokens.local
+
+# ─── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# ─── OS / editor ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
