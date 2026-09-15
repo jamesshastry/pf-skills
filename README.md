@@ -49,6 +49,9 @@ that run entirely on your own machine against your own data.
 | `cfc-gilti-screen` | Does a controlled foreign corporation exist, which forms follow, and what they cost to miss |
 | `pfic-divest-or-comply` | Keep the foreign fund and pay the compliance cost, or sell it? The §1291 charge with its compound interest |
 | `foreign-pension-classification` | Treaty-protected, §402(b) employees' trust, or foreign grantor trust — and which of 3520/3520-A follow |
+| `entity-structure-comparison` | Schedule C vs S-Corp vs C-Corp, and the salary optimum QBI creates |
+| `solo-retirement-plan-choice` | Solo 401(k), SEP or defined benefit for an owner-only business |
+| `depreciation-election` | §179 vs bonus vs mileage — the income limit, and what year one locks in |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`

@@ -70,7 +70,7 @@ answer.
 | 10 · Cross-border planning | `roth-portability-check` · `geo-arbitrage-model` · `cross-border-healthcare` | ✅ shipped |
 | 11 · Expat tax filing | `feie-vs-ftc` · `foreign-presence-tests` · `state-domicile-exit` · `cfc-gilti-screen` | ✅ shipped |
 | 12 · Offshore assets & pensions | `foreign-reporting-audit` · `pfic-divest-or-comply` · `foreign-pension-classification` | ✅ shipped |
-| 13 · Owner-operator business | `entity-structure-comparison` · `solo-retirement-plan-choice` · `depreciation-election` | planned |
+| 13 · Owner-operator business | `entity-structure-comparison` · `solo-retirement-plan-choice` · `depreciation-election` | ✅ shipped |
 | 14 · Portfolio policy | `asset-allocation-review` · `rebalancing-rules` · `wash-sale-policy` | planned |
 | 15 · Charitable giving | `charitable-giving-strategy` | planned |
 | 16 · Healthcare & aging | `aca-subsidy-optimization` · `medicare-enrollment-timing` · `long-term-care-funding` | planned |
