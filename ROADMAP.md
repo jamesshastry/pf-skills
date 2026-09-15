@@ -57,7 +57,7 @@ answer.
 | 1 · Property & casualty | `auto-insurance-review` · `renters-homeowners-review` · `umbrella-liability` | ✅ shipped |
 | 2 · Income protection | `survivor-needs` · `life-insurance-review` · `disability-insurance-review` | ✅ shipped |
 | 3 · Beneficiaries & estate | `beneficiary-audit` · `estate-document-review` · `digital-estate` | ✅ shipped |
-| 4 · Tax-advantaged space | `contribution-space-audit` · `employer-match-audit` · `hsa-review` | planned |
+| 4 · Tax-advantaged space | `contribution-space-audit` · `employer-match-audit` · `hsa-review` | ✅ shipped |
 | 5 · Cash & debt | `emergency-fund-sizing` · `cash-yield-review` · `debt-payoff-priority` | planned |
 | 5a · Maintenance | `reference-data-refresh` | planned |
 | 5b · Maintenance *(cross-cutting)* | `conflict-check` | planned |
