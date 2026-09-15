@@ -63,7 +63,7 @@ answer.
 | 5b · Maintenance *(cross-cutting)* | `conflict-check` | planned |
 | 5c · Onboarding *(cross-cutting)* | `document-intake` | planned |
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped |
-| 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | planned |
+| 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | planned |
 | 8 · Housing | `rent-vs-buy` · `mortgage-review` | planned |
 | 9 · Education | `education-funding` | planned |

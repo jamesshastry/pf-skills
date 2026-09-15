@@ -29,6 +29,8 @@ that run entirely on your own machine against your own data.
 | `emergency-fund-sizing` | The buffer every absorbability test assumes — shortfall *and* excess |
 | `cash-yield-review` | What idle cash costs per year, and the Treasury state-tax exemption |
 | `debt-payoff-priority` | Avalanche vs snowball with the difference priced, after tax |
+| `employer-concentration-risk` | Income and assets as one correlated bet, and the joint scenario |
+| `equity-comp-review` | The vesting cliff an annual equity figure hides |
 | `citizenship-status-review` | Citizenship, visa status and domicile — and which other conclusions depend on them |
 
 Run them in that order. Each of the first two checks whether the underlying
