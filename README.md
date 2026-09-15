@@ -26,6 +26,9 @@ that run entirely on your own machine against your own data.
 | `contribution-space-audit` | Unused tax-advantaged room, the after-tax route, and the backdoor pro-rata trap |
 | `employer-match-audit` | Whether front-loading deferrals is forfeiting match |
 | `hsa-review` | Eligibility, space, and treating an HSA as a retirement account |
+| `emergency-fund-sizing` | The buffer every absorbability test assumes — shortfall *and* excess |
+| `cash-yield-review` | What idle cash costs per year, and the Treasury state-tax exemption |
+| `debt-payoff-priority` | Avalanche vs snowball with the difference priced, after tax |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`

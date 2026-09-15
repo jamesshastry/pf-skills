@@ -58,7 +58,7 @@ answer.
 | 2 · Income protection | `survivor-needs` · `life-insurance-review` · `disability-insurance-review` | ✅ shipped |
 | 3 · Beneficiaries & estate | `beneficiary-audit` · `estate-document-review` · `digital-estate` | ✅ shipped |
 | 4 · Tax-advantaged space | `contribution-space-audit` · `employer-match-audit` · `hsa-review` | ✅ shipped |
-| 5 · Cash & debt | `emergency-fund-sizing` · `cash-yield-review` · `debt-payoff-priority` | planned |
+| 5 · Cash & debt | `emergency-fund-sizing` · `cash-yield-review` · `debt-payoff-priority` | ✅ shipped |
 | 5a · Maintenance | `reference-data-refresh` | planned |
 | 5b · Maintenance *(cross-cutting)* | `conflict-check` | planned |
 | 5c · Onboarding *(cross-cutting)* | `document-intake` | planned |
