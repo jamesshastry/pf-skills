@@ -39,6 +39,7 @@ that run entirely on your own machine against your own data.
 | `mortgage-review` | Removable PMI, prepayment, and the refinance break-even |
 | `education-funding` | The college gap per child, the retirement-first rule, and 529 mechanics |
 | `citizenship-status-review` | Citizenship, visa status and domicile — and which other conclusions depend on them |
+| `foreign-reporting-audit` | FBAR · FATCA · PFIC · Form 3520 — does an obligation already exist |
 | `roth-portability-check` | Does the destination honour the Roth wrapper — and the conversion advice that inverts where it does not |
 | `geo-arbitrage-model` | Blended burn across a split year, the target it moves, and the day test it trips |
 | `cross-border-healthcare` | Medicare does not travel: the Part B keep-or-drop arithmetic and the permanent enrolment penalty |
@@ -46,6 +47,8 @@ that run entirely on your own machine against your own data.
 | `foreign-presence-tests` | One travel ledger: the 330-day test across every rolling window, bona fide residence, and the destination's own threshold |
 | `state-domicile-exit` | Has the sticky state actually let go — severance, statutory residence, and source income |
 | `cfc-gilti-screen` | Does a controlled foreign corporation exist, which forms follow, and what they cost to miss |
+| `pfic-divest-or-comply` | Keep the foreign fund and pay the compliance cost, or sell it? The §1291 charge with its compound interest |
+| `foreign-pension-classification` | Treaty-protected, §402(b) employees' trust, or foreign grantor trust — and which of 3520/3520-A follow |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`
