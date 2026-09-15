@@ -35,6 +35,8 @@ that run entirely on your own machine against your own data.
 | `withdrawal-sequencing` | Which account to spend first, and why not strictly |
 | `roth-conversion-window` | The low-tax years between work and RMDs |
 | `social-security-timing` | Claiming age as longevity insurance, and the survivor decision |
+| `rent-vs-buy` | Total cost of occupancy and the break-even holding period |
+| `mortgage-review` | Removable PMI, prepayment, and the refinance break-even |
 | `citizenship-status-review` | Citizenship, visa status and domicile — and which other conclusions depend on them |
 
 Run them in that order. Each of the first two checks whether the underlying
