@@ -60,7 +60,7 @@ answer.
 | 4 · Tax-advantaged space | `contribution-space-audit` · `employer-match-audit` · `hsa-review` | ✅ shipped |
 | 5 · Cash & debt | `emergency-fund-sizing` · `cash-yield-review` · `debt-payoff-priority` | ✅ shipped |
 | 5a · Maintenance | `reference-data-refresh` | ✅ shipped |
-| 5b · Maintenance *(cross-cutting)* | `conflict-check` | planned |
+| 5b · Maintenance *(cross-cutting)* | `conflict-check` | ✅ shipped |
 | 5c · Onboarding *(cross-cutting)* | `document-intake` | planned |
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
