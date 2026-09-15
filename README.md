@@ -22,6 +22,7 @@ that run entirely on your own machine against your own data.
 | `disability-insurance-review` | After-tax cover against spending, occupation definition, and expiring rider windows |
 | `beneficiary-audit` | Designations override the will — missing contingents, minors named directly, shares that don't total 100% |
 | `estate-document-review` | Will, powers of attorney, directive, and whether the trust is actually funded |
+| `probate-exposure` | Which assets go through court, what it costs in your state, and the cheapest instrument per account — a pour-over will is not one |
 | `digital-estate` | Could anyone actually log in tomorrow, without you |
 | `contribution-space-audit` | Unused tax-advantaged room, the after-tax route, and the backdoor pro-rata trap |
 | `employer-match-audit` | Whether front-loading deferrals is forfeiting match |

@@ -38,15 +38,21 @@ household:
   balance_sheet:
     # Joint checking — no designation possible, so the audit stays quiet.
     # NEAR-ZERO YIELD CASE — the most common unforced error on a balance sheet.
+    # PROBATE: COVERED-BY-JOINT CASE — survivorship carries it, no form needed.
     - { name: cash, value: 40000, tier: liquid, asset_class: cash,
+        titled_to: joint,
         account_type: taxable, wash_sale_policy_applied: true,
         yield_gross: 0.0001, state_tax_exempt: false,
         beneficiary_applicable: false }
 
     # CLEAN CASE — primary and contingent both named.
+    # PROBATE: COVERED-BY-DESIGNATION CASE — individually titled, but a named
+    # primary carries it outside the will anyway. Titling is not the whole
+    # answer, which is the point of checking both.
     - name: brokerage
       value: 45000
       tier: liquid
+      titled_to: individual
       # TAXABLE CASE — a prime fund, so the state exemption does not apply.
       asset_class: cash
       # The direct-indexed account. COVERED CASE for the wash-sale policy.
@@ -64,9 +70,14 @@ household:
     # MIXED-HOLDINGS CASE — one account, three asset classes.
     # WASH-SALE GAP CASE — coverage unrecorded on a retirement account, which
     # is the expensive one: a purchase here disallows the loss permanently.
+    # PROBATE: EXPOSED CASE — individually titled and the designation was
+    # checked with nobody named. Nothing carries it out of the estate. On a
+    # retirement account this is the expensive one, and the fix is the spouse
+    # directly rather than the trust.
     - name: retirement_401k
       value: 310000
       tier: age_restricted
+      titled_to: individual
       account_type: tax_deferred
       wash_sale_policy_applied: null
       holdings:
@@ -78,6 +89,9 @@ household:
     # DEFECT CASE — minors named directly. Forces a court guardianship
     # instead of the trust that exists for exactly this.
     # EARMARKED CASE — excluded from the household allocation entirely.
+    # PROBATE: UNKNOWN-TITLING CASE — primaries are named so it avoids
+    # probate regardless, but `titled_to` is deliberately absent to show that
+    # an unrecorded field is reported as unrecorded rather than assumed.
     - name: college_529
       value: 28000
       tier: illiquid
@@ -230,6 +244,9 @@ estate:
     - { type: financial_poa,     exists: false }
     - { type: healthcare_poa,    exists: true,  last_reviewed: 2016-05-14 }
     - { type: advance_directive, exists: false }
+  # Whether the will pours into the trust rather than to the spouse directly.
+  # Decides whether a simplified spousal transfer stays available.
+  will_pours_to_trust: true
   digital:
     password_manager: true
     emergency_access_configured: false

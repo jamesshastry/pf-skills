@@ -30,6 +30,7 @@ from . import jurisdiction as _jur
 from . import pension as _pen
 from . import pfic as _pfi
 from . import portfolio as _pf
+from . import probate as _prb
 from . import presence as _pre
 from . import realestate as _re
 from . import reporting as _rep
@@ -117,6 +118,16 @@ def registry() -> list[Table]:
             values={k: getattr(rules, k) for k in (
                 "min_liability", "um_uim_capped_at_bi", "umpd_available",
                 "umpd_max", "umpd_excluded_by_collision", "umpd_deductible")}))
+
+    prb_entries = []
+    for code in _prb.states_available():
+        pr = _prb.rules_for(code)
+        on, unver = _parse(pr.verified_on)
+        prb_entries.append(Entry(
+            code, pr.source, on, unver,
+            values={k: getattr(pr, k) for k in (
+                "basis", "fee_schedule", "fee_claimable_twice",
+                "small_estate_threshold", "spousal_simplified")}))
 
     ages_on, ages_unver = _parse(_lim.RETIREMENT_AGES_VERIFIED)
     rep_on, rep_unver = _parse(_rep.REPORTING_VERIFIED)
@@ -237,6 +248,17 @@ def registry() -> list[Table]:
             url="https://www.ssa.gov/international/agreements_overview.html",
             cadence=LEGISLATIVE,
             entries=tot_entries,
+        ),
+        Table(
+            name="state probate cost and small-estate rules",
+            module="lib/pf/probate.py",
+            holds="fee basis and schedule, whether the fee is claimable twice, "
+                  "small-estate thresholds, simplified spousal transfers",
+            authority="each state's probate code",
+            url="https://leginfo.legislature.ca.gov · "
+                "https://statutes.capitol.texas.gov",
+            cadence=LEGISLATIVE,
+            entries=prb_entries,
         ),
         Table(
             name="state auto insurance rules",

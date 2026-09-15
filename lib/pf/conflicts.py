@@ -145,7 +145,48 @@ def _feie_and_ira(facts: dict) -> bool:
     return bool(_dig(facts, "expat.planned_ira_contribution"))
 
 
+def _non_citizen_spouse_with_assets(facts: dict) -> bool:
+    """A spouse who is not a US citizen, and a balance sheet to retitle.
+
+    Driven by the facts that establish the condition rather than by a
+    downstream conclusion: `citizenship-status-review` already records the
+    status, and `probate-exposure` will recommend retitling whenever anything
+    is exposed or unchecked.
+    """
+    members = _dig(facts, "household.members") or []
+    spouse = next((m for m in members if m.get("role") == "spouse"), None)
+    if not spouse:
+        return False
+    status = spouse.get("us_status")
+    cits = spouse.get("citizenship") or []
+    non_citizen = (status is not None and status != "citizen") or (
+        bool(cits) and "US" not in cits)
+    return non_citizen and bool(_dig(facts, "household.balance_sheet"))
+
+
 REGISTRY: tuple[Conflict, ...] = (
+    Conflict(
+        key="probate-titling-vs-non-citizen-spouse",
+        skills=("probate-exposure", "citizenship-status-review"),
+        tension="One says retitle assets jointly or into the trust, because "
+                "that is the cheapest way out of probate. The other records "
+                "that the spouse is **not a US citizen**, and the transfer "
+                "rules that make retitling cheap for a citizen spouse do not "
+                "apply: there is no unlimited marital deduction, and adding a "
+                "non-citizen spouse to a title can be a reportable gift "
+                "rather than a free administrative step.",
+        trigger="A spouse recorded as anything other than a US citizen, and "
+                "any account that probate-exposure would recommend retitling.",
+        resolution="Do not let the probate answer drive the titling decision "
+                   "on its own. Probate cost is a known, bounded, one-off "
+                   "administrative fee; a mishandled transfer to a "
+                   "non-citizen spouse is a tax question with a much wider "
+                   "range and a QDOT may be the instrument that actually "
+                   "belongs here. Establish the status question first — it is "
+                   "cheap — then decide titling. This registry entry does not "
+                   "decide it, and neither skill should.",
+        applies=_non_citizen_spouse_with_assets,
+    ),
     Conflict(
         key="conversions-vs-aca",
         skills=("roth-conversion-window", "aca-subsidy-optimization"),

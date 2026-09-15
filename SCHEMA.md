@@ -96,6 +96,40 @@ is counted on both sides and the survivor gap is overstated.
 Skills that ask *"can this household absorb an $8,000 loss?"* use **`liquid`**, never total net
 worth. A household with $2M in a 401(k) and $3,000 in cash cannot absorb an $8,000 loss.
 
+### Titling and designation — required by `probate-exposure`
+
+```yaml
+- name: brokerage
+  value: 45000
+  tier: liquid
+  titled_to: individual        # trust | joint | individual. null = unknown
+  beneficiary_primary: a2      # trust | <member id> | descendants | estate | null
+  beneficiary_contingent: c1   # trust | <member id> | descendants | null
+  distribution_type: per_stirpes   # optional: per_stirpes | per_capita
+```
+
+**`titled_to` decides whether an asset goes through probate**, and it is the
+only field in the schema that does. `joint` means joint tenancy **with right of
+survivorship** — tenants in common does not avoid probate and looks identical on
+a statement, so record it as `individual` unless the deed or registration says
+survivorship.
+
+**`null` is not "exposed" and not "covered."** An absent `titled_to` reports as
+*cannot be determined*, and the estimated probate cost becomes a range. That is
+the honest answer: the most common real state is that nobody has looked, and a
+skill that defaults it either way produces a confident wrong number. The width
+of the range is what not having looked is worth.
+
+**`beneficiary_primary` is a shorthand, not a second source of truth.** Where
+the fuller [`beneficiaries`](#the-beneficiaries-shape--required-by-beneficiary-audit)
+list is present, `probate-exposure` derives the primary from it. Record one or
+the other — recording both invites them to disagree.
+
+The related field `estate.will_pours_to_trust` (boolean, optional) says whether
+the will pours into a trust rather than passing to the spouse directly. It
+decides whether a simplified spousal transfer may still be available, which is
+flagged as a question for counsel rather than answered.
+
 ### `pending` — recorded but not counted
 
 ```yaml

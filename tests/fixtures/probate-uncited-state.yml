@@ -1,0 +1,69 @@
+# A second fictional household, for the branches the Rivera fixture cannot
+# reach without changing figures that other skills' goldens depend on.
+#
+# Two jobs:
+#
+#  1. **The state is not in the cited table.** OH is absent from
+#     `probate.STATES` on purpose. The routing must still work and the cost
+#     must come back UNKNOWN rather than borrowing California's schedule.
+#     That is the whole point of a cited table, and it needs a test that
+#     fails loudly if somebody adds a "sensible default".
+#
+#  2. The trust-titled, unknown-titling and minor-as-contingent branches.
+#
+# Every figure here is invented.
+
+meta:
+  schema_version: 1
+  as_of: 2026-09-15
+  currency: USD
+  jurisdiction:
+    country: US
+    state: OH            # deliberately NOT in probate.STATES
+
+household:
+  members:
+    - { id: a1, role: primary, age: 52, birth_year: 1974, income_annual: 140000 }
+    - { id: a2, role: spouse,  age: 50, birth_year: 1976, income_annual: 0 }
+    - { id: c1, role: dependent, age: 14 }
+
+  balance_sheet:
+    # COVERED-BY-TRUST CASE — the retitling actually happened. This is what a
+    # pour-over will does not do, and the only row here that proves it.
+    - name: taxable_brokerage
+      value: 260000
+      tier: liquid
+      titled_to: trust
+      beneficiary_applicable: false
+
+    # UNKNOWN CASE — neither field recorded. Must report as cannot-be-
+    # determined: not exposed, not covered.
+    - name: old_savings
+      value: 45000
+      tier: liquid
+
+    # EXPOSED CASE — individually titled, estate named as beneficiary. The
+    # designation routes it into probate deliberately.
+    - name: legacy_account
+      value: 90000
+      tier: liquid
+      titled_to: individual
+      beneficiary_primary: estate
+
+    # MINOR-AS-CONTINGENT CASE — spouse primary, minor child contingent. The
+    # designation is fine and avoids probate; the contingent is what makes a
+    # blanket "just add a TOD everywhere" recommendation wrong elsewhere.
+    - name: retirement_ira
+      value: 310000
+      tier: age_restricted
+      titled_to: individual
+      beneficiary_primary: a2
+      beneficiary_contingent: c1
+
+  annual_spending: 88000
+
+estate:
+  documents:
+    - { type: will,            exists: true, last_reviewed: 2024-02-01 }
+    - { type: revocable_trust, exists: true, last_reviewed: 2024-02-01, funded: true }
+  will_pours_to_trust: true

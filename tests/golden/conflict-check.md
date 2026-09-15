@@ -4,7 +4,15 @@ Every skill here is individually correct and each is tested in isolation. **Noth
 
 A household running one skill sees confident advice and no hint the other exists. That is worse than either skill being wrong, because there is nothing on the page to be suspicious of.
 
-**13 conflict(s) live for this household**, involving 19 skills.
+**14 conflict(s) live for this household**, involving 21 skills.
+
+## `probate-exposure` ⇄ `citizenship-status-review`
+
+**The tension.** One says retitle assets jointly or into the trust, because that is the cheapest way out of probate. The other records that the spouse is **not a US citizen**, and the transfer rules that make retitling cheap for a citizen spouse do not apply: there is no unlimited marital deduction, and adding a non-citizen spouse to a title can be a reportable gift rather than a free administrative step.
+
+**When it bites.** A spouse recorded as anything other than a US citizen, and any account that probate-exposure would recommend retitling.
+
+**How to resolve it.** Do not let the probate answer drive the titling decision on its own. Probate cost is a known, bounded, one-off administrative fee; a mishandled transfer to a non-citizen spouse is a tax question with a much wider range and a QDOT may be the instrument that actually belongs here. Establish the status question first — it is cheap — then decide titling. This registry entry does not decide it, and neither skill should.
 
 ## `roth-conversion-window` ⇄ `aca-subsidy-optimization`
 
