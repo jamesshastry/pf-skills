@@ -20,6 +20,9 @@ that run entirely on your own machine against your own data.
 | `survivor-needs` | Capital-needs analysis: what the household needs if an income stops |
 | `life-insurance-review` | Coverage gap, term expiry, and the real return on a cash-value policy |
 | `disability-insurance-review` | After-tax cover against spending, occupation definition, and expiring rider windows |
+| `beneficiary-audit` | Designations override the will — missing contingents, minors named directly, shares that don't total 100% |
+| `estate-document-review` | Will, powers of attorney, directive, and whether the trust is actually funded |
+| `digital-estate` | Could anyone actually log in tomorrow, without you |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`
