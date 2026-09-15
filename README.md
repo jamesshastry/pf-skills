@@ -39,6 +39,9 @@ that run entirely on your own machine against your own data.
 | `mortgage-review` | Removable PMI, prepayment, and the refinance break-even |
 | `education-funding` | The college gap per child, the retirement-first rule, and 529 mechanics |
 | `citizenship-status-review` | Citizenship, visa status and domicile — and which other conclusions depend on them |
+| `roth-portability-check` | Does the destination honour the Roth wrapper — and the conversion advice that inverts where it does not |
+| `geo-arbitrage-model` | Blended burn across a split year, the target it moves, and the day test it trips |
+| `cross-border-healthcare` | Medicare does not travel: the Part B keep-or-drop arithmetic and the permanent enrolment penalty |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`
