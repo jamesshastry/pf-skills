@@ -55,6 +55,7 @@ that run entirely on your own machine against your own data.
 | `asset-allocation-review` | Target versus actual, a horizon-based glide band, and asset *location* — the free half nobody checks |
 | `rebalancing-rules` | Bands versus calendar, decided once, and how much of the correction needs a taxable sale |
 | `wash-sale-policy` | Which securities are unbuyable, in which accounts — an IRA purchase deletes the loss outright |
+| `charitable-giving-strategy` | Give appreciated stock in kind, bunch into a DAF, or run a QCD — and which AGI limit binds |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`

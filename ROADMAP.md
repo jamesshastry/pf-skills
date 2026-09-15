@@ -72,7 +72,7 @@ answer.
 | 12 · Offshore assets & pensions | `foreign-reporting-audit` · `pfic-divest-or-comply` · `foreign-pension-classification` | ✅ shipped |
 | 13 · Owner-operator business | `entity-structure-comparison` · `solo-retirement-plan-choice` · `depreciation-election` | ✅ shipped |
 | 14 · Portfolio policy | `asset-allocation-review` · `rebalancing-rules` · `wash-sale-policy` | ✅ shipped |
-| 15 · Charitable giving | `charitable-giving-strategy` | planned |
+| 15 · Charitable giving | `charitable-giving-strategy` | ✅ shipped |
 | 16 · Healthcare & aging | `aca-subsidy-optimization` · `medicare-enrollment-timing` · `long-term-care-funding` | planned |
 | 17 · Life transitions | `windfall-management` · `marriage-finance-merger` · `divorce-asset-split` | planned |
 | 18 · Real estate investing | `passive-loss-eligibility` · `rental-deal-underwriting` · `1031-exchange-modeling` · `cost-segregation-screen` | planned |
