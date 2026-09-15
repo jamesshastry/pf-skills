@@ -62,6 +62,10 @@ that run entirely on your own machine against your own data.
 | `windfall-management` | Do nothing for ninety days — then tax character, estimated tax, Form 3520 |
 | `marriage-finance-merger` | Joint vs separate netted against IDR payments · beneficiaries · marital deduction |
 | `divorce-asset-split` | After-tax value of a proposed split · QDRO vs transfer incident to divorce |
+| `passive-loss-eligibility` | Can a rental loss reach W-2 income at all — §469's three doors, and which one is open |
+| `rental-deal-underwriting` | NOI without the mortgage in it, cap rate, cash-on-cash, DSCR against the lender floor, IRR |
+| `1031-exchange-modeling` | Defer or pay — gain *including* depreciation recapture, cash and mortgage boot, the 45/180 clocks |
+| `cost-segregation-screen` | Whether a study is worth commissioning, and whether the deduction is usable at all |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`
