@@ -14,6 +14,9 @@ that run entirely on your own machine against your own data.
 
 | Skill | Covers |
 |---|---|
+| `auto-insurance-review` | Liability adequacy, UM/UIM, the comp/collision drop test, UMPD and MedPay interactions |
+| `renters-homeowners-review` | Personal liability and the umbrella attachment gate, contents, loss of use, settlement basis, sub-limits, endorsed exclusions |
+| `umbrella-liability` | Sizing against attachable assets and future earnings, the attachment gate, exclusions and pass-throughs |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`

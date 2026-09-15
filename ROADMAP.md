@@ -54,7 +54,7 @@ answer.
 
 | Cluster | Skills | State |
 |---|---|---|
-| 1 · Property & casualty | `auto-insurance-review` · `renters-homeowners-review` · `umbrella-liability` | planned |
+| 1 · Property & casualty | `auto-insurance-review` · `renters-homeowners-review` · `umbrella-liability` | ✅ shipped |
 | 2 · Income protection | `survivor-needs` · `life-insurance-review` · `disability-insurance-review` | planned |
 | 3 · Beneficiaries & estate | `beneficiary-audit` · `estate-document-review` · `digital-estate` | planned |
 | 4 · Tax-advantaged space | `contribution-space-audit` · `employer-match-audit` · `hsa-review` | planned |
