@@ -67,6 +67,7 @@ that run entirely on your own machine against your own data.
 | `1031-exchange-modeling` | Defer or pay — gain *including* depreciation recapture, cash and mortgage boot, the 45/180 clocks |
 | `cost-segregation-screen` | Whether a study is worth commissioning, and whether the deduction is usable at all |
 | `conflict-check` | Cross-cutting: where two skills' recommendations pull the same dollar in opposite directions |
+| `document-intake` | Onboarding: which fields are still unset, what each one unblocks, and which document answers it |
 | `reference-data-refresh` | Maintenance: when the repo's own statutory tables were last checked |
 
 Run them in that order. Each of the first two checks whether the underlying

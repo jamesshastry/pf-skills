@@ -61,7 +61,7 @@ answer.
 | 5 · Cash & debt | `emergency-fund-sizing` · `cash-yield-review` · `debt-payoff-priority` | ✅ shipped |
 | 5a · Maintenance | `reference-data-refresh` | ✅ shipped |
 | 5b · Maintenance *(cross-cutting)* | `conflict-check` | ✅ shipped |
-| 5c · Onboarding *(cross-cutting)* | `document-intake` | planned |
+| 5c · Onboarding *(cross-cutting)* | `document-intake` | ✅ shipped |
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |
