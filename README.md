@@ -52,6 +52,9 @@ that run entirely on your own machine against your own data.
 | `entity-structure-comparison` | Schedule C vs S-Corp vs C-Corp, and the salary optimum QBI creates |
 | `solo-retirement-plan-choice` | Solo 401(k), SEP or defined benefit for an owner-only business |
 | `depreciation-election` | §179 vs bonus vs mileage — the income limit, and what year one locks in |
+| `asset-allocation-review` | Target versus actual, a horizon-based glide band, and asset *location* — the free half nobody checks |
+| `rebalancing-rules` | Bands versus calendar, decided once, and how much of the correction needs a taxable sale |
+| `wash-sale-policy` | Which securities are unbuyable, in which accounts — an IRA purchase deletes the loss outright |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`
