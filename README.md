@@ -66,6 +66,7 @@ that run entirely on your own machine against your own data.
 | `rental-deal-underwriting` | NOI without the mortgage in it, cap rate, cash-on-cash, DSCR against the lender floor, IRR |
 | `1031-exchange-modeling` | Defer or pay — gain *including* depreciation recapture, cash and mortgage boot, the 45/180 clocks |
 | `cost-segregation-screen` | Whether a study is worth commissioning, and whether the deduction is usable at all |
+| `reference-data-refresh` | Maintenance: when the repo's own statutory tables were last checked |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`
