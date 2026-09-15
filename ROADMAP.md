@@ -66,7 +66,7 @@ answer.
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |
 | 8 · Housing | `rent-vs-buy` · `mortgage-review` | ✅ shipped |
-| 9 · Education | `education-funding` | planned |
+| 9 · Education | `education-funding` | ✅ shipped |
 | 10 · Cross-border planning | `roth-portability-check` · `geo-arbitrage-model` · `cross-border-healthcare` | planned |
 | 11 · Expat tax filing | `feie-vs-ftc` · `foreign-presence-tests` · `state-domicile-exit` · `cfc-gilti-screen` | planned |
 | 12 · Offshore assets & pensions | `foreign-reporting-audit` · `pfic-divest-or-comply` · `foreign-pension-classification` | planned |
