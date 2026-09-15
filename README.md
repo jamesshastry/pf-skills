@@ -59,6 +59,9 @@ that run entirely on your own machine against your own data.
 | `aca-subsidy-optimization` | The pre-Medicare gap, the premium tax credit against MAGI as a share of FPL, and the taper as a marginal rate |
 | `medicare-enrollment-timing` | Which enrolment window applies, what a late Part B costs permanently, and the two-year IRMAA lookback |
 | `long-term-care-funding` | A multi-year care episode against investable assets, and whether the surviving spouse's retirement survives it |
+| `windfall-management` | Do nothing for ninety days — then tax character, estimated tax, Form 3520 |
+| `marriage-finance-merger` | Joint vs separate netted against IDR payments · beneficiaries · marital deduction |
+| `divorce-asset-split` | After-tax value of a proposed split · QDRO vs transfer incident to divorce |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`
