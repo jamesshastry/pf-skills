@@ -135,3 +135,135 @@ def test_example_facts_file_parses_and_satisfies_the_skill():
         "auto.vehicles[].value_basis",
     ])
     assert pre.ok, pre.missing
+
+
+# ── duplicate keys ──────────────────────────────────────────────────────────
+#
+# `yaml.safe_load` resolves a duplicate mapping key silently: the second wins,
+# the first is discarded, and nothing downstream can tell. A facts file with
+# two `housing:` blocks parses cleanly and every skill then produces a
+# confident, correctly formatted report about whichever half survived.
+#
+# This is not hypothetical. It happened to a real file, `rent-vs-buy` reported
+# on the wrong property at the wrong price, and the file's own validator passed
+# throughout.
+
+
+def _write(tmp_path, body, name="facts.yml"):
+    p = tmp_path / name
+    p.write_text(body)
+    return p
+
+
+def test_a_duplicate_top_level_key_is_refused(tmp_path):
+    p = _write(tmp_path, """\
+meta: {schema_version: 1}
+housing:
+  monthly_rent: 2400
+other: 1
+housing:
+  monthly_rent: 9999
+""")
+    with pytest.raises(F.FactsError) as e:
+        F.load(p)
+    assert "housing" in str(e.value)
+
+
+def test_the_message_names_the_key_and_both_lines(tmp_path):
+    """An error saying only "duplicate key found" sends someone hunting
+    through a six-hundred-line file."""
+    p = _write(tmp_path, """\
+meta: {schema_version: 1}
+housing:
+  monthly_rent: 2400
+other: 1
+housing:
+  monthly_rent: 9999
+""")
+    with pytest.raises(F.FactsError) as e:
+        F.load(p)
+    msg = str(e.value)
+    assert "`housing`" in msg
+    assert "line 2" in msg          # first definition
+    assert "line 5" in msg          # the one that silently won
+
+
+def test_a_duplicate_nested_key_is_refused(tmp_path):
+    p = _write(tmp_path, """\
+meta: {schema_version: 1}
+housing:
+  purchase:
+    price: 100
+    price: 200
+""")
+    with pytest.raises(F.FactsError) as e:
+        F.load(p)
+    assert "`price`" in str(e.value)
+    assert "line 4" in str(e.value) and "line 5" in str(e.value)
+
+
+def test_a_duplicate_inside_a_list_item_is_refused(tmp_path):
+    """Mappings inside sequences are mappings too, and this is where a
+    hand-edited balance sheet actually goes wrong."""
+    p = _write(tmp_path, """\
+meta: {schema_version: 1}
+household:
+  members:
+    - id: a1
+      age: 41
+      age: 52
+""")
+    with pytest.raises(F.FactsError) as e:
+        F.load(p)
+    assert "`age`" in str(e.value)
+
+
+def test_the_same_key_in_two_different_mappings_is_fine(tmp_path):
+    """The guard must not fire on the ordinary case: every list item having
+    an `id`, every block having a `value`. That would make it useless."""
+    p = _write(tmp_path, """\
+meta: {schema_version: 1}
+household:
+  members:
+    - { id: a1, age: 41 }
+    - { id: a2, age: 39 }
+  balance_sheet:
+    - { name: cash, value: 100 }
+    - { name: brokerage, value: 200 }
+""")
+    assert F.load(p)["household"]["members"][1]["id"] == "a2"
+
+
+def test_a_clean_file_still_loads(tmp_path):
+    p = _write(tmp_path, """\
+meta:
+  schema_version: 1
+  as_of: 2026-09-15
+housing:
+  monthly_rent: 2400
+""")
+    assert F.load(p)["housing"]["monthly_rent"] == 2400
+
+
+def test_the_shipped_example_fixture_has_no_duplicate_keys():
+    """The guard, pointed at the thing everybody copies."""
+    assert F.load(ROOT / "inputs" / "facts.example.yml")
+
+
+def test_a_duplicate_in_json_is_refused_too(tmp_path):
+    """Same defect, different syntax. `json.loads` also keeps the last."""
+    p = _write(tmp_path,
+               '{"meta": {"schema_version": 1}, "housing": {"a": 1}, '
+               '"housing": {"a": 2}}',
+               name="facts.json")
+    with pytest.raises(F.FactsError) as e:
+        F.load(p)
+    assert "housing" in str(e.value)
+
+
+def test_malformed_yaml_is_still_a_factserror_not_a_yaml_error(tmp_path):
+    """Callers catch FactsError. A raw YAMLError escaping `load` would reach
+    the user as a traceback, which the behaviour tests forbid."""
+    p = _write(tmp_path, "meta: {schema_version: 1}\n  bad indent: [\n")
+    with pytest.raises(F.FactsError):
+        F.load(p)

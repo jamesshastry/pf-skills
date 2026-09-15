@@ -505,7 +505,13 @@ housing:
     term_years: 30
     property_tax_rate: 0.0185
     insurance_annual: 1800
-    hoa_monthly: 0
+    # HOA-MATERIAL CASE — the candidate is a townhome, so there are dues. At
+    # this price and rate they are price-equivalent to roughly 16% of the
+    # asking price, which clears HOA_MATERIAL_PRICE_SHARE and fires the
+    # finding. The zero-dues and below-threshold branches are covered in
+    # tests/test_housing.py, because the schema holds one purchase candidate
+    # and a fixture cannot be both.
+    hoa_monthly: 420
     maintenance_rate: 0.01
     expected_years: 7
 

@@ -70,6 +70,35 @@ REFI_BREAKEVEN_MONTHS = 36
 #: Loan-to-value at which mortgage insurance can usually be removed.
 PMI_REMOVAL_LTV = 0.80
 
+#: HOA dues stop being a line in the outflows table and become a finding once
+#: their **price-equivalent** reaches this share of the purchase price.
+#:
+#: The test is on price-equivalence rather than on dues as a share of annual
+#: running cost, and that choice matters. A share-of-running-cost test is
+#: dominated by principal and interest, so on an expensive property it stays
+#: comfortably small — well under any threshold worth setting — while the same
+#: dues are displacing six figures of purchase price. It would have missed the
+#: case this finding was written for. This test measures what the finding is
+#: actually about: whether the listing price is misleading as a comparator
+#: against properties that carry no dues.
+#:
+#: 5% is set where the distortion exceeds ordinary negotiating range. Below it
+#: the dues change the arithmetic; above it they change *which houses this one
+#: should be compared against at all*, which is a different kind of error and
+#: not one more decimal places will fix.
+HOA_MATERIAL_PRICE_SHARE = 0.05
+
+#: Assumed growth in dues when not supplied. Dues track labour, insurance and
+#: deferred reserves rather than general prices and have historically run at or
+#: above inflation, so this is a floor rather than a forecast — the point
+#: survives any plausible value.
+DEFAULT_HOA_GROWTH = DEFAULT_RENT_GROWTH
+
+#: Horizon for the "what will dues be by then" figure. Chosen to land inside a
+#: typical mortgage term while being far enough out that compounding is
+#: visible, and because it is roughly when a mid-career buyer's income stops.
+HOA_PROJECTION_YEARS = 20
+
 
 def monthly_payment(principal: float, annual_rate: float, years: int) -> float:
     """Standard amortising payment."""
@@ -192,6 +221,74 @@ def cost_of_owning(p: dict, years: int, *, investment_return: float,
     }
 
 
+@dataclass
+class HOAEquivalence:
+    """Dues expressed as the mortgage and the price they are equivalent to.
+
+    An HOA is **not a substitute for maintenance. It is a substitute for
+    mortgage.** Maintenance is lumpy, deferrable and partly discretionary;
+    dues are fixed, unavoidable and perpetual. That makes them debt service in
+    everything but name, and converting them to price-equivalence is the only
+    way to compare a property that carries them against one that does not.
+    """
+    monthly_dues: float
+    annual_dues: float
+    rate: float
+    term: int
+    ltv: float
+    #: Dues divided by the annual payment on one dollar of loan.
+    loan_equivalent: float
+    #: The loan-equivalent grossed up by the LTV actually being used.
+    price_equivalent: float
+    share_of_price: float
+    comparable_price: float
+    projected_monthly: float
+    projection_years: int
+
+    @property
+    def material(self) -> bool:
+        return self.share_of_price >= HOA_MATERIAL_PRICE_SHARE
+
+
+def hoa_equivalence(p: dict, *,
+                    hoa_growth: float = DEFAULT_HOA_GROWTH,
+                    projection_years: int = HOA_PROJECTION_YEARS
+                    ) -> HOAEquivalence | None:
+    """What the dues are worth in loan and in price. None if not computable.
+
+    Both the rate and the loan-to-value come from the facts. Hardcoding a rate
+    would put a market assumption inside a conversion that should only reflect
+    the deal in front of the household.
+    """
+    monthly = float(p.get("hoa_monthly") or 0)
+    price = float(p.get("price") or 0)
+    rate = float(p.get("mortgage_rate") or 0)
+    term = int(p.get("term_years") or 30)
+    down = float(p.get("down_payment") or 0)
+    if monthly <= 0 or price <= 0 or rate <= 0:
+        return None
+    ltv = max(0.0, price - down) / price
+    if ltv <= 0:
+        # An all-cash purchase has no mortgage to be equivalent to. The dues
+        # are still real; there is simply no conversion to make.
+        return None
+
+    annual_pi_per_dollar = monthly_payment(1.0, rate, term) * 12
+    if annual_pi_per_dollar <= 0:                # pragma: no cover - defensive
+        return None
+    annual = monthly * 12
+    loan_equiv = annual / annual_pi_per_dollar
+    price_equiv = loan_equiv / ltv
+    return HOAEquivalence(
+        monthly_dues=monthly, annual_dues=annual, rate=rate, term=term,
+        ltv=ltv, loan_equivalent=loan_equiv, price_equivalent=price_equiv,
+        share_of_price=price_equiv / price,
+        comparable_price=price + price_equiv,
+        projected_monthly=monthly * (1 + hoa_growth) ** projection_years,
+        projection_years=projection_years,
+    )
+
+
 def cost_of_renting(monthly_rent: float, years: int, *,
                     rent_growth: float,
                     investment_return: float = DEFAULT_INVESTMENT_RETURN) -> float:
@@ -290,6 +387,41 @@ def compare(
         "line is why short holding periods lose, and it does not shrink if the "
         "market moves against you."
     )
+
+    eq = hoa_equivalence(purchase, hoa_growth=rent_growth)
+    if eq is not None and eq.material:
+        c.findings.append(
+            f"**The HOA is not a substitute for maintenance — it is a "
+            f"substitute for mortgage.** {_money(eq.monthly_dues)}/month is "
+            f"fixed, unavoidable and perpetual, which makes it debt service "
+            f"in everything but name. At {eq.rate:.2%} over {eq.term} years "
+            f"and the {eq.ltv:.0%} loan-to-value actually being used, "
+            f"{_money(eq.annual_dues)} a year carries "
+            f"**{_money(eq.loan_equivalent)} of loan**, which at that "
+            f"loan-to-value is **{_money(eq.price_equivalent)} of price** — "
+            f"{eq.share_of_price:.0%} of the asking price. A "
+            f"{_money(own['price'])} property with these dues costs what a "
+            f"**{_money(eq.comparable_price)}** property without them costs. "
+            "That is the comparison to make against listings that carry no "
+            "dues, and no amount of reading the outflows table surfaces it."
+        )
+        c.findings.append(
+            f"**And it is worse debt than a mortgage.** Principal and interest "
+            f"are fixed and gone at the end of the term; dues inflate and "
+            f"never end. At {rent_growth:.0%} growth, "
+            f"{_money(eq.monthly_dues)}/month is about "
+            f"**{_money(eq.projected_monthly)}/month in "
+            f"{eq.projection_years} years** — typically arriving around the "
+            "time earned income stops. The association also sets the number, "
+            "and a special assessment is not optional."
+        )
+        c.findings.append(
+            f"Over {years} years the dues total {_money(c.hoa_paid)}"
+            + (", the largest avoidable line here after interest."
+               if c.hoa_paid > c.transaction_costs else ".")
+            + " Unlike maintenance, none of it is deferrable, and unlike "
+              "principal, none of it comes back on sale."
+        )
     return c
 
 

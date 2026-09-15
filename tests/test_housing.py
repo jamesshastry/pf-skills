@@ -236,3 +236,120 @@ def test_refinance_is_always_framed_as_a_breakeven_not_a_rate_comparison():
     joined = " ".join(r.findings)
     assert "break-even calculation, not a rate comparison" in joined
     assert "increasing total interest" in joined
+
+
+# ── HOA as price, not as a line item ────────────────────────────────────────
+#
+# Dues sat in the outflows table with no comment while the findings discussed
+# transaction costs a third their size. The point the table cannot make is
+# that an HOA is not a substitute for maintenance — it is a substitute for
+# mortgage — and converting it to price-equivalence is what makes a property
+# that carries dues comparable to one that does not.
+
+
+def hoa(monthly, **over):
+    return {**PURCHASE, "hoa_monthly": monthly, **over}
+
+
+def test_zero_dues_produce_no_equivalence():
+    assert H.hoa_equivalence(hoa(0)) is None
+
+
+def test_the_worked_example_converts_as_documented():
+    """Pinned against the hand-computed case: $753/month at 6.5% over 30
+    years at 80% LTV is about $119,131 of loan and $148,914 of price."""
+    eq = H.hoa_equivalence({"price": 1_380_000, "down_payment": 276_000,
+                            "mortgage_rate": 0.065, "term_years": 30,
+                            "hoa_monthly": 753})
+    assert eq.loan_equivalent == pytest.approx(119_131, abs=50)
+    assert eq.price_equivalent == pytest.approx(148_914, abs=50)
+    assert eq.comparable_price == pytest.approx(1_528_914, abs=50)
+
+
+def test_the_rate_comes_from_the_facts_not_a_constant():
+    """A higher rate displaces less loan for the same dues. If this ever stops
+    varying, a market assumption has been hardcoded into the conversion."""
+    low = H.hoa_equivalence(hoa(400, mortgage_rate=0.04))
+    high = H.hoa_equivalence(hoa(400, mortgage_rate=0.09))
+    assert low.loan_equivalent > high.loan_equivalent
+
+
+def test_the_ltv_comes_from_the_facts_not_a_constant():
+    """A larger deposit means the same loan-equivalent grosses up to a larger
+    price-equivalent, because less of the price is being financed."""
+    eighty = H.hoa_equivalence(hoa(400, down_payment=104_000))    # 80% LTV
+    fifty = H.hoa_equivalence(hoa(400, down_payment=260_000))     # 50% LTV
+    assert fifty.ltv == pytest.approx(0.50)
+    assert fifty.price_equivalent > eighty.price_equivalent
+
+
+def test_an_all_cash_purchase_has_no_mortgage_to_be_equivalent_to():
+    """The dues are still real; there is simply no conversion to make, and
+    inventing one would be worse than declining."""
+    assert H.hoa_equivalence(hoa(400, down_payment=520_000)) is None
+
+
+def test_a_zero_rate_declines_rather_than_dividing_by_zero():
+    assert H.hoa_equivalence(hoa(400, mortgage_rate=0)) is None
+
+
+def test_dues_are_projected_forward_and_do_not_end():
+    eq = H.hoa_equivalence(hoa(400), hoa_growth=0.03)
+    assert eq.projected_monthly == pytest.approx(400 * 1.03 ** 20, rel=1e-9)
+    assert eq.projected_monthly > eq.monthly_dues
+
+
+# ── the threshold ───────────────────────────────────────────────────────────
+
+def test_materiality_is_measured_against_price_not_running_cost():
+    eq = H.hoa_equivalence(hoa(420))
+    assert eq.share_of_price == pytest.approx(
+        eq.price_equivalent / 520_000, rel=1e-9)
+
+
+def test_the_boundary(monkeypatch):
+    """Either side of HOA_MATERIAL_PRICE_SHARE, found by search rather than
+    asserted, so the test survives a change to the constant."""
+    lo, hi = 1, 5_000
+    for _ in range(40):                       # bisect on the dues
+        mid = (lo + hi) / 2
+        if H.hoa_equivalence(hoa(mid)).material:
+            hi = mid
+        else:
+            lo = mid
+    assert not H.hoa_equivalence(hoa(lo)).material
+    assert H.hoa_equivalence(hoa(hi)).material
+    assert H.hoa_equivalence(hoa(hi)).share_of_price == pytest.approx(
+        H.HOA_MATERIAL_PRICE_SHARE, abs=1e-3)
+
+
+def test_immaterial_dues_produce_no_finding():
+    c = H.compare(hoa(25), monthly_rent=2_400, years=7)
+    assert not any("substitute for mortgage" in f for f in c.findings)
+
+
+def test_zero_dues_produce_no_finding():
+    c = H.compare(hoa(0), monthly_rent=2_400, years=7)
+    assert not any("HOA" in f for f in c.findings)
+
+
+def test_material_dues_produce_the_finding_and_both_halves_of_it():
+    c = H.compare(hoa(420), monthly_rent=2_400, years=7)
+    text = " ".join(c.findings)
+    assert "substitute for mortgage" in text      # the price-equivalence half
+    assert "worse debt than a mortgage" in text   # the never-ends half
+    assert "of price" in text
+
+
+def test_the_finding_names_the_comparable_price():
+    c = H.compare(hoa(420), monthly_rent=2_400, years=7)
+    eq = H.hoa_equivalence(hoa(420))
+    assert any(f"{eq.comparable_price:,.0f}" in f for f in c.findings)
+
+
+def test_the_arithmetic_is_unchanged_by_the_finding():
+    """The finding is a reporting change. Totals must not move."""
+    before = H.compare(hoa(0), monthly_rent=2_400, years=7)
+    after = H.compare(hoa(0), monthly_rent=2_400, years=7)
+    assert before.total_cost_of_owning == after.total_cost_of_owning
+    assert before.breakeven_years == after.breakeven_years

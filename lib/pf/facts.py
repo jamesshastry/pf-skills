@@ -53,12 +53,88 @@ class Preflight:
         return not self.missing
 
 
+def _duplicate_key_error(key: Any, first_line: int, second_line: int) -> FactsError:
+    """The message this defect deserves.
+
+    "duplicate key found" sends someone hunting through a 600-line file, so
+    both locations are named. The explanation is here rather than in a comment
+    because the person reading it is mid-incident and will not go looking.
+    """
+    return FactsError(
+        f"duplicate key `{key}` in the facts file.\n"
+        f"  first defined at line {first_line}\n"
+        f"  defined again at line {second_line}\n"
+        "\n"
+        "YAML resolves this silently: the second block wins and the first is "
+        "discarded. Nothing downstream can tell, so every skill produces a "
+        "confident, correctly formatted report about whichever half survived. "
+        "This is refused rather than resolved because there is no safe guess "
+        "about which one you meant.\n"
+        "\n"
+        "Merge the two blocks into one. Do not simply delete the later block — "
+        "it is the one that has been in effect."
+    )
+
+
+def _strict_yaml_loader():
+    """A SafeLoader that refuses duplicate mapping keys.
+
+    Built here rather than at import time because PyYAML is an optional
+    dependency — a `.json` facts file must work without it.
+
+    `construct_mapping` is called once per mapping node, so overriding it
+    catches duplicates at the top level, nested, and inside list items,
+    without the caller needing to know which.
+    """
+    import yaml  # noqa: PLC0415
+
+    class StrictLoader(yaml.SafeLoader):
+        def construct_mapping(self, node, deep=False):
+            seen: dict[Any, int] = {}
+            for key_node, _value_node in node.value:
+                key = self.construct_object(key_node, deep=deep)
+                try:
+                    hash(key)
+                except TypeError:          # an unhashable key is its own bug
+                    continue
+                line = key_node.start_mark.line + 1   # marks are 0-based
+                if key in seen:
+                    raise _duplicate_key_error(key, seen[key], line)
+                seen[key] = line
+            return super().construct_mapping(node, deep=deep)
+
+    return StrictLoader
+
+
+def _json_no_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """The same guard for JSON, which also keeps the last of a duplicate pair.
+
+    JSON carries no line numbers through `object_pairs_hook`, so the message
+    is necessarily weaker — but silently discarding half a file is the same
+    defect whichever syntax it arrives in.
+    """
+    out: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in out:
+            raise FactsError(
+                f"duplicate key `{key}` in the facts file.\n"
+                "JSON resolves this silently — the later value wins and the "
+                "earlier one is discarded, so a skill reports confidently on "
+                "half the data. Merge the two rather than deleting one."
+            )
+        out[key] = value
+    return out
+
+
 def load(path: str | Path) -> dict[str, Any]:
-    """Read a facts file. YAML if PyYAML is installed; JSON always."""
+    """Read a facts file. YAML if PyYAML is installed; JSON always.
+
+    Duplicate keys are an error, not a resolution. See `_duplicate_key_error`.
+    """
     p = Path(path)
     text = p.read_text(encoding="utf-8")
     if p.suffix.lower() == ".json":
-        data = json.loads(text)
+        data = json.loads(text, object_pairs_hook=_json_no_duplicates)
     else:
         try:
             import yaml  # noqa: PLC0415
@@ -68,7 +144,12 @@ def load(path: str | Path) -> dict[str, Any]:
                 "  pip install pyyaml     (or run the skill with: uv run)\n"
                 "A .json facts file works with no dependencies."
             ) from exc
-        data = yaml.safe_load(text)
+        try:
+            data = yaml.load(text, Loader=_strict_yaml_loader())  # noqa: S506
+        except yaml.YAMLError as exc:
+            if isinstance(exc, FactsError):   # pragma: no cover - defensive
+                raise
+            raise FactsError(f"{p} is not valid YAML: {exc}") from exc
     if not isinstance(data, dict):
         raise FactsError(f"{p} did not parse to a mapping.")
     check_version(data)
