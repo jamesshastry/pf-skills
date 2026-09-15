@@ -62,20 +62,20 @@ answer.
 | 5a · Maintenance | `reference-data-refresh` | ✅ shipped |
 | 5b · Maintenance *(cross-cutting)* | `conflict-check` | ✅ shipped |
 | 5c · Onboarding *(cross-cutting)* | `document-intake` | ✅ shipped |
-| 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped |
+| 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped — closes `REVIEW.md` A1 |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |
 | 8 · Housing | `rent-vs-buy` · `mortgage-review` | ✅ shipped |
 | 9 · Education | `education-funding` | ✅ shipped |
-| 10 · Cross-border planning | `roth-portability-check` · `geo-arbitrage-model` · `cross-border-healthcare` | ✅ shipped |
-| 11 · Expat tax filing | `feie-vs-ftc` · `foreign-presence-tests` · `state-domicile-exit` · `cfc-gilti-screen` | ✅ shipped |
-| 12 · Offshore assets & pensions | `foreign-reporting-audit` · `pfic-divest-or-comply` · `foreign-pension-classification` | ✅ shipped |
-| 13 · Owner-operator business | `entity-structure-comparison` · `solo-retirement-plan-choice` · `depreciation-election` | ✅ shipped |
-| 14 · Portfolio policy | `asset-allocation-review` · `rebalancing-rules` · `wash-sale-policy` | ✅ shipped |
-| 15 · Charitable giving | `charitable-giving-strategy` | ✅ shipped |
-| 16 · Healthcare & aging | `aca-subsidy-optimization` · `medicare-enrollment-timing` · `long-term-care-funding` | ✅ shipped |
-| 17 · Life transitions | `windfall-management` · `marriage-finance-merger` · `divorce-asset-split` | ✅ shipped |
-| 18 · Real estate investing | `passive-loss-eligibility` · `rental-deal-underwriting` · `1031-exchange-modeling` · `cost-segregation-screen` | ✅ shipped |
+| 10 · Cross-border planning | ~~`roth-portability-check`~~ ✅ · ~~`geo-arbitrage-model`~~ ✅ · ~~`cross-border-healthcare`~~ ✅ | ✅ shipped |
+| 11 · Expat tax filing | ~~`feie-vs-ftc`~~ ✅ · ~~`foreign-presence-tests`~~ ✅ · ~~`state-domicile-exit`~~ ✅ · ~~`cfc-gilti-screen`~~ ✅ | ✅ shipped |
+| 12 · Offshore assets & pensions | ~~`foreign-reporting-audit`~~ ✅ · ~~`pfic-divest-or-comply`~~ ✅ · ~~`foreign-pension-classification`~~ ✅ | ✅ shipped |
+| 13 · Owner-operator business | ~~`entity-structure-comparison`~~ ✅ · ~~`solo-retirement-plan-choice`~~ ✅ · ~~`depreciation-election`~~ ✅ | ✅ shipped |
+| 14 · Portfolio policy | ~~`asset-allocation-review`~~ ✅ · ~~`rebalancing-rules`~~ ✅ · ~~`wash-sale-policy`~~ ✅ | ✅ shipped |
+| 15 · Charitable giving | ~~`charitable-giving-strategy`~~ ✅ | ✅ shipped |
+| 16 · Healthcare & aging | ~~`aca-subsidy-optimization`~~ ✅ · ~~`medicare-enrollment-timing`~~ ✅ · ~~`long-term-care-funding`~~ ✅ | ✅ shipped |
+| 17 · Life transitions | ~~`windfall-management`~~ ✅ · ~~`marriage-finance-merger`~~ ✅ · ~~`divorce-asset-split`~~ ✅ | ✅ shipped |
+| 18 · Real estate investing | ~~`passive-loss-eligibility`~~ ✅ · ~~`rental-deal-underwriting`~~ ✅ · ~~`1031-exchange-modeling`~~ ✅ · ~~`cost-segregation-screen`~~ ✅ | ✅ shipped — the gate runs first |
 | — · Multinational corporate tax | transfer pricing · DEMPE · IP boxes · Pillar Two | **recommended against — see below** |
 
 Clusters ship whole. A cluster is done when every skill in it runs, its schema extension is
