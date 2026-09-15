@@ -64,7 +64,7 @@ answer.
 | 5c · Onboarding *(cross-cutting)* | `document-intake` | planned |
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
-| 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | planned |
+| 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |
 | 8 · Housing | `rent-vs-buy` · `mortgage-review` | planned |
 | 9 · Education | `education-funding` | planned |
 | 10 · Cross-border planning | `roth-portability-check` · `geo-arbitrage-model` · `cross-border-healthcare` | planned |

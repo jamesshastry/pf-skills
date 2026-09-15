@@ -31,6 +31,10 @@ that run entirely on your own machine against your own data.
 | `debt-payoff-priority` | Avalanche vs snowball with the difference priced, after tax |
 | `employer-concentration-risk` | Income and assets as one correlated bet, and the joint scenario |
 | `equity-comp-review` | The vesting cliff an annual equity figure hides |
+| `retirement-readiness` | When retirement is affordable, as a range across assumptions |
+| `withdrawal-sequencing` | Which account to spend first, and why not strictly |
+| `roth-conversion-window` | The low-tax years between work and RMDs |
+| `social-security-timing` | Claiming age as longevity insurance, and the survivor decision |
 | `citizenship-status-review` | Citizenship, visa status and domicile — and which other conclusions depend on them |
 
 Run them in that order. Each of the first two checks whether the underlying
