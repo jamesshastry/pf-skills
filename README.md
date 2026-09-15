@@ -56,6 +56,9 @@ that run entirely on your own machine against your own data.
 | `rebalancing-rules` | Bands versus calendar, decided once, and how much of the correction needs a taxable sale |
 | `wash-sale-policy` | Which securities are unbuyable, in which accounts — an IRA purchase deletes the loss outright |
 | `charitable-giving-strategy` | Give appreciated stock in kind, bunch into a DAF, or run a QCD — and which AGI limit binds |
+| `aca-subsidy-optimization` | The pre-Medicare gap, the premium tax credit against MAGI as a share of FPL, and the taper as a marginal rate |
+| `medicare-enrollment-timing` | Which enrolment window applies, what a late Part B costs permanently, and the two-year IRMAA lookback |
+| `long-term-care-funding` | A multi-year care episode against investable assets, and whether the surviving spouse's retirement survives it |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`

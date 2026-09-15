@@ -73,7 +73,7 @@ answer.
 | 13 · Owner-operator business | `entity-structure-comparison` · `solo-retirement-plan-choice` · `depreciation-election` | ✅ shipped |
 | 14 · Portfolio policy | `asset-allocation-review` · `rebalancing-rules` · `wash-sale-policy` | ✅ shipped |
 | 15 · Charitable giving | `charitable-giving-strategy` | ✅ shipped |
-| 16 · Healthcare & aging | `aca-subsidy-optimization` · `medicare-enrollment-timing` · `long-term-care-funding` | planned |
+| 16 · Healthcare & aging | `aca-subsidy-optimization` · `medicare-enrollment-timing` · `long-term-care-funding` | ✅ shipped |
 | 17 · Life transitions | `windfall-management` · `marriage-finance-merger` · `divorce-asset-split` | planned |
 | 18 · Real estate investing | `passive-loss-eligibility` · `rental-deal-underwriting` · `1031-exchange-modeling` · `cost-segregation-screen` | planned |
 | — · Multinational corporate tax | transfer pricing · DEMPE · IP boxes · Pillar Two | **recommended against — see below** |
