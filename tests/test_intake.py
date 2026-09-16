@@ -146,3 +146,42 @@ def test_off_paper_fields_name_the_peak_balance_problem():
     text = " ".join(why for _, why in I.OFF_PAPER)
     assert "PEAK" in text or "peak" in text
     assert "year-end" in text
+
+
+# ── the facts-free set, and why it is deliberately duplicated ───────────────
+
+
+def test_facts_free_matches_the_harness_copy():
+    """`skill_harness.py` keeps its own copy of this set. That is deliberate.
+
+    The harness reads runner source rather than importing it, so the contract
+    tests still work on a runner that is broken — importing `pf.intake` there
+    would give the harness the very dependency it avoids having.
+
+    So the two definitions cannot be collapsed, and this asserts they agree
+    instead. Drift here would mean a skill silently skipped by one consumer
+    and checked by the other.
+    """
+    import skill_harness as H
+    assert set(I.FACTS_FREE) == set(H.FACTS_FREE)
+
+
+def test_skill_requirements_reads_each_skill_md():
+    reqs = I.skill_requirements(Path(__file__).resolve().parents[1] / "skills")
+    assert reqs, "no skills found"
+    # Every household skill declares at least one input; the facts-free ones
+    # are skipped, so nothing in the result should be empty.
+    assert all(paths for paths in reqs.values()), \
+        [n for n, p in reqs.items() if not p]
+    # Most entries are dotted schema paths; a few are whole top-level
+    # sections (`equity_comp`, `debts`), which is legitimate — the skill needs
+    # the section, not one field in it.
+    flat = {p for paths in reqs.values() for p in paths}
+    assert flat, "no requirements parsed"
+    assert not [p for p in flat if p != p.strip() or " " in p], \
+        "requirements should parse clean, with no stray whitespace"
+
+
+def test_skill_requirements_skips_the_facts_free_skills():
+    reqs = I.skill_requirements(Path(__file__).resolve().parents[1] / "skills")
+    assert not (set(reqs) & set(I.FACTS_FREE))

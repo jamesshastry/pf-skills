@@ -186,6 +186,44 @@ def suggested_documents(report: IntakeReport) -> list[tuple[str, tuple[str, ...]
     return out
 
 
+#: Skills that take no `--facts`, so they declare no requirements to run
+#: against. `reference-data-refresh` reports on the repository's own tables
+#: rather than a household; `document-intake` runs before a facts file
+#: exists. Every consumer of the skill directory skips the same set — it
+#: lives here rather than in each runner so the set cannot drift.
+FACTS_FREE = frozenset({"reference-data-refresh", "document-intake"})
+
+
+def skill_requirements(skills_dir, *, skip=FACTS_FREE) -> dict[str, list[str]]:
+    """Each skill's declared inputs, read from its own SKILL.md.
+
+    Read rather than restated: a second copy of this mapping would drift
+    from the runners within a release, and the contract tests already
+    guarantee that `requires` matches each runner's REQUIRED.
+    """
+    from pathlib import Path
+    out: dict[str, list[str]] = {}
+    for d in sorted(Path(skills_dir).iterdir()):
+        if not d.is_dir() or d.name in skip:
+            continue
+        md = d / "SKILL.md"
+        if not md.exists():
+            continue
+        paths, inside = [], False
+        for line in md.read_text(encoding="utf-8").splitlines():
+            if line.strip() == "requires:":
+                inside = True
+                continue
+            if inside:
+                s = line.strip()
+                if s.startswith("- "):
+                    paths.append(s[2:].split("#")[0].strip())
+                elif s and not s.startswith("#"):
+                    break
+        out[d.name] = paths
+    return out
+
+
 _SAFE_NAME = re.compile(r"^[\w\-. ]+$")
 
 
