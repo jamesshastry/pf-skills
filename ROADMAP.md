@@ -82,7 +82,9 @@ answer.
 Clusters ship whole. A cluster is done when every skill in it runs, its schema extension is
 documented, its tests pass, and it has been validated against real data at least once.
 
-**All eight planned clusters are shipped, plus maintenance and a ninth added in use.** What follows is maintenance and whatever the next
+**All eighteen clusters are shipped, plus the cross-cutting skills** (`conflict-check`,
+`document-intake`, `household-review`, `citizenship-status-review`) **and maintenance.**
+What follows is maintenance and whatever the next
 real gap turns out to be — see the open questions at the bottom. Resist adding clusters for
 symmetry; the filter at the top of this file still applies.
 
@@ -263,10 +265,11 @@ Not skills. Built when a skill needs them, extracted at rule-of-three.
 
 ---
 
-## Proposed — cluster 10, cross-border retirement
+## Cluster 10 — cross-border retirement *(shipped)*
 
-Requested 2026-09-14. **Not started; the skill list below is provisional and the user is adding
-to it.** Recorded now so the design constraints are settled before any code exists.
+Requested 2026-09-14. All three skills below are built; the decomposition and the country-table
+constraint stood as written. The "open before building" answers are recorded at the bottom —
+both were settled by building.
 
 ### Domain 1 of the request is already built
 
@@ -325,16 +328,20 @@ compute the comparison rather than restate the background.
   The case that drove it is a US tax resident by substantial presence who is **neither a citizen
   nor a lawful permanent resident** — a combination that changes more than it looks, and one the
   schema could not previously express at all. See `REVIEW.md` A1.
-- Whether immigration status is its own skill or a section of `foreign-reporting-audit`. It is
-  largely a legal question rather than an arithmetic one, which argues for the latter.
-- Whether `geo-arbitrage-model` extends `retirement-readiness` or stands alone. It reuses the
-  same projection machinery.
+- ~~Whether immigration status is its own skill or a section of `foreign-reporting-audit`.~~
+  **Its own skill: `citizenship-status-review`** (closes `REVIEW.md` A1). The legal-question
+  argument lost to a wider finding — the premise affected every shipped skill, so it needed a
+  skill-shaped audit, not a section.
+- ~~Whether `geo-arbitrage-model` extends `retirement-readiness` or stands alone.~~ **Standalone
+  skill that imports retirement's machinery** (`geo-arbitrage-model` calls into `lib/pf/retirement.py`
+  rather than restating projections).
 
 ---
 
-## Proposed — cluster 11, expat tax filing
+## Cluster 11 — expat tax filing *(shipped, with the caveats below standing)*
 
-Requested 2026-09-14, as a second brief. **Not started.**
+Requested 2026-09-14, as a second brief. All five skills are built with one owner per topic
+as resolved here.
 
 ### It is a different activity from cluster 10, and the split matters
 
@@ -376,17 +383,15 @@ households where it matters. That is the skill's reason to exist.
 
 ### What this needs that does not exist yet
 
-**Federal bracket tables in `limits.py`.** Today that module holds contribution limits. A
-FEIE-versus-FTC comparison needs marginal brackets, the standard deduction and the
-inflation-adjusted FEIE cap, all year-specific. That is a significant expansion of the
-highest-risk table in the repository, and it raises the cost of those entries still reading
-`verified_on: unverified`.
+**Federal bracket tables did not go into `limits.py`.** The comparison instead takes
+brackets, the standard deduction and the FEIE cap as facts-file assumptions — still
+placeholders in the example — rather than expanding the highest-risk table in the
+repository. Cheaper, and it keeps unverified rates out of versioned code.
 
-**Cluster 11 has no validation case.** Every other cluster was checked against real figures at
-least once — the rule at the top of this file. This one could not be: the validation set has no
-foreign earned income and no foreign entity. (`REVIEW.md` A2 records that the "no foreign
-accounts" half of that sentence was an assumption, and a wrong one.) Cluster 11 would
-be the first to ship unvalidated, and that should be stated on it rather than discovered later.
+**Cluster 11 shipped without a validation case.** Every other cluster was checked against
+real figures at least once — the rule at the top of this file. This one could not be: the
+validation set has no foreign earned income and no foreign entity. Stated here rather than
+discovered later; it stands until a household with foreign income validates it.
 
 ### What to refuse
 
@@ -407,16 +412,16 @@ or EA. That is a weaker output than the rest of the repository and it is the cor
 
 Cluster 10 before cluster 11. Cluster 10 is live for this household now — the India question is
 real and the retirement-date interaction is unpriced. Cluster 11 only becomes relevant if they
-actually move and have foreign income or accounts, and it would ship without a validation case
-until then.
+actually move and have foreign income or accounts — and it shipped without a validation case,
+as flagged above, until a household with foreign income validates it.
 
 ---
 
-## Proposed — cluster 12, offshore assets & pensions
+## Cluster 12 — offshore assets & pensions *(shipped)*
 
-Requested 2026-09-14, as a third brief. **Not started.** It splits PFIC and reporting out of
-cluster 11, because the third brief makes PFIC too large to be one check inside a threshold
-audit.
+Requested 2026-09-14, as a third brief. PFIC and reporting split out of cluster 11 as
+resolved here, because the third brief makes PFIC too large to be one check inside a
+threshold audit.
 
 | Skill | The decision it answers |
 |---|---|
@@ -510,7 +515,9 @@ keeps catching.
 **Country attributes, not a skill.** Territorial versus worldwide taxation, digital-nomad visa
 terms, and totalization agreements are *columns on the cluster 10 country table*, consumed by
 several skills. Making them a skill of their own would produce a report nobody has a decision
-to make about.
+to make about. As built: worldwide-versus-territorial is a column, totalization is answered
+through `status.py` and consumed by the cross-border skills, and visa terms stayed prose —
+no skill prices a visa outcome, so there is nothing for a column to decide.
 
 The brief's "perpetual traveler myth" section is framing rather than a decision — it belongs in
 the `foreign-presence-tests` SKILL.md as the thing to say, not as its own skill. For a US
@@ -519,7 +526,7 @@ sleep.
 
 ---
 
-## Proposed — cluster 13, owner-operator business
+## Cluster 13 — owner-operator business *(shipped)*
 
 Requested 2026-09-14, as a sixth brief, and **domestic** rather than cross-border.
 
@@ -618,11 +625,11 @@ household finance library.
 
 ---
 
-## Proposed — clusters 14 to 18
+## Clusters 14 to 18 *(all shipped)*
 
-Five clusters proposed 2026-09-14 in one message. Recorded in full, with an honest assessment of
-each, because **the roadmap's own instruction is to resist adding clusters for symmetry** and
-five arriving at once is exactly that pressure. They are not equal.
+Five clusters proposed 2026-09-14 in one message, all since built. The assessments below are
+kept as written — including the reservations, which explain the order they shipped in and
+the shape they took.
 
 ### 14 · Portfolio policy — *with one item moved*
 
@@ -675,17 +682,17 @@ two years, so conversions at 63 raise premiums at 65. Late-enrolment penalties a
 `long-term-care-funding` is a real gap in the shipped set — the largest uninsured tail risk most
 households carry, and the one the insurance cluster does not touch.
 
-### 17 · Life transitions — *one now, two later*
+### 17 · Life transitions *(shipped — all three)*
 
-`windfall-management` is worth building: the decision is mostly *do nothing for ninety days*, and
+`windfall-management` was worth building: the decision is mostly *do nothing for ninety days*, and
 the arithmetic is the tax and beneficiary restructuring that follows. One cross-border note
 belongs in it — **a gift or inheritance above $100,000 from a foreign person triggers Form 3520**,
 which is a reporting obligation with real penalties and no tax attached, and which an
 India-connected household is meaningfully likely to encounter.
 
-`marriage-finance-merger` and `divorce-asset-split` are later. Divorce in particular is
-substantially legal rather than arithmetic, and a skill that reads as guidance during a divorce
-carries a different risk profile from one that reads as guidance about car insurance.
+`marriage-finance-merger` and `divorce-asset-split` shipped after it. The divorce caveat stands:
+it is substantially legal rather than arithmetic, and a skill that reads as guidance during a
+divorce carries a different risk profile from one that reads as guidance about car insurance.
 
 ### 18 · Real estate investing — *strong content, wrong household*
 
@@ -715,10 +722,9 @@ producing an audit-defensible allocation. The skill establishes whether the econ
 justify commissioning one — property basis, holding period, marginal rate, and whether the
 resulting losses can be used at all, which loops back to the gate.
 
-**Still last.** All four are genuinely good skills and none applies to a household that rents its
+**Shipped last, as predicted.** All four are genuinely good skills and none applies to a household that rents its
 home and owns no investment property. This serves a different investor persona from every other
-cluster, and the honest trigger for building it is someone with rental property actually using the
-library — not the quality of the brief.
+cluster — kept here as the reason it shipped last, not as an argument against what is built.
 
 ---
 
@@ -787,13 +793,16 @@ Two of its findings concern **already-shipped work** and outrank everything prop
 
 And one that argues directly against the size of this roadmap:
 
-- **A3** — six reference tables now assert **50 values that nobody has verified**.
+- **A3** — the reference tables assert **some two hundred values that nobody has verified**
+  (201 across 21 tables at last count — the figure moves, which is the thing to watch).
   `reference-data-refresh --checklist` generates the list to check them against; until someone
   does, every figure derived from them is provisional. This is the only finding here that code
   cannot close.
-- **A6** — `roth-conversion-window` (shipped) and `aca-subsidy-optimization` (proposed) will give
-  the same household opposite instructions for the same five years, and nothing in the design
-  would catch it. Each new skill adds edges, not just nodes.
+- **A6** — `roth-conversion-window` and `aca-subsidy-optimization` give
+  the same household opposite instructions for the same five years. `conflict-check` now
+  registers that contradiction as data and `household-review` surfaces it live — the edge is
+  tracked. Each new skill still adds edges, not just nodes, so registering its conflicts is
+  part of shipping it.
 
 ---
 

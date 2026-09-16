@@ -173,40 +173,43 @@ in-plan-conversion route.
 
 Minor, caught before building, and included here because it is the third instance this cycle of
 a new brief proposing something already shipped. That is a **discoverability** problem: the
-briefs are written without reading `README.md`, and at 25 skills that is understandable. It
+briefs are written without reading `README.md`, and at pushing sixty skills that is understandable. It
 argues for a one-line index of what each skill already covers, kept where a brief-writer would
 find it.
 
 ---
 
-## A6 — Two skills are proposed that would actively contradict each other
+## A6 — Two shipped skills actively contradict each other
 
 `roth-conversion-window` (shipped) tells a household to deliberately raise taxable income in
 early retirement, to fill low brackets before RMDs.
 
-`aca-subsidy-optimization` (proposed) will tell the same household to deliberately *suppress*
+`aca-subsidy-optimization` (shipped) tells the same household to deliberately *suppress*
 modified AGI in exactly those years, because premium subsidies taper and there is a cliff.
 
-`medicare-enrollment-timing` (proposed) adds a third pull: IRMAA looks back two years, so
+`medicare-enrollment-timing` (shipped) adds a third pull: IRMAA looks back two years, so
 conversions at 63 raise premiums at 65.
 
 For any household that reaches its retirement target before **65**, this is not hypothetical:
 Medicare starts at 65, so the conversion window and the subsidy years are *the same years*. The
 earlier the target is reached, the wider the overlap.
 
-**Nothing in the current design would catch this.** Each skill is individually correct.
-`education-funding` is the only skill that reaches into another's logic, and it was treated as an
-exception. The roadmap's own conclusion-consistency idea — a validator comparing peer items
-resolved by different rules — was proposed after D13 and never built.
+**The catching mechanism is now built, and this finding tracks whether it is used.** Each skill is individually correct.
+`conflict-check` registers the contradiction as data rather than prose, and `household-review`
+surfaces live ones in the ranked worklist. What remains is discipline, not design: a new skill
+that contradicts a shipped one has to register the conflict, or the edge goes untracked again.
+The roadmap's fuller conclusion-consistency idea — a validator comparing peer items
+resolved by different rules — was proposed after D13 and never built; the registry is the
+cheaper version that shipped.
 
 **This is the strongest argument in this document for building fewer skills.** Each new one adds
-edges, not just nodes, and nothing currently tracks the edges.
+edges, not just nodes.
 
 ---
 
 ## A7 — Nothing here has been used by anyone
 
-Twenty-five skills, 1,086 tests, one household, zero users. Every design decision has been
+Fifty-nine skills, on the order of three thousand tests, one household, zero users. Every design decision has been
 validated against a single set of facts and a single reader.
 
 Several patterns that feel settled may simply be untested: reports are long, they are markdown to
@@ -234,15 +237,15 @@ the point.
 
 ---
 
-## A9 — At fifty skills the "not advice" framing deserves a fresh look
+## A9 — At pushing sixty skills the "not advice" framing deserves a fresh look
 
-Twenty-five skills covering insurance and savings reads as analysis tooling. Fifty covering tax
+Twenty-five skills covering insurance and savings reads as analysis tooling. Sixty covering tax
 elections, estate structure, entity choice, charitable strategy, Medicare timing and portfolio
 allocation reads like something else, and the distinction between *"showing a household the
 arithmetic"* and *"providing financial planning"* is not purely a matter of adding a footer.
 
-Not a legal opinion, and not a reason to stop. It is a reason to look at it deliberately at some
-point before fifty rather than after, and the honest answer may simply be that the disclaimers
+Not a legal opinion, and not a reason to stop. It is a reason to look at it deliberately — that
+"at some point" is now, at pushing sixty — and the honest answer may simply be that the disclaimers
 and the refusal-to-conclude discipline are already doing the work.
 
 ---
@@ -251,14 +254,16 @@ and the refusal-to-conclude discipline are already doing the work.
 
 In order, and it is not the order the clusters are numbered in:
 
-1. **A1 — add citizenship and domicile to the schema, and audit the shipped skills against it.**
-   Correctness in shipped work outranks any new feature.
-2. **A2 — establish whether FBAR and PFIC obligations already exist.** If Indian accounts exceed
-   the threshold, that is a live compliance matter, not a planning topic.
+1. ~~**A1 — add citizenship and domicile to the schema, and audit the shipped skills against it.**~~
+   **Done** — `citizenship-status-review` closed A1.
+2. ~~**A2 — establish whether FBAR and PFIC obligations already exist.**~~ **Done** —
+   confirmed, and `foreign-reporting-audit` tracks them.
 3. **A3 — verify the existing `limits.py` entries** before anything depends on more of them.
-4. **Then cluster 10**, which has a real validation case and a live decision behind it.
-5. **Then cluster 16**, specifically `aca-subsidy-optimization` — and build the conflict
-   detection from A6 alongside it rather than afterwards.
+   Still open, and still the only item here that no code can close.
+4. ~~**Then cluster 10**, which has a real validation case and a live decision behind it.~~ **Shipped.**
+5. ~~**Then cluster 16**, specifically `aca-subsidy-optimization` — and build the conflict
+   detection from A6 alongside it rather than afterwards.~~ **Shipped, with `conflict-check`
+   as the detection.**
 6. Everything else on evidence of use.
 
 ---
