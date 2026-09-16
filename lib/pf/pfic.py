@@ -18,10 +18,6 @@ here. The output is a comparison of the ongoing annual compliance cost (Form
 8621 per fund, per year, plus the CPA fee and the punitive rate differential)
 against the one-off cost of getting out.
 
-`quant-platform/docs/INDIA_PORTFOLIO_GUIDE.md` reaches the same conclusion for
-Indian mutual funds, with a compliance-cost table. This module quantifies what
-that guide argues qualitatively; it is not restated here.
-
 ## The §1291 interest charge, and why it is computed rather than described
 
 An excess distribution — or the entire gain on disposition — is allocated
@@ -553,10 +549,9 @@ def divest_or_comply(
         d.findings.append(
             "**No election is available on any holding, so §1291 applies by "
             "default** — and §1291 by default is the case for selling. There "
-            "is no version of holding these that gets cheaper with time. See "
-            "`quant-platform/docs/INDIA_PORTFOLIO_GUIDE.md` for the same "
-            "conclusion reached on Indian mutual funds, with an equivalent US-"
-            "domiciled wrapper for the same exposure.")
+            "is no version of holding these that gets cheaper with time. A "
+            "US-domiciled fund usually gives the same exposure without the "
+            "wrapper that causes this.")
     else:
         d.findings.append(
             "**At least one election is available**, which changes the "

@@ -55,7 +55,7 @@ Allocated pro-rata across 11 tax year(s), 10.2 years held.
 
 - **The rate differential is the whole penalty.** The same gain in a US-domiciled fund would have been long-term capital gain: $5,775 at 15%, against $20,795 under §1291 — $15,020 more for holding the same exposure through the wrong wrapper.
 
-- **No election is available on any holding, so §1291 applies by default** — and §1291 by default is the case for selling. There is no version of holding these that gets cheaper with time. See `quant-platform/docs/INDIA_PORTFOLIO_GUIDE.md` for the same conclusion reached on Indian mutual funds, with an equivalent US-domiciled wrapper for the same exposure.
+- **No election is available on any holding, so §1291 applies by default** — and §1291 by default is the case for selling. There is no version of holding these that gets cheaper with time. A US-domiciled fund usually gives the same exposure without the wrapper that causes this.
 
 - **Regime availability is unknown on at least one holding.** `null` is not `false`. Ask the fund administrator whether a PFIC Annual Information Statement is issued — one email, and the answer decides which half of this report applies.
 

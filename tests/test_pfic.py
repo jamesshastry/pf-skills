@@ -208,9 +208,17 @@ def test_no_election_available_is_the_case_for_selling():
     assert any("case for selling" in f for f in d.findings)
 
 
-def test_the_india_guide_is_pointed_at_not_restated():
+def test_the_us_domiciled_alternative_is_named():
+    """The finding must offer the way out, not only diagnose the problem.
+
+    This replaced an assertion that the output pointed at an external document
+    in an unrelated repository. The cross-reference was removed: it was a
+    broken path for anyone who cloned this, and it disclosed something about
+    the author rather than the household being analysed.
+    """
     d = P.divest_or_comply([fund()], rates=rates(), as_of=D(2021, 6, 30))
-    assert any("INDIA_PORTFOLIO_GUIDE.md" in f for f in d.findings)
+    assert any("US-domiciled" in f for f in d.findings)
+    assert not any("quant-platform" in f for f in d.findings)
 
 
 def test_form_8621_is_counted_per_fund():

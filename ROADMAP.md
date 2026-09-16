@@ -312,12 +312,11 @@ turned further toward refusal:
 The arithmetic — day counting, blended burn rates, location-adjusted portfolio targets — can be
 fully rigorous, and should carry the weight the tax content cannot.
 
-### Prior art in this workspace
+### Prior art
 
-`quant-platform/docs/INDIA_PORTFOLIO_GUIDE.md` already holds ~480 lines on PFIC treatment of
-foreign mutual funds for US persons, compliance cost, NRE vs NRO accounts, and the
-liquidate-versus-comply decision. `expat-tax-exposure` should point at it rather than restate
-it — restating derived analysis is the drift this project exists to prevent.
+PFIC treatment of foreign mutual funds for US persons is well covered elsewhere — compliance
+cost, NRE vs NRO accounts, and the liquidate-versus-comply decision. `expat-tax-exposure` should
+compute the comparison rather than restate the background.
 
 ### Open before building
 
@@ -432,10 +431,8 @@ PFIC Annual Information Statement that most non-US retail funds do not issue**, 
 marketable stock on a qualified exchange. Both are frequently unavailable, which leaves §1291 by
 default — and §1291 by default is the case for selling.
 
-`quant-platform/docs/INDIA_PORTFOLIO_GUIDE.md` already reached exactly this conclusion for Indian
-mutual funds, with a compliance-cost table. The skill should quantify the comparison the guide
-makes qualitatively — ongoing annual compliance cost and punitive rate differential against the
-one-off cost of divesting — and point at the guide rather than restate it.
+The skill's job is to **quantify** a comparison that is usually made qualitatively — ongoing
+annual compliance cost and the punitive rate differential, against the one-off cost of divesting.
 
 The regime comparison becomes an *input* to that decision, not the output.
 

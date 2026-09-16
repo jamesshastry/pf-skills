@@ -26,11 +26,6 @@ by default is the case for selling. So the regime comparison is an **input**
 here. The output is the ongoing annual compliance cost against the one-off cost
 of getting out.
 
-`quant-platform/docs/INDIA_PORTFOLIO_GUIDE.md` reaches this conclusion for
-Indian mutual funds, with a compliance-cost table and an equivalent
-US-domiciled wrapper for the same exposure. Read it alongside this; it is not
-restated here.
-
 ## The §1291 charge, and why it is computed rather than warned about
 
 An excess distribution — or the whole gain on disposition — is allocated
