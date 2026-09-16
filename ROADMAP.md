@@ -62,6 +62,7 @@ answer.
 | 5a · Maintenance | `reference-data-refresh` | ✅ shipped |
 | 5b · Maintenance *(cross-cutting)* | `conflict-check` | ✅ shipped |
 | 5c · Onboarding *(cross-cutting)* | `document-intake` | ✅ shipped |
+| 5d · Review *(cross-cutting)* | `household-review` | ✅ shipped |
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped — closes `REVIEW.md` A1 |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |

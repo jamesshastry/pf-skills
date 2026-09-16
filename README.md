@@ -72,6 +72,7 @@ that run entirely on your own machine against your own data.
 | `conflict-check` | Cross-cutting: where two skills' recommendations pull the same dollar in opposite directions |
 | `document-intake` | Onboarding: which fields are still unset, what each one unblocks, and which document answers it |
 | `reference-data-refresh` | Maintenance: when the repo's own statutory tables were last checked |
+| `household-review` | Cross-cutting: every skill's verdict re-read in-process, ranked — expiring findings, uncovered losses, priced drags, then optimizations |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`

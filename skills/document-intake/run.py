@@ -21,37 +21,16 @@ from pf import cli, intake as I  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "documents"
 SKILLS = ROOT / "skills"
-#: Skills that take no --facts, so they have no requirements to report on.
-FACTS_FREE = {"reference-data-refresh", "document-intake"}
 
 
 def requirements() -> dict[str, list[str]]:
     """Each skill's declared inputs, read from its own SKILL.md.
 
-    Read rather than restated. A second copy of this mapping would drift from
-    the runners inside one release, and the contract tests already guarantee
-    that `requires` matches each runner's REQUIRED.
+    Kept as a thin wrapper: `scripts/doctor.py` calls `mod.requirements()`.
+    The implementation lives in `lib/pf/intake.py`, shared with
+    `household-review` — one copy for every consumer of the skill directory.
     """
-    out: dict[str, list[str]] = {}
-    for d in sorted(p for p in SKILLS.iterdir() if p.is_dir()):
-        if d.name in FACTS_FREE:
-            continue
-        md = d / "SKILL.md"
-        if not md.exists():
-            continue
-        paths, inside = [], False
-        for line in md.read_text().splitlines():
-            if line.strip() == "requires:":
-                inside = True
-                continue
-            if inside:
-                s = line.strip()
-                if s.startswith("- "):
-                    paths.append(s[2:].split("#")[0].strip())
-                elif s and not s.startswith("#"):
-                    break
-        out[d.name] = paths
-    return out
+    return I.skill_requirements(SKILLS, skip=I.FACTS_FREE)
 
 
 def scan() -> list[I.Document]:
