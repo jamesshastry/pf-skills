@@ -74,6 +74,31 @@ household with young children and a non-earning spouse it is often the largest
 single driver of the number, and it is invisible in a multiple-of-income
 calculation.
 
+## Social Security is netted — year by year, not as an average
+
+Where the statement figures are on file (`social_security.survivors_monthly`),
+the report nets survivor benefits out of the capital need. The sequence is the
+whole point, so it nets each year's payable amount rather than a flat average:
+
+- a child benefit while a child qualifies, ending at 18 (19 in school);
+- a caregiver benefit only while a child is under 16 — frequently already
+  expired when people assume it applies;
+- nothing between those ending and the widow(er)'s benefit at 60;
+- a reduced widow(er)'s benefit from 60, full at the survivor's own full
+  retirement age.
+
+An average across the horizon would carry the same present value and erase the
+gap years that make the finding useful, so the report shows the phase table
+instead. Combined benefits are capped by the family maximum where one is
+recorded; where none is recorded the report says the total may overstate
+rather than silently over-crediting.
+
+**Both totals are shown.** Excluding Social Security as conservatism is a
+defensible choice, so the report gives the need before and after netting and
+lets the choice stay visible. Where no statement figures are on file, nothing
+is netted and the report says so — the un-netted need is then the whole
+answer, and the missing statement is usually its largest single omission.
+
 ## Closing
 
 Report the gap as **one number**, with the derivation beside it. Then hand off:

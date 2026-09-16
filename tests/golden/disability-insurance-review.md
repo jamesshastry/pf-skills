@@ -10,6 +10,8 @@
 
 Cover is compared **after tax**, because a stated benefit is not comparable across policies until it is. Who paid the premium decides whether the benefit is taxed.
 
+> SSDI of about $3,100/mo is recorded from the statement. It is an overlay on these policies, not part of them — the cover above stands on its own.
+
 ### Deadlines
 
 |  | What | Date | Days left |

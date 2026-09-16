@@ -31,7 +31,8 @@ def build(data: dict, w: cli.Writer) -> None:
                          education_obligation=F._dig(data, "household.education_obligation"),
                          non_citizen_survivor=any(
                              x.get("role") == "spouse" and x.get("us_status")
-                             and x.get("us_status") != "citizen" for x in members))
+                             and x.get("us_status") != "citizen" for x in members),
+                         social_security=F._dig(data, "social_security"))
         a = L.assess(policies, need=need.net_need, insured_id=iid,
                      dependents=dependents, today=today)
 

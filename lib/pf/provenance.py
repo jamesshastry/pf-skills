@@ -35,6 +35,7 @@ from . import probate as _prb
 from . import presence as _pre
 from . import realestate as _re
 from . import reporting as _rep
+from . import ssa as _ssa
 from . import status as _sta
 from . import transitions as _tra
 from . import limits as _lim
@@ -146,6 +147,16 @@ def registry() -> list[Table]:
               values={d.key: d.authority for d in _dis.DISCLOSURES}),
     ]
 
+    ssa_on, ssa_unver = _parse(_ssa.SSA_VERIFIED)
+    ssa_entries = [Entry(
+        "survivor benefit eligibility ages and factors", _ssa.SSA_SOURCE,
+        ssa_on, ssa_unver,
+        values={k: getattr(_ssa, k) for k in (
+            "CHILD_BENEFIT_END_AGE", "CHILD_BENEFIT_END_AGE_IN_SCHOOL",
+            "CAREGIVER_CHILD_AGE_LIMIT", "WIDOW_EARLIEST_AGE",
+            "WIDOW_FACTOR_AT_EARLIEST", "CHILD_AND_CAREGIVER_PIA_SHARE",
+            "FULLY_INSURED_CREDITS")})]
+
     ages_on, ages_unver = _parse(_lim.RETIREMENT_AGES_VERIFIED)
     rep_on, rep_unver = _parse(_rep.REPORTING_VERIFIED)
 
@@ -256,6 +267,16 @@ def registry() -> list[Table]:
                         "FATCA_ABROAD": _rep.FATCA_ABROAD,
                         "PFIC_DE_MINIMIS": _rep.PFIC_DE_MINIMIS,
                         "FOREIGN_GIFT_THRESHOLD": _rep.FOREIGN_GIFT_THRESHOLD})],
+        ),
+        Table(
+            name="social security survivor benefit rules",
+            module="lib/pf/ssa.py",
+            holds="when a child, caregiver and widow(er)'s benefit start and "
+                  "stop, the early-claiming factor, and insured-status credits",
+            authority="Social Security Act §202; 20 CFR 404.350-404.390",
+            url="https://www.ssa.gov/benefits/survivors/",
+            cadence=LEGISLATIVE,
+            entries=ssa_entries,
         ),
         Table(
             name="social security totalization agreements",

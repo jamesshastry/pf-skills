@@ -32,15 +32,38 @@ This consideration routinely outweighs the break-even arithmetic, and is
 routinely left out of it. The report raises it automatically when the household
 has one earner and more than one adult.
 
+## The spouse's own record
+
+A short work history does **not** reduce spousal or survivor benefits — neither
+requires the spouse's own credits, and the report says so plainly, because the
+opposite intuition wastes years. What a thin record does change:
+
+- **No floor.** Every dollar flows through the worker's record, so anything
+  interrupting payment there interrupts all of it rather than part of it.
+- **Coupled filing.** A spousal benefit cannot begin until the worker files, so
+  delaying the worker's claim silently defers the spouse's income too — that
+  cost belongs in the delay calculation.
+- **The 50% test on further credits.** Building the spouse's record raises the
+  household total only once their own benefit would exceed half the worker's
+  PIA. Against a 35-year average a late, short career rarely clears that bar.
+  The report gives the verdict where both statements are on file
+  (`social_security.spouse_own_projected_monthly`) and the dollar threshold
+  where only the worker's is.
+
+Whether benefits are payable abroad is an answer recorded from SSA or left
+unknown. The exceptions are specific, this skill does not encode them, and
+that refusal stands.
+
 ## What the table is and isn't
 
 The report shows the **statutory adjustment schedule** — the percentage of the
 full-retirement-age amount at each claiming age. Roughly 70% at 62 and 124% at
 70 for a full retirement age of 67.
 
-It does **not** know the household's actual benefit amount, which comes from a
-Social Security statement. Apply the percentage to their figure; don't invent
-one.
+Where the statement figures are on file (`social_security.retirement_monthly`),
+each row gains its dollar amount — transcribed, never computed. Without them
+the percentages decide nothing on their own, and the report sends the reader
+to their statement rather than inventing a figure.
 
 Full retirement age steps in months across the 1955–1959 birth years, and the
 skill **deliberately refuses to approximate it** for that band. A plausible
@@ -69,10 +92,13 @@ are not modelled here.
 ## Closing
 
 1. **Reframe away from break-even** before any numbers.
-2. **The adjustment table**, with a note that it's a multiplier on their own
-   figure.
+2. **The adjustment table**, with dollar amounts beside the percentages where
+   the statement is on file.
 3. **The survivor argument**, if it applies — leading, not buried.
-4. **Send them to their statement** for the actual amount.
+4. **The spouse's own record**, where there is a spouse — including the 50%
+   test before anyone decides more credits mean more income.
+5. **Send them to their statement** for the actual amounts — theirs and, where
+   it matters, the spouse's.
 
 ---
 

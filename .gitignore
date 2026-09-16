@@ -39,3 +39,9 @@ Thumbs.db
 .idea/
 *.swp
 *~
+
+# Task briefs dropped into the repo root. They routinely quote real figures
+# from the household they were written about -- that is what makes them
+# useful -- and this is a public repository.
+/*-prompt.md
+/*-brief.md

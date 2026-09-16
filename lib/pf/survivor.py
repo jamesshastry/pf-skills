@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from . import ssa as _ssa
+
 #: Share of current household spending the survivors still incur. One fewer
 #: adult removes some consumption but almost none of the fixed costs: housing,
 #: utilities, insurance and transport barely move. A benchmark, not a
@@ -51,12 +53,24 @@ class SurvivorNeed:
     education_obligation: float
     assets_available: float
     total_need: float
+    #: Capital required with NO Social Security netted. Reported alongside the
+    #: netted figure rather than instead of it: a household may deliberately
+    #: exclude Social Security as conservatism, and that choice should be
+    #: visible rather than buried in an assumption.
+    total_need_before_ss: float = 0.0
+    capital_for_income_before_ss: float = 0.0
+    ss: "_ssa.SurvivorBenefit | None" = None
     notes: list[str] = field(default_factory=list)
 
     @property
     def net_need(self) -> float:
         """Capital required beyond what the household already holds."""
         return max(0.0, self.total_need - self.assets_available)
+
+    @property
+    def ss_value(self) -> float:
+        """Present value of the survivor benefits netted out."""
+        return max(0.0, self.capital_for_income_before_ss - self.capital_for_income)
 
 
 def pv_annuity(annual: float, years: float, rate: float = REAL_DISCOUNT_RATE) -> float:
@@ -81,6 +95,7 @@ def compute(
     education_obligation: float | None = None,
     spending_factor: float = SURVIVOR_SPENDING_FACTOR,
     non_citizen_survivor: bool = False,
+    social_security: dict | None = None,
 ) -> SurvivorNeed:
     insured = next((m for m in members if m.get("id") == insured_id), {})
     others = [m for m in members if m.get("id") != insured_id]
@@ -99,7 +114,33 @@ def compute(
     surviving_income = float(sum(a.get("income_annual") or 0 for a in adults))
     shortfall = max(0.0, annual_need - surviving_income)
 
-    capital = pv_annuity(shortfall, horizon)
+    capital_before_ss = pv_annuity(shortfall, horizon)
+
+    # Social Security is netted year by year rather than as an average. The
+    # sequence is the whole finding: a caregiver benefit that stops at the
+    # youngest child's sixteenth birthday, then years with nothing payable,
+    # then a widow(er)'s benefit from 60. A flat average across the horizon
+    # produces the same present value and erases the gap that makes the
+    # analysis worth running.
+    sched = _ssa.survivor_schedule(
+        benefits=_ssa.read_benefits(social_security),
+        survivor_age=survivor_age,
+        dependent_ages=[d.get("age") for d in dependents
+                        if d.get("age") is not None],
+        horizon_years=horizon,
+    )
+    if sched.computable:
+        # Discounted at (i + 1), not i. `pv_annuity` is an ordinary annuity —
+        # the first payment lands at the end of year one — so netting year by
+        # year has to use the same convention or the two figures disagree even
+        # when the benefit is zero. They did, by about 3%, which is invisible
+        # in a report showing only one of them.
+        capital = 0.0
+        for i in range(horizon):
+            net = max(0.0, shortfall - sched.annual_at(survivor_age + i))
+            capital += net / ((1 + REAL_DISCOUNT_RATE) ** (i + 1))
+    else:
+        capital = capital_before_ss
     education = float(education_obligation or 0)
 
     need = SurvivorNeed(
@@ -114,7 +155,11 @@ def compute(
         education_obligation=education,
         assets_available=assets_available,
         total_need=capital + FINAL_EXPENSES + education,
+        total_need_before_ss=capital_before_ss + FINAL_EXPENSES + education,
+        capital_for_income_before_ss=capital_before_ss,
+        ss=sched,
     )
+    need.notes.extend(sched.notes)
 
     if non_citizen_survivor:
         need.notes.append(

@@ -2,7 +2,7 @@
 
 ## Insured: a1
 
-⚠️ **Short by $815,488.** Need $1,465,488 · portable cover in force $650,000 · premiums $2,820/yr.
+✅ **Covered.** Need $443,577 · portable cover in force $650,000 · premiums $2,820/yr.
 
 | Policy | Type | Benefit | Premium | Per $1k/yr | Portable |
 |---|---|---|---|---|---|

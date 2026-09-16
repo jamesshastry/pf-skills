@@ -1559,6 +1559,63 @@ that absence is a statutory finding rather than a gap in the analysis.
 association whose delinquency rate nobody has requested is not an association
 with a low delinquency rate.
 
+## `social_security` — read by `survivor-needs`, `social-security-timing` and `disability-insurance-review`
+
+Mirrors the structure of an SSA statement, because that is where every figure
+comes from. **No skill computes a PIA**; a computed benefit would be a guess
+wearing a statement's clothes.
+
+```yaml
+social_security:
+  statement_date: 2026-09-15
+  full_retirement_age: 67
+  retirement_monthly: { 62: 2240, 67: 3200, 70: 3968 }
+  disability_monthly: 3100
+  survivors_monthly:
+    spouse_at_fra: 3200          # the full widow(er)'s benefit
+    minor_child: 2380            # also serves as the caregiver benefit
+    family_maximum: 5600
+  payable_abroad: null           # null = nobody has checked
+  totalization_agreement: false
+  spouse_own_projected_monthly: null   # the spouse's own statement figure, if any
+```
+
+**`minor_child` does double duty.** A child's benefit and the caregiver
+("mother's or father's") benefit are both 75% of the worker's PIA, so the
+statement's child figure serves for both. Without it the survivor sequence
+cannot be built at all.
+
+**`family_maximum` is not decoration.** Combined family benefits are capped, so
+summing the individual lines overstates what a household receives. Absent, the
+report says the total may be overstated rather than silently over-crediting.
+
+**`payable_abroad` stays nullable and null by default.** It records an answer
+obtained from SSA and nothing else. `social-security-timing` refuses to compute
+it — the alien non-payment exceptions are specific — and this field must not
+become a back door around that refusal.
+
+**`spouse_own_projected_monthly` is the spouse's own statement figure**, read
+only from their own SSA statement, and optional. `social-security-timing`
+compares it against half the worker's PIA: below that, further credits do not
+raise the household total, because the spousal top-up already covers the whole
+amount. With only the worker's PIA on file the report names the dollar
+threshold instead of the verdict. `disability-insurance-review` reads
+`disability_monthly` the same way — as an overlay many group LTD policies
+offset against, never as cover it nets out.
+
+### `ss_credits` on a household member
+
+```yaml
+- { id: a2, role: spouse, ss_credits: 4 }
+```
+
+Forty credits makes a worker fully insured on their own record. A spouse with
+fewer is **not** thereby entitled to less: spousal and survivor benefits do not
+require their own credits. What changes is that they have no floor of their own,
+and that their benefit cannot begin until the worker files — so a delay-to-70
+decision defers their income too. `ss_insured: true | false` may be given
+instead where the credit count is unknown.
+
 ## Extending
 
 Skills declare their inputs in frontmatter:

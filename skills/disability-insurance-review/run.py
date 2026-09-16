@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
-from pf import cli, disability as D, facts as F  # noqa: E402
+from pf import cli, disability as D, facts as F, ssa as SS  # noqa: E402
 
 REQUIRED = ["household.members", "household.annual_spending",
             "household.balance_sheet", "insurance.disability"]
@@ -51,6 +51,12 @@ def build(data: dict, w: cli.Writer) -> None:
         w("Cover is compared **after tax**, because a stated benefit is not "
           "comparable across policies until it is. Who paid the premium "
           "decides whether the benefit is taxed.")
+        for n in SS.disability_overlay_notes(
+                ssdi_monthly=F._dig(data, "social_security.disability_monthly"),
+                has_group_cover=any(p.get("employer_provided") for p in policies
+                                    if p.get("insured") == iid)):
+            w()
+            w(f"> {n}")
         for n in a.notes:
             w()
             w(f"> {n}")

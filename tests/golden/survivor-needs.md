@@ -8,14 +8,35 @@
 | × survivor factor 75% | **$72,000/yr** |
 | Less surviving income | −$0 |
 | **Annual shortfall** | **$72,000** |
-| Over 51 years at 3% real | **$1,868,488** |
+| Over 51 years at 3% real, before Social Security | $1,868,488 |
+| Less Social Security survivor benefits | −$1,021,912 |
+| **Capital for income** | **$846,577** |
 | Final expenses | $20,000 |
 | Education obligation | $0 |
-| **Total need** | **$1,888,488** |
+| **Total need** | **$866,577** |
 | Less assets available to survivors | −$423,000 |
-| **Capital gap** | **$1,465,488** |
+| **Capital gap** | **$443,577** |
 
-**$1,465,488** is the figure life cover has to close. `life-insurance-review` compares it against what is in force.
+**Before netting Social Security the total need is $1,888,488.** Both figures are shown because excluding Social Security is a defensible choice — some households treat it as conservatism — and the choice should be visible rather than buried in an assumption.
+
+### The survivor benefit does not arrive as a flat amount
+
+Netting an average across the horizon produces the same present value and erases the only feature worth knowing about: the caregiver benefit stops at the youngest child's **16th** birthday, not their eighteenth, and a widow(er)'s benefit cannot start before 60.
+
+| Survivor's age | Payable | What it is |
+|---|---|---|
+| 39–48 | $67,200/yr *(capped)* | 2 child benefit(s) + caregiver benefit |
+| 49 | $57,120/yr | 1 child benefit(s) + caregiver benefit |
+| 50–51 | $28,560/yr | 1 child benefit(s) |
+| 52–59 | $0/yr | nothing payable |
+| 60–66 | $27,456/yr | reduced widow(er)'s benefit |
+| 67–89 | $38,400/yr | full widow(er)'s benefit |
+
+**$443,577** is the figure life cover has to close. `life-insurance-review` compares it against what is in force.
+
+- The family maximum binds in at least one year, so the total is less than the individual benefits added together. That is the point of recording it.
+
+- **The gap: ages 52 to 59, 8 year(s) with nothing payable.** The caregiver benefit stops when the youngest child turns 16 — not 18 — and a widow(er)'s benefit cannot start before 60. Those years are funded entirely from capital, and netting a flat average across the horizon would hide them completely.
 
 - **The surviving spouse is not a US citizen.** The unlimited marital deduction does not apply, so assets passing to them may be reduced by estate tax unless a QDOT is in place. This figure is a *need*, not a projection of what will arrive — see `citizenship-status-review` and `estate-document-review`.
 

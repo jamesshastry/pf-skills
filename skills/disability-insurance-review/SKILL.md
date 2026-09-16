@@ -81,6 +81,18 @@ compensation can be most of the income. It stacks with an individual policy
 subject to combined issue limits, so it's worth knowing about, but it does not
 replace one.
 
+## SSDI is an overlay, not cover
+
+Social Security Disability Insurance may pay alongside a private benefit — or a
+group policy may subtract it dollar-for-dollar through an offset clause.
+Either way it changes what arrives, and the report treats it as an overlay
+rather than cover: where the statement figure
+(`social_security.disability_monthly`) is on file it is named beside the
+policies, with a pointer to check the offset clause in the plan documents;
+where it is not, the report says the gap treats SSDI as zero, which is a
+missing input rather than a finding. It is never estimated and never netted
+out silently.
+
 ## The ceiling
 
 Carriers won't insure the whole income. When the gap sits above roughly 70% of

@@ -25,13 +25,18 @@ household:
       us_status: citizen
       age: 41
       birth_year: 1985
+      # INSURED CASE — a full career, well past the 40-credit threshold.
+      ss_credits: 40
       income_annual: 180000
       employer: Northwind
       income_variable_share: 0.28
       income_components: { base: 130000, bonus: 25000, equity: 25000 }
     # NON-CITIZEN SPOUSE CASE — exercises the marital-deduction branch.
+    # UNINSURED CASE — a short work history. Spousal and survivor entitlement
+    # is unaffected, which is the point worth stating; what changes is that
+    # there is no floor of her own underneath it.
     - { id: a2, role: spouse, citizenship: [CA], us_status: permanent_resident,
-        age: 39, birth_year: 1987, income_annual: 0 }
+        age: 39, birth_year: 1987, income_annual: 0, ss_credits: 4 }
     - { id: c1, role: dependent, age: 8 }
     - { id: c2, role: dependent, age: 5 }
 
@@ -920,6 +925,27 @@ transitions:
 # One block means one case, so this fixture is the DIFFICULT one: a pre-1978
 # townhome in an association with weak reserves. The strong-association and
 # detached-single-family branches are covered in tests/test_disclosure.py.
+# ── Social Security, as the SSA statement gives it ──────────────────────────
+# Amounts are read, never computed. The statement is the only source.
+social_security:
+  statement_date: 2026-09-15
+  full_retirement_age: 67
+  retirement_monthly: { 62: 2240, 67: 3200, 70: 3968 }
+  disability_monthly: 3100
+  survivors_monthly:
+    spouse_at_fra: 3200
+    # 75% of PIA, the same share the caregiver benefit uses.
+    minor_child: 2380
+    # FAMILY-MAXIMUM-BINDS CASE — two children plus a caregiver benefit sums
+    # above this, so the cap is exercised rather than being decoration.
+    family_maximum: 5600
+  payable_abroad: null          # null = nobody has checked. Not "yes".
+  totalization_agreement: false
+  # UNRECORDED CASE — the spouse's own statement has never been pulled (four
+  # credits; there may be nothing to project). Unknown, not zero: the skill
+  # names the 50%-of-PIA threshold instead of a verdict.
+  spouse_own_projected_monthly: null
+
 property_review:
   # The household lives in TX; this candidate is in California. Disclosure law
   # follows the property, so `state` here overrides meta.jurisdiction.state —
