@@ -185,3 +185,40 @@ def test_skill_requirements_reads_each_skill_md():
 def test_skill_requirements_skips_the_facts_free_skills():
     reqs = I.skill_requirements(Path(__file__).resolve().parents[1] / "skills")
     assert not (set(reqs) & set(I.FACTS_FREE))
+
+
+# ── schema drift: fields no skill consumes ──────────────────────────────────
+
+SKILLS = Path(__file__).resolve().parents[1] / "skills"
+LIB = Path(__file__).resolve().parents[1] / "lib" / "pf"
+
+
+def test_consumed_paths_covers_required_and_optional_reads():
+    consumed = I.consumed_paths(SKILLS, LIB)
+    # A declared requirement …
+    assert "household.members" in consumed
+    # … and an optional read no requires list names.
+    assert "social_security.disability_monthly" in consumed
+    assert "meta.as_of" in consumed
+
+
+def test_drift_flags_recorded_data_no_skill_reads():
+    consumed = {"household.members", "household.annual_spending"}
+    facts = {"household": {"members": [{"id": "a1"}],
+                           "annual_spending": 96000,
+                           "mystery_field": 42,
+                           "not_looked_at": None}}
+    assert I.drift(facts, consumed) == ["household.mystery_field"]
+
+
+def test_drift_counts_a_read_subtree_as_read():
+    consumed = {"household.balance_sheet"}
+    facts = {"household": {"balance_sheet": [
+        {"name": "cash", "apy": 0.01}]}}
+    assert I.drift(facts, consumed) == []
+
+
+def test_drift_is_sorted_and_deterministic():
+    consumed = set()
+    facts = {"b": {"z": 1, "a": 2}, "a": {"m": 3}}
+    assert I.drift(facts, consumed) == ["a.m", "b.a", "b.z"]

@@ -224,6 +224,79 @@ def skill_requirements(skills_dir, *, skip=FACTS_FREE) -> dict[str, list[str]]:
     return out
 
 
+def consumed_paths(skills_dir, lib_dir) -> set[str]:
+    """Every facts path any skill can read, required or optional.
+
+    Union of two sources, both read rather than restated: each skill's
+    declared `requires` (which the contract tests already pin to its
+    runner's REQUIRED), and every string literal passed to a `*_dig`
+    call in the runners plus the lib modules that read whole facts
+    (`conflicts` predicates, `facts` helpers). A skill that reads a
+    subtree covers everything beneath it; optionals count, because an
+    unread *optional* is still read when present.
+    """
+    import ast
+    from pathlib import Path
+    out: set[str] = set()
+    for paths in skill_requirements(skills_dir).values():
+        out.update(paths)
+    sources = sorted(Path(skills_dir).glob("*/run.py"))
+    for name in ("conflicts.py", "facts.py"):
+        p = Path(lib_dir) / name
+        if p.exists():
+            sources.append(p)
+    for src in sources:
+        try:
+            tree = ast.parse(src.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError):
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            fn = node.func
+            # F._dig in runners, bare _dig in the scanned lib modules.
+            is_dig = (isinstance(fn, ast.Attribute) and fn.attr == "_dig"
+                      or isinstance(fn, ast.Name) and fn.id == "_dig")
+            if not is_dig:
+                continue
+            # _dig takes (facts, dotted): the path is the second argument.
+            if len(node.args) >= 2 and isinstance(node.args[1], ast.Constant):
+                arg = node.args[1].value
+                if isinstance(arg, str) and arg:
+                    out.add(arg)
+    return out
+
+
+def _leaves(node, prefix: str = ""):
+    """(Scalar leaf path, value) pairs of a facts file, list indices dropped."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            yield from _leaves(v, f"{prefix}.{k}" if prefix else str(k))
+    elif isinstance(node, list):
+        for v in node:
+            yield from _leaves(v, prefix)
+    else:
+        yield prefix, node
+
+
+def drift(facts: dict, consumed: set[str]) -> list[str]:
+    """Facts-file leaves no skill reads, sorted.
+
+    `None` leaves are skipped: null means nobody looked, and flagging every
+    untouched skeleton field would bury the real signal — recorded data the
+    library ignores. A leaf counts as read when a consumed path equals it or
+    sits above it (whole-subtree reads cover their children).
+    """
+    out = []
+    for leaf, value in _leaves(facts):
+        if value is None:
+            continue
+        if not any(c == leaf or leaf.startswith(c + ".") or c.startswith(leaf + ".")
+                   for c in consumed):
+            out.append(leaf)
+    return sorted(set(out))
+
+
 _SAFE_NAME = re.compile(r"^[\w\-. ]+$")
 
 

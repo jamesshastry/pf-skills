@@ -1,6 +1,6 @@
 ---
 name: reference-data-refresh
-description: Refresh the repository's own reference tables when the rules change — statutory contribution limits that change annually, and state insurance rules that change on legislative timescales. Use at the start of a calendar year, when a limit or law is known to have changed, when a skill reports UNKNOWN for the current year, or when the provenance test fails. Operates on the repo, not on any household's facts.
+description: Refresh the repository's own reference tables when the rules change — statutory contribution limits that change annually, and state insurance rules that change on legislative timescales. Use at the start of a calendar year, when a limit or law is known to have changed, when a skill reports UNKNOWN for the current year, or when the provenance test fails. With --facts it also reports schema drift: recorded fields no skill consumes. Operates on the repo, not on any household's facts.
 requires: []
 ---
 
@@ -20,15 +20,22 @@ A stale entry here is worse than a missing one, because it will be quoted
 confidently and believed. This skill is the maintenance procedure that keeps
 them honest.
 
-## Two modes
+## Three modes
 
 ```bash
 uv run skills/reference-data-refresh/run.py              # what is stale or unverified
 uv run skills/reference-data-refresh/run.py --checklist  # every value, to go and check
+uv run skills/reference-data-refresh/run.py --facts inputs/facts.yml  # plus schema drift
 ```
 
-Neither takes `--facts` — this inspects the repository, not a household. The
-report exits non-zero if there's a blocker.
+The first two take no `--facts` — they inspect the repository, not a household.
+The third additionally reports **schema drift**: recorded fields in a household
+file that no skill consumes. That is either private analysis running ahead of
+the public schema (the case the check exists for), a misspelled field, or a
+skill not yet built — advisory in all three cases, never a blocker, because a
+household legitimately records figures before any skill reads them.
+
+The report exits non-zero if there's a blocker.
 
 **The checklist is generated from the tables**, not hand-written, so it cannot
 omit a value that was added later. That matters: a verification checklist which

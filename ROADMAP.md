@@ -258,6 +258,7 @@ Not skills. Built when a skill needs them, extracted at rule-of-three.
 | Piece | Why |
 |---|---|
 | `lib/pf/limits.py` | Statutory limits by year. Cited table, `UNKNOWN` outside it. Blocks cluster 4. |
+| Schema-drift check (`reference-data-refresh --facts`) | Recorded fields no skill consumes, read from each runner's `requires` plus every `_dig` literal. Closes open question 6. |
 | `lib/pf/money.py` | Real versus nominal, and present value. Mixing the two is a documented defect class; make it structural rather than a convention. |
 | Absorbability / exposure helpers | `auto` and `property` already share the shape. Third consumer triggers extraction. |
 | Band propagation | `Band` currently lives in `auto`. Any second consumer moves it. |
@@ -824,10 +825,14 @@ And one that argues directly against the size of this roadmap:
    audit, not a model" line so the reader calibrates correctly. What they *did* need was a
    three-state input convention — omitted / empty / not-applicable — because "nobody looked" is
    a distinct and more common finding than "it is wrong".
-6. **Nothing detects a private facts file drifting ahead of the public schema.** The
-   `cash-yield-review` gap above sat unnoticed for a week. A check that reads a facts file and
-   reports fields no skill consumes would have caught it in one run — and would be a reasonable
-   addition to `reference-data-refresh`, which already reports on repository health.
+6. ~~**Nothing detects a private facts file drifting ahead of the public schema.**~~
+   **Built.** `reference-data-refresh --facts` reports recorded fields no skill consumes,
+   read from the runners' own `requires` plus every `_dig` literal — so a new read can never
+   silently miss a field the way a hand list would. Against the example fixture it finds five
+   genuine leaves (`auto.premium_annual_total`, `auto.term_months`, `housing.status`,
+   `meta.currency`, `meta.jurisdiction.country`): schema-documented or fixture-populated,
+   read by nothing. Each is either analysis ahead of the schema, a misspelling, or an
+   unbuilt skill — the report says all three rather than guessing.
 
 4. ~~**Where does a skill record that a finding expires?**~~ **Answered by cluster 2.**
    `facts.Deadline` carries a date, days remaining, and an urgency band; skills render dated

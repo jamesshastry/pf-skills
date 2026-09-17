@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
-# dependencies = []
+# dependencies = ["pyyaml"]
 # ///
 """Provenance report — what this repo knows about the world, and when it checked.
 
-Takes no --facts: this is about the repository's own tables, not any household.
+Facts-free by default: this is about the repository's own tables, not any
+household. With --facts it additionally reports schema drift — fields in a
+household file no skill consumes.
 
     uv run skills/reference-data-refresh/run.py
 """
@@ -15,7 +17,9 @@ import datetime as dt
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
-from pf import provenance as P  # noqa: E402
+from pf import intake as I, provenance as P  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[2]
 
 SEV = {"blocker": "🚫 **BLOCKER**", "stale": "⚠️ Stale", "unverified": "· Unverified"}
 
@@ -96,11 +100,44 @@ def checklist() -> int:
     return 0
 
 
+def drift_section(facts_path: str) -> list[str]:
+    """Fields in a household file no skill reads. Advisory, never a blocker:
+    a household legitimately records figures before any skill consumes them,
+    and failing their run for being ahead of the schema would punish exactly
+    the diligence this check is meant to notice."""
+    import yaml
+    out: list[str] = []
+    w = out.append
+    with open(facts_path, encoding="utf-8") as fh:
+        facts = yaml.safe_load(fh) or {}
+    consumed = I.consumed_paths(ROOT / "skills", ROOT / "lib" / "pf")
+    uncovered = I.drift(facts, consumed)
+    w("")
+    w("## Schema drift")
+    w("")
+    w(f"Read from `{facts_path}`.")
+    w("")
+    if not uncovered:
+        w("No drift: every recorded field is read by at least one skill.")
+    else:
+        w(f"**{len(uncovered)} recorded field(s) no skill consumes.** Either "
+          "private analysis has outrun the public schema — the case this "
+          "check exists for — or the field is misspelled, or it belongs to "
+          "a skill not yet built:")
+        w("")
+        for leaf in uncovered:
+            w(f"- `{leaf}`")
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--checklist", action="store_true",
                     help="emit a verification checklist of every asserted value")
-    if ap.parse_args().checklist:
+    ap.add_argument("--facts", default=None, metavar="FILE",
+                    help="also report schema drift for a household facts file")
+    args = ap.parse_args()
+    if args.checklist:
         return checklist()
 
     today = dt.date.today()
@@ -142,6 +179,9 @@ def main() -> int:
         w("")
         for i in sorted(issues, key=lambda x: x.severity != "blocker"):
             w(f"- {SEV[i.severity]} **{i.table} / {i.key}** — {i.detail}")
+
+    if args.facts:
+        out.extend(drift_section(args.facts))
 
     w("")
     w("---")
