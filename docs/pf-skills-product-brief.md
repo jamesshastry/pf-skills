@@ -9,10 +9,10 @@ YAML file the user owns, runs tested arithmetic from a small Python library, and
 markdown report to stdout.
 
 There is no server, no account, and no network call. The repository is public; the numbers never
-are. Fifty-five skill directories sit under `skills/`, backed by thirty-six modules under
-`lib/pf/` and 2,591 passing tests. The work was built as eighteen thematic clusters plus several
-cross-cutting ones, landed over twenty-four commits — one per cluster or piece of shared
-infrastructure.
+are. Fifty-nine skill directories sit under `skills/`, backed by thirty-nine modules under
+`lib/pf/` and 2,865 passing tests. The work was built as eighteen thematic clusters plus several
+cross-cutting ones, landed over thirty-four commits — roughly one per cluster or piece of
+shared infrastructure.
 
 It has no external users. Every design decision so far has been validated against synthetic
 fixtures and one privately held real-data set.
@@ -142,8 +142,10 @@ declares dependencies inline, every required path resolves in the example fixtur
 listed in `README.md` and `ROADMAP.md`, output is deterministic against a golden fixture, a
 missing field stops without a traceback, and nothing goes to stderr on success. Two skills —
 `document-intake` and `reference-data-refresh` — take no `--facts` and are excluded from the
-household-skill checks by name, with the reason recorded in the harness. The other fifty-three
-each have a golden fixture.
+household-skill checks by name, with the reason recorded in the harness. The other fifty-seven
+each have a golden fixture. A generated suite also asserts that every household skill has an
+adapter in `household-review` (below), which is the mechanism that keeps whole-library
+coverage whole as skills are added.
 
 Privacy is enforced structurally rather than by care. `.gitignore` excludes everything in
 `inputs/`, `documents/` and `outputs/` except the example and the READMEs; a pre-commit hook runs
@@ -179,19 +181,29 @@ uncertainty, no hedging where the arithmetic is clear.
 
 ## Current Capabilities
 
-Fifty-five skills run today. Fifty-three read a facts file and cover property and casualty,
+Fifty-nine skills run today. Fifty-seven read a facts file and cover property and casualty,
 income protection, beneficiaries and estate, tax-advantaged space, cash and debt, concentration,
 retirement adequacy, housing, education, cross-border planning, expat tax filing, offshore assets
 and pensions, owner-operator business entities, portfolio policy, charitable giving, healthcare
 and aging, life transitions, and real-estate investing — plus a cross-cutting citizenship,
-immigration-status and domicile review, and `conflict-check` over the registry of contradictions.
+immigration-status and domicile review, `conflict-check` over the registry of contradictions,
+and `household-review`, which re-runs every skill's check in-process and ranks the findings
+into one worklist: expiring items first, then uncovered losses, priced drags, and optimizations.
 Two run without a facts file: `document-intake`, which builds the onboarding worklist from what
 is in `documents/`, and `reference-data-refresh`, which reports on the staleness of the
 repository's own tables and generates the verification checklist.
 
+Recent additions since the original eighteen clusters: a `social_security` schema block that
+mirrors the SSA statement (retirement, disability, and survivor figures read, never computed;
+family maximum binds; `payable_abroad` stays nullable), which `survivor-needs` nets year by
+year out of the capital need while still reporting the un-netted total; insured-status
+branches for spouses with thin earnings records; and the shared `skill_requirements()`
+harvester in `lib/pf/intake.py` so the onboarding report and the whole-household review read
+each skill's declared inputs from one copy.
+
 Supporting all of it: the schema contract in `SCHEMA.md`, a fictional example household (the
 Riveras, Austin TX) as the committed fixture, three setup and safety scripts, gitleaks plus a
-local pre-commit hook, and 2,591 passing tests.
+local pre-commit hook, and 2,865 passing tests.
 
 `REVIEW.md` is the standing inventory of what is wrong, and it is worth reading as part of the
 capability statement rather than against it. The 201 asserted reference values are generated,
@@ -246,8 +258,8 @@ erosion, because a boundary that gives way under repeated asking is not a bounda
 
 ## Portfolio Summary
 
-pf-skills is a local-first library of 55 agent skills for household financial decisions, built on
-36 tested Python modules with 2,591 passing tests and zero network dependencies. Its organising
+pf-skills is a local-first library of 59 agent skills for household financial decisions, built on
+39 tested Python modules with 2,865 passing tests and zero network dependencies. Its organising
 idea is that skills hold procedures and thresholds while the user's own gitignored file holds
 values — which is what allows the reasoning to be public and reviewable while the data never
 leaves the machine. The engineering interest is in what the system refuses to do: it stops and
@@ -258,4 +270,4 @@ standing adversarial review says so in the first paragraph.
 
 ---
 Created: 2026-09-15
-Last updated: 2026-09-15
+Last updated: 2026-09-17
