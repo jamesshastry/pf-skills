@@ -182,7 +182,10 @@ class CashFlowInputs:
     def __post_init__(self) -> None:
         for name, value in vars(self).items():
             _nonnegative(value, name.replace("_", " "))
-        if self.pre_tax_retirement_contributions > self.employee_retirement_contributions:
+        if (
+            self.pre_tax_retirement_contributions
+            > self.employee_retirement_contributions
+        ):
             raise CashFlowError(
                 "pre-tax retirement contributions exceed total employee "
                 "retirement contributions")
