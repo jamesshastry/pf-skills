@@ -60,6 +60,7 @@ from pathlib import Path
 
 from . import facts as F
 from . import intake as I
+from . import timeseries as T
 
 #: Findings dated within this window outrank everything priced. Mirrors the
 #: `urgent` band of `facts.Deadline` (there is no named constant to import):
@@ -106,6 +107,8 @@ class Outcome:
     headline: str
     actions: list[Action] = field(default_factory=list)
     findings: list[str] = field(default_factory=list)
+    metrics: list[T.MetricObservation] = field(default_factory=list)
+    structured_findings: list[T.FindingObservation] = field(default_factory=list)
 
 
 @dataclass
@@ -127,6 +130,7 @@ class ReviewError:
 class HouseholdReview:
     ranked: list[Action] = field(default_factory=list)
     checked: list[Outcome] = field(default_factory=list)
+    structured: list[Outcome] = field(default_factory=list)
     blocked: list[Blocked] = field(default_factory=list)
     unwired: list[str] = field(default_factory=list)
     errors: list[ReviewError] = field(default_factory=list)
@@ -202,6 +206,26 @@ def collect(facts: dict, skills_dir: str | Path) -> HouseholdReview:
             continue
         try:
             outcome = fn(facts)
+            from . import skill_metrics as _skill_metrics  # noqa: PLC0415
+            outcome.metrics.extend(_skill_metrics.emit(skill, facts))
+            calculated = F._as_date(F._dig(facts, "meta.analysis_at")) or F.as_of(facts)
+            effective = F.as_of(facts)
+            if calculated is not None and effective is not None:
+                is_open = outcome.status == "action"
+                outcome.structured_findings.append(T.FindingObservation(
+                    finding_id="skill." + skill.replace("-", ".") + ".verdict",
+                    effective_date=effective,
+                    source_skill=skill,
+                    state="open" if is_open else "closed",
+                    severity=(outcome.actions[0].tier if outcome.actions else "ok"),
+                    text=outcome.headline,
+                    calculated_at=calculated,
+                    model_version=T.ANALYSIS_MODEL_VERSION,
+                    transition_reason=(None if is_open else
+                                       "current model reports no action"),
+                    change_driver="unknown",
+                    inputs_fingerprint=T.analysis_input_fingerprint(facts),
+                ))
         except Exception as exc:  # noqa: BLE001 — recorded, see ReviewError
             out.errors.append(ReviewError(skill=skill, message=str(exc)))
             continue
@@ -209,6 +233,7 @@ def collect(facts: dict, skills_dir: str | Path) -> HouseholdReview:
             out.ranked.extend(outcome.actions)
         else:
             out.checked.append(outcome)
+        out.structured.append(outcome)
 
     out.ranked = prioritize(out.ranked)
     out.checked.sort(key=lambda o: o.skill)
@@ -223,6 +248,27 @@ def collect(facts: dict, skills_dir: str | Path) -> HouseholdReview:
         key=lambda kv: (-len(kv[1]), kv[0]),
     )
     return out
+
+
+def structured_results(review: HouseholdReview, facts: dict) -> list[T.StructuredResult]:
+    """Expose review outcomes without scraping their Markdown renderers."""
+    calculated = F._as_date(F._dig(facts, "meta.analysis_at")) or F.as_of(facts)
+    if calculated is None:
+        raise ValueError("meta.as_of or meta.analysis_at is required")
+    by_skill: dict[str, Outcome] = {
+        outcome.skill: outcome for outcome in review.structured
+    }
+    return [T.StructuredResult(
+        skill_id=outcome.skill,
+        headline=outcome.headline,
+        calculated_at=calculated,
+        model_version=T.ANALYSIS_MODEL_VERSION,
+        metrics=list(outcome.metrics),
+        findings=list(outcome.structured_findings),
+        dependencies=(),
+        assumptions=(),
+    ) for outcome in sorted(by_skill.values(), key=lambda o: o.skill)
+    if outcome.metrics or outcome.structured_findings]
 
 
 # ── adapters ──────────────────────────────────────────────────────────────
@@ -248,6 +294,7 @@ from . import estate as _estate  # noqa: E402
 from . import expat as _expat  # noqa: E402
 from . import healthcare as _health  # noqa: E402
 from . import housing as _housing  # noqa: E402
+from . import housing_affordability as _afford  # noqa: E402
 from . import jurisdiction as _jurisdiction  # noqa: E402
 from . import life as _life  # noqa: E402
 from . import limits as _lim  # noqa: E402
@@ -266,6 +313,14 @@ from . import survivor as _survivor  # noqa: E402
 from . import transitions as _trans  # noqa: E402
 from . import umbrella as _umbrella  # noqa: E402
 import datetime as _dt  # noqa: E402
+
+
+def _retirement_savings_path(data: dict, annual_savings: float) -> list[float]:
+    current = next(
+        (s for s in (F._dig(data, "cash_flow.scenarios") or [])
+         if s.get("kind") == "current"), {})
+    return _retire.savings_path_from_obligations(
+        annual_savings, current.get("obligations") or [])
 
 
 def _cash_yield(data: dict) -> Outcome:
@@ -871,13 +926,16 @@ def _education_funding(data: dict) -> "Outcome":
     age_at = None
     if savings is not None and spending is not None:
         primary = next((x for x in members if x.get("role") == "primary"), {})
-        assets = (F.tier_total(data, F.LIQUID) + F.tier_total(data, F.AGE_RESTRICTED)
-                  + F.tier_total(data, F.ILLIQUID))
-        r = _retire.assess_readiness(annual_spending=float(spending), assets=assets,
-                                  annual_savings=float(savings),
-                                  current_age=primary.get("age"))
-        on_track = r.years_to_target is not None
-        age_at = r.age_at_target
+        classified = F.retirement_assets(data)
+        if not classified.unknown:
+            r = _retire.assess_readiness(
+                annual_spending=float(spending), assets=classified.included,
+                annual_savings=float(savings),
+                current_age=primary.get("age"),
+                savings_by_year=_retirement_savings_path(
+                    data, float(savings)))
+            on_track = r.years_to_target is not None
+            age_at = r.age_at_target
     lines = _edu.ordering_rule(retirement_on_track=on_track,
                                retirement_age_at_target=age_at)
     out = Outcome(skill=skill, status="ok", headline="")
@@ -918,18 +976,28 @@ def _retirement_readiness(data: dict) -> "Outcome":
     primary = next((x for x in members if x.get("role") == "primary"), {})
     spending = float(F._dig(data, "household.annual_spending"))
     savings = float(F._dig(data, "retirement.annual_savings"))
-    assets = (F.tier_total(data, F.LIQUID) + F.tier_total(data, F.AGE_RESTRICTED)
-              + F.tier_total(data, F.ILLIQUID))
+    classified = F.retirement_assets(data)
+    assets = classified.included
     age = primary.get("age")
     r = _retire.assess_readiness(annual_spending=spending, assets=assets,
-                           annual_savings=savings, current_age=age)
+                           annual_savings=savings, current_age=age,
+                           savings_by_year=_retirement_savings_path(data, savings))
+    if classified.unknown:
+        return act(
+            skill,
+            "Retirement asset eligibility is incomplete; unclassified assets "
+            "are excluded",
+            TIER_OPTIMISE,
+            detail="Add retirement_eligible for: "
+                   + ", ".join(classified.unknown) + ".")
     if r.already_there:
         return ok(skill, "Assets already exceed the target — the question is sequencing, not accumulation")
     if r.years_to_target is None:
         return act(skill, "Plan does not close at central assumptions — spending, savings, or the target must change",
                    TIER_OPTIMISE, detail="; ".join(r.findings))
     grid = _retire.sensitivity(annual_spending=spending, assets=assets,
-                         annual_savings=savings, current_age=age)
+                         annual_savings=savings, current_age=age,
+                         savings_by_year=_retirement_savings_path(data, savings))
     ages = [row[rr]["age"] for row in grid for rr in _retire.REAL_RETURN_SCENARIOS
             if row[rr]["age"] is not None]
     if ages:
@@ -1213,8 +1281,9 @@ def _emergency_fund_sizing(data: dict) -> "Outcome":
     earners = [x for x in members if (x.get("income_annual") or 0) > 0]
     var = next((x.get("income_variable_share") for x in earners
                 if x.get("income_variable_share") is not None), None)
+    reserve = F.reserve_assets(data)
     b = _cash.size_buffer(
-        liquid=F.liquid(data),
+        liquid=reserve.included,
         annual_spending=float(F._dig(data, "household.annual_spending")),
         earners=len(earners),
         has_dependents=bool(F.dependents(data)),
@@ -1320,7 +1389,7 @@ def _rent_vs_buy(data: dict) -> "Outcome":
     if appr is None:
         appr = _housing.DEFAULT_APPRECIATION
     growth = F._dig(data, "assumptions.rent_growth")
-    if not growth:
+    if growth is None:
         growth = _housing.DEFAULT_RENT_GROWTH
     c = _housing.compare(
         p, monthly_rent=rent, years=years,
@@ -1343,6 +1412,64 @@ def _rent_vs_buy(data: dict) -> "Outcome":
         TIER_DRAG, impact_annual=yearly,
         detail="Principal repaid is excluded from owning cost; both sides "
                "are carried forward to the horizon at the investment return.")
+
+
+# housing-affordability: mirrors the runner's reconciled scenario and
+# constraint calculation. A target above the stress ceiling is an actionable
+# planning conflict; a reconciliation failure is a blocker, never an estimate.
+def _housing_affordability(data: dict) -> Outcome:
+    skill = "housing-affordability"
+    try:
+        r = _afford.assess(
+            scenarios=F._dig(data, "cash_flow.scenarios") or [],
+            purchase=F._dig(data, "housing.purchase") or {},
+            monthly_rent=float(F._dig(data, "housing.monthly_rent")),
+            balance_sheet=F._dig(data, "household.balance_sheet") or [],
+            reserve_assets=F.reserve_assets(data),
+            retirement_annual_savings=F._dig(
+                data, "retirement.annual_savings"),
+            household_income=F.household_income(data),
+            household_income_components=F.household_income_components(data),
+            affordability=F._dig(data, "housing.affordability") or {},
+            transition=F._dig(data, "housing.transition") or {},
+            rental_deals=F._dig(data, "real_estate.deals") or [],
+            portfolio_wash_sale=F._dig(data, "portfolio.wash_sale"),
+        )
+    except _afford.ReconciliationError as exc:
+        return act(skill, f"Affordability blocked: {exc}", TIER_OPTIMISE)
+    try:
+        transition = _afford.transition_from_facts(data)
+    except _afford.ReconciliationError as exc:
+        return act(skill, f"Housing transition blocked: {exc}", TIER_OPTIMISE)
+    if transition.blockers:
+        return act(
+            skill, "Housing transition financing/occupancy is inconsistent",
+            TIER_OPTIMISE, detail="; ".join(transition.blockers))
+    phase_failures = [
+        check for check in _afford.phase_cash_checks(r.scenarios, transition)
+        if not check.passes
+    ]
+    if phase_failures:
+        return act(
+            skill,
+            f"Target transition misses the savings floor in "
+            f"{len(phase_failures)} phase/scenario row(s)",
+            TIER_OPTIMISE,
+            detail="Run the phase table; current rent, tenant carry, and "
+                   "owner costs are applied exactly once.")
+    if r.target_price > r.stress_tested_ceiling:
+        return act(
+            skill,
+            f"Target {_money(r.target_price)} exceeds the stress-tested "
+            f"ceiling {_money(r.stress_tested_ceiling)}",
+            TIER_OPTIMISE,
+            detail=f"Binding constraint: {r.binding_constraint}. Current "
+                   f"income capacity is {_money(r.current_income_ceiling)}; "
+                   f"liquidity limit is {_money(r.liquidity_maximum)}.")
+    return ok(
+        skill,
+        f"Target {_money(r.target_price)} is within the stress-tested ceiling "
+        f"of {_money(r.stress_tested_ceiling)}")
 
 
 # ca-sfh-disclosure-review: mirrors run.py lines 65, 78 and 88 calling
@@ -2585,14 +2712,13 @@ def _cross_border_healthcare(data: dict) -> "Outcome":
                 "intention decides the comparison."))
 
 
-# geo-arbitrage-model: mirrors run.py build() lines 19-29 calling F.tier_total
-# (x3) and _xb.model; tier drag because the verdict is priced dollars per year
+# geo-arbitrage-model: mirrors run.py build() calling F.retirement_assets and
+# _xb.model; tier drag because the verdict is priced dollars per year
 # (baseline burn minus blended burn, cutting the portfolio target); ok when the
 # split saves nothing. The runner yields no deadline objects, no days_to_expiry.
 def _geo_arbitrage_model(data: dict) -> "Outcome":
     skill = "geo-arbitrage-model"
-    assets = (F.tier_total(data, F.LIQUID) + F.tier_total(data, F.AGE_RESTRICTED)
-              + F.tier_total(data, F.ILLIQUID))
+    assets = F.retirement_assets(data).included
     savings = float(F._dig(data, "retirement.annual_savings"))
     p = _xb.model(
         F._dig(data, "crossborder.locations") or [],
@@ -2600,6 +2726,7 @@ def _geo_arbitrage_model(data: dict) -> "Outcome":
         annual_savings=savings,
         fixed_annual=float(F._dig(data, "crossborder.fixed_annual_costs") or 0),
         duplicate_housing=F._dig(data, "crossborder.duplicate_housing"),
+        savings_by_year=_retirement_savings_path(data, savings),
     )
     if not p.legs:
         return ok(skill, "No locations recorded, so there is nothing to blend")
@@ -2652,6 +2779,53 @@ def _roth_portability_check(data: dict) -> "Outcome":
     return ok(skill, "No destination recorded here is known to tax Roth distributions")
 
 
+def _financial_history_review(data: dict) -> Outcome:
+    paths = [Path(path) for path in F._dig(data, "history.snapshot_files") or []]
+    history = T.load_history(paths)
+    return ok(
+        "financial-history-review",
+        f"{len(history.snapshots)} immutable history snapshot(s) available; "
+        "run explicitly for trend decisions",
+    )
+
+
+def _financial_scenario_planner(data: dict) -> Outcome:
+    from . import scenario as _scenario  # noqa: PLC0415
+    specs = _scenario.scenarios_from_facts(data)
+    return ok(
+        "financial-scenario-planner",
+        f"{len(specs)} hypothetical scenario(s) recorded; excluded from the "
+        "current-action worklist",
+    )
+
+
+def _job_loss_stress_test(data: dict) -> Outcome:
+    from . import scenario as _scenario  # noqa: PLC0415
+    count = sum(
+        any(event.type == "employment_loss" for event in spec.events)
+        for spec in _scenario.scenarios_from_facts(data)
+    )
+    return ok(
+        "job-loss-stress-test",
+        f"{count} job-loss stress case(s) recorded; hypothetical results are "
+        "not current findings",
+    )
+
+
+def _windfall_deployment_planner(data: dict) -> Outcome:
+    from . import scenario as _scenario  # noqa: PLC0415
+    count = sum(
+        any(event.type in ("cash_receipt", "asset_receipt")
+            for event in spec.events)
+        for spec in _scenario.scenarios_from_facts(data)
+    )
+    return ok(
+        "windfall-deployment-planner",
+        f"{count} windfall deployment case(s) recorded; hypothetical results "
+        "are not current findings",
+    )
+
+
 ADAPTERS: dict[str, Callable[[dict], Outcome]] = {
     "cash-yield-review": _cash_yield,
     "conflict-check": _conflict_check,
@@ -2684,7 +2858,10 @@ ADAPTERS: dict[str, Callable[[dict], Outcome]] = {
     "foreign-pension-classification": _foreign_pension_classification,
     "foreign-presence-tests": _foreign_presence_tests,
     "foreign-reporting-audit": _foreign_reporting_audit,
+    "financial-history-review": _financial_history_review,
+    "financial-scenario-planner": _financial_scenario_planner,
     "geo-arbitrage-model": _geo_arbitrage_model,
+    "housing-affordability": _housing_affordability,
     "hsa-review": _hsa_review,
     "life-insurance-review": _life_insurance_review,
     "long-term-care-funding": _long_term_care_funding,
@@ -2708,5 +2885,7 @@ ADAPTERS: dict[str, Callable[[dict], Outcome]] = {
     "umbrella-liability": _umbrella_liability,
     "wash-sale-policy": _wash_sale_policy,
     "windfall-management": _windfall_management,
+    "windfall-deployment-planner": _windfall_deployment_planner,
+    "job-loss-stress-test": _job_loss_stress_test,
     "withdrawal-sequencing": _withdrawal_sequencing,
 }

@@ -3,7 +3,7 @@
 Agent skills for evaluating and optimizing personal finance — insurance, liability, and risk —
 that run entirely on your own machine against your own data.
 
-> **Status:** seventeen clusters shipped, plus a cross-cutting status audit — property & casualty, income protection,
+> **Status:** eighteen clusters shipped, plus cross-cutting review infrastructure — property & casualty, income protection,
 > estate, tax-advantaged space, cash & debt, concentration, retirement, housing, education, cross-border retirement,
 > expat tax filing, offshore assets & pensions, owner-operator business, portfolio policy, charitable giving,
 > healthcare & aging, life transitions, and real estate investing.
@@ -38,6 +38,7 @@ that run entirely on your own machine against your own data.
 | `social-security-timing` | Claiming age as longevity insurance, and the survivor decision |
 | `ca-sfh-disclosure-review` | California detached home: which disclosures apply, what the package is missing, what to read the TDS and SPQ for |
 | `ca-condo-hoa-disclosure-review` | California condo: the §4525 packet, reserves and delinquency against thresholds, SB 326, warrantability |
+| `housing-affordability` | Reconciled household cash flow, current and stress-tested price ceilings, closing liquidity, and rent-first occupancy phases |
 | `rent-vs-buy` | Total cost of occupancy and the break-even holding period |
 | `mortgage-review` | Removable PMI, prepayment, and the refinance break-even |
 | `education-funding` | The college gap per child, the retirement-first rule, and 529 mechanics |
@@ -73,6 +74,10 @@ that run entirely on your own machine against your own data.
 | `document-intake` | Onboarding: which fields are still unset, what each one unblocks, and which document answers it |
 | `reference-data-refresh` | Maintenance: when the repo's own statutory tables were last checked |
 | `household-review` | Cross-cutting: every skill's verdict re-read in-process, ranked — expiring findings, uncovered losses, priced drags, then optimizations |
+| `financial-history-review` | Cross-cutting: immutable observed snapshots, historical skill results, comparable metric changes, finding transitions, and methodology attribution |
+| `financial-scenario-planner` | Cross-cutting: deterministic baseline-versus-scenario monthly liquidity, net worth, saving, debt, and recovery conditions |
+| `job-loss-stress-test` | Correlated employment loss: income, vesting, match, employer stock, health cost, runway, and intra-period cash failure |
+| `windfall-deployment-planner` | After the decision pause: compare cash, investing, debt, home, and split uses of net proceeds without treating stock as cash |
 
 Run them in that order. Each of the first two checks whether the underlying
 limits qualify for an umbrella to attach above them; `umbrella-liability`
@@ -97,11 +102,15 @@ The first question anyone should ask of a personal-finance tool, answered plainl
 
 - **There is no server.** No account, no sign-up, no upload.
 - **Your figures live in `inputs/facts.yml`**, gitignored, on your disk.
+- **Historical snapshots live in `history/`**, also gitignored; they are retained
+  copies of private facts, so never force-add them.
 - **Skills are text.** They tell an AI agent already running on your machine how to reason about
   the numbers you give it. Nothing in this repo transmits anything.
-- **Reports are written to `outputs/`**, also gitignored.
-- **Statements you drop in `documents/` stay there.** Nothing reads them but you and whichever
-  agent you hand them to; nothing in that directory is committed.
+- **Outputs are grouped by purpose** under `outputs/reports/`, `history/`,
+  `scenarios/`, and `structured/`. Generated contents are gitignored.
+- **Statements go in categorized `inputs/<category>/` directories.** Their
+  contents are gitignored and read only by you and whichever agent you hand
+  them to. The legacy flat `documents/` directory remains supported.
 
 If you install via `npx skills add`, that CLI reports an anonymous install count and nothing
 else — it never sees your data, because it isn't involved once the files are on disk.
@@ -117,13 +126,46 @@ open. That's their privacy policy, not ours. For maximum privacy, run against a 
 ```
 1. Check the setup       uv run scripts/doctor.py
 2. Start a facts file    uv run scripts/init_facts.py
-3. Add your documents    cp ~/Downloads/*.pdf documents/
+3. Add your documents    cp ~/Downloads/checking.pdf inputs/banking/
 4. Get a worklist        uv run skills/document-intake/run.py
 5. Ask your agent        "review my auto insurance"
 6. Read the report       outputs/
 ```
 
 Full walkthrough: **[QUICKSTART.md](QUICKSTART.md)**.
+
+### History and scenarios are explicit
+
+Normal skill runs remain read-only and never create history. Capture and compare
+immutable local snapshots deliberately:
+
+```bash
+uv run scripts/history.py capture --facts inputs/facts.yml \
+  --snapshot-id s2026-08-30 --effective-date 2026-08-30 \
+  --observed-at 2026-08-31 --output history/2026-08-30.yml
+uv run scripts/history.py calculate --snapshot history/2026-08-30.yml \
+  --snapshot-id a2026-08-31 --calculated-at 2026-08-31 \
+  --output history/2026-08-30.analysis.yml
+uv run scripts/history.py compare history/2026-05-31.yml history/2026-08-30.yml
+```
+
+Point `history.snapshot_files` at those documents to run
+`financial-history-review`. Existing dated Markdown can be entered manually as
+a labeled lossy migration; it is never scraped automatically.
+
+History-enabled skills also accept `--structured-output <path>` for explicit,
+machine-readable metrics. That output is not captured implicitly, and both the
+structured writer and snapshot writer refuse overwrite.
+
+Record deterministic cases under `scenario_planning.scenarios`, then run:
+
+```bash
+uv run skills/financial-scenario-planner/run.py --facts inputs/facts.yml
+uv run skills/job-loss-stress-test/run.py --facts inputs/facts.yml
+uv run skills/windfall-deployment-planner/run.py --facts inputs/facts.yml
+```
+
+Scenarios never become facts, write results back, or execute an action.
 
 **Step 2 writes a skeleton of nulls rather than copying the example
 household.** Copying is one command and it is the wrong first move: every field
@@ -132,7 +174,7 @@ difference between a number you entered and one the example came with. A null
 stops the skill and names the field; an invented number produces a confident
 report.
 
-**Step 4 is the one that saves the hour.** Fifty-three skills read a facts file
+**Step 4 is the one that saves the hour.** Sixty-two skills read a facts file
 and nothing writes one, so the real onboarding cost is transcription.
 `document-intake` makes it ordered and finite: it ranks the unset fields by how
 many skills each one unblocks, and `household.members` alone is about thirty of
@@ -149,10 +191,11 @@ anyone without exposing anyone.
 ```
 skills/     the skills themselves
 lib/        tested arithmetic — ratios, IRR, unit conversion
-scripts/    setup and safety — doctor, init_facts, privacy_audit
-inputs/     facts.example.yml ships; facts.yml is yours and gitignored
-documents/  your statements; the README ships, nothing else does
-outputs/    generated reports; gitignored
+scripts/    setup, history and safety — doctor, init_facts, history, privacy_audit
+inputs/     facts plus private, categorized source-document drop zones
+documents/  legacy flat source-document drop zone; still scanned
+outputs/    private reports, history views, scenarios, and structured results
+history/    immutable local snapshots and analyses; gitignored
 tests/      synthetic fixtures only
 SCHEMA.md   the facts contract
 ```

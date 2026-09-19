@@ -3,7 +3,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["pyyaml"]
 # ///
-"""What is in documents/, what the schema still needs, and what to do next.
+"""What source documents exist, what the schema still needs, and what to do next.
 
 Takes no --facts by default: this runs *before* a facts file exists, and
 reports usefully when there is nothing to read yet.
@@ -19,8 +19,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
 from pf import cli, intake as I  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
-DOCS = ROOT / "documents"
 SKILLS = ROOT / "skills"
+INPUT_CATEGORIES = (
+    "banking", "business", "cross-border", "debts", "education", "estate",
+    "healthcare", "income", "insurance", "investments", "life-events",
+    "property", "retirement", "tax",
+)
+DOCUMENT_ROOTS = (
+    *((f"inputs/{name}", ROOT / "inputs" / name) for name in INPUT_CATEGORIES),
+    ("documents", ROOT / "documents"),  # legacy flat drop zone
+)
 
 
 def requirements() -> dict[str, list[str]]:
@@ -33,12 +41,21 @@ def requirements() -> dict[str, list[str]]:
     return I.skill_requirements(SKILLS, skip=I.FACTS_FREE)
 
 
-def scan() -> list[I.Document]:
-    if not DOCS.exists():
-        return []
-    return [I.classify(p.name, p.stat().st_size)
-            for p in sorted(DOCS.rglob("*"))
-            if p.is_file() and p.name not in (".gitkeep", "README.md")]
+def scan(
+    roots: tuple[tuple[str, Path], ...] = DOCUMENT_ROOTS,
+) -> list[I.Document]:
+    """Scan categorized inputs plus the legacy flat document directory."""
+    found: list[I.Document] = []
+    for label, directory in roots:
+        if not directory.exists():
+            continue
+        for path in sorted(directory.rglob("*")):
+            if (not path.is_file()
+                    or path.name in (".gitignore", ".gitkeep", "README.md")):
+                continue
+            relative = path.relative_to(directory).as_posix()
+            found.append(I.classify(f"{label}/{relative}", path.stat().st_size))
+    return sorted(found, key=lambda document: document.name)
 
 
 def load_facts(path: Path | None) -> tuple[dict, str]:
@@ -65,9 +82,11 @@ def build(facts: dict, facts_path: str, docs: list[I.Document], w: cli.Writer) -
     w("## Documents")
     w()
     if not docs:
-        w("**`documents/` is empty.** Drop statements, policies and prior "
-          "returns in there — anything, any name, any format. Nothing in that "
-          "directory is committed, and nothing leaves this machine.")
+        w("**No source documents found.** Drop statements, policies and prior "
+          "returns into the matching `inputs/<category>/` directory — "
+          "anything, any name, any format. The legacy flat `documents/` "
+          "directory is scanned too. Nothing in those locations is committed, "
+          "and nothing leaves this machine.")
     else:
         named = [d for d in docs if I.looks_renamed_for_privacy(d.name)]
         w(f"**{len(docs)} file(s).** Filenames are matched against the schema "
@@ -82,7 +101,8 @@ def build(facts: dict, facts_path: str, docs: list[I.Document], w: cli.Writer) -
             w()
             w(f"> **{len(named)} filename(s) carry personal data**: "
               + ", ".join(f"`{d.name}`" for d in named[:5])
-              + ". `documents/` is gitignored, so this never reaches git — but "
+              + ". Source-document directories are gitignored, so this never "
+                "reaches git — but "
                 "gitignore does not protect a screen share, a terminal "
                 "recording or a support ticket. Renaming costs one `mv`.")
 
@@ -154,8 +174,9 @@ def build(facts: dict, facts_path: str, docs: list[I.Document], w: cli.Writer) -
     w()
     w("## How to use this with an agent")
     w()
-    w("Put the documents in `documents/`, run this, and hand an agent the "
-      "report together with the files. The report says which fields are "
+    w("Put documents in the matching `inputs/<category>/` directory, run "
+      "this, and hand an agent the report together with the files. The report "
+      "says which fields are "
       "open and which document probably answers each; the agent reads and "
       "proposes values; **you** confirm them into `inputs/facts.yml`.")
     w()

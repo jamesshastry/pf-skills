@@ -76,13 +76,23 @@ def git(*args: str) -> str:
     return p.stdout
 
 
-def tracked_files() -> list[str]:
-    return [f for f in git("ls-files").split("\n") if f]
+def repository_files() -> list[str]:
+    """Tracked and non-ignored untracked files in the public worktree.
+
+    A privacy audit run before staging is the valuable one. Scanning only
+    ``git ls-files`` gave every newly created report, fixture, and skill a
+    blind window until it entered the index.
+    """
+    return [
+        f for f in git(
+            "ls-files", "--cached", "--others", "--exclude-standard"
+        ).split("\n") if f
+    ]
 
 
 def pattern_pass() -> list[tuple[str, str, str, str]]:
     hits = []
-    for f in tracked_files():
+    for f in repository_files():
         if any(f.startswith(a) or f == a for a in ALLOW):
             continue
         try:
@@ -161,7 +171,7 @@ def token_pass(tokens: set[str], quiet: bool = True) -> list[tuple[str, list[str
         if p.exists():
             public += p.read_text()
     blobs = {}
-    for f in tracked_files():
+    for f in repository_files():
         try:
             blobs[f] = (ROOT / f).read_text()
         except (UnicodeDecodeError, FileNotFoundError):
@@ -193,7 +203,7 @@ def main() -> int:
     print("privacy audit\n" + "=" * 62)
 
     pat = pattern_pass()
-    print(f"\n1. Pattern pass — {len(pat)} hit(s) in tracked files "
+    print(f"\n1. Pattern pass — {len(pat)} hit(s) in public worktree files "
           f"(fixtures and SCHEMA excluded)")
     for label, f, line, text in pat[:40]:
         print(f"   {label:<15} {f}:{line}  {text[:48]}")

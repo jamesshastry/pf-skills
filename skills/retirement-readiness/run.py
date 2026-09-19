@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
-from pf import cli, facts as F, retirement as R  # noqa: E402
+from pf import cli, facts as F, retirement as R, skill_metrics as SM  # noqa: E402
 
 REQUIRED = ["household.members", "household.annual_spending",
             "household.balance_sheet", "retirement.annual_savings"]
@@ -20,14 +20,30 @@ def build(data: dict, w: cli.Writer) -> None:
     primary = next((x for x in members if x.get("role") == "primary"), {})
     spending = float(F._dig(data, "household.annual_spending"))
     savings = float(F._dig(data, "retirement.annual_savings"))
-    assets = (F.tier_total(data, F.LIQUID) + F.tier_total(data, F.AGE_RESTRICTED)
-              + F.tier_total(data, F.ILLIQUID))
+    classified = F.retirement_assets(data)
+    assets = classified.included
     age = primary.get("age")
+    current_cash_flow = next(
+        (s for s in (F._dig(data, "cash_flow.scenarios") or [])
+         if s.get("kind") == "current"), {})
+    try:
+        savings_path = R.savings_path_from_obligations(
+            savings, current_cash_flow.get("obligations") or [])
+    except ValueError as exc:
+        w(f"## BLOCKED — {exc}")
+        w()
+        w("A nominal future obligation cannot enter this real, today's-money "
+          "projection. Correct the basis instead of mixing units.")
+        cli.disclaimer(w, "lib/pf/retirement.py")
+        return
 
     r = R.assess_readiness(annual_spending=spending, assets=assets,
-                           annual_savings=savings, current_age=age)
+                           annual_savings=savings, current_age=age,
+                           savings_by_year=savings_path)
     grid = R.sensitivity(annual_spending=spending, assets=assets,
-                         annual_savings=savings, current_age=age)
+                         annual_savings=savings, current_age=age,
+                         savings_by_year=savings_path)
+    w.add_metrics(SM.emit("retirement-readiness", data))
 
     if r.already_there:
         w(f"✅ **Assets already exceed the {r.withdrawal_rate:.1%} target of "
@@ -40,9 +56,18 @@ def build(data: dict, w: cli.Writer) -> None:
     w()
     w.table(["", ""], [
         ["Annual spending", m(spending)],
-        ["Investable assets", m(assets)],
-        ["Annual savings", m(savings)],
+        ["Retirement-eligible assets", m(assets)],
+        ["Annual savings (current baseline)", m(savings)],
     ])
+    if classified.unknown:
+        w()
+        w("⚠️ **Unclassified assets are excluded:** "
+          + ", ".join(classified.unknown)
+          + ". Add `retirement_eligible: true|false`; total net worth is not "
+            "a retirement portfolio.")
+    if classified.excluded:
+        w()
+        w(f"Explicitly excluded or unclassified assets: {m(classified.excluded)}.")
 
     w()
     w("## The answer is the spread, not the middle")
@@ -85,4 +110,5 @@ def build(data: dict, w: cli.Writer) -> None:
 
 
 if __name__ == "__main__":
-    raise SystemExit(cli.run(title="Retirement readiness", required=REQUIRED, build=build))
+    raise SystemExit(cli.run(title="Retirement readiness", required=REQUIRED,
+                             build=build, skill_id="retirement-readiness"))

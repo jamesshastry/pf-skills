@@ -1,0 +1,59 @@
+history_schema_version: 1
+snapshot_id: a2025-12-31
+kind: analysis
+effective_date: 2025-12-31
+observed_at: 2026-01-05
+completeness: complete
+source_snapshot_id: s2025-12-31
+observations: []
+analyses:
+  - skill_id: emergency-fund-sizing
+    headline: Reserve below target
+    calculated_at: 2026-01-05
+    model_version: pf-skills-v1
+    metrics:
+      - {metric_id: emergency_fund.months_held, effective_date: 2025-12-31,
+         value: 4.0, unit: months, basis: nonmonetary, scenario: current,
+         source: emergency-fund-sizing, clock: analysis, status: derived,
+         calculated_at: 2026-01-05, model_version: pf-skills-v1,
+         inputs_fingerprint: reserve-input-v1, data_quality: complete}
+    findings:
+      - {finding_id: skill.employer.concentration.risk.verdict,
+         effective_date: 2025-12-31, source_skill: employer-concentration-risk,
+         state: open, severity: uncovered, text: Employer risk is elevated,
+         calculated_at: 2026-01-05, model_version: pf-skills-v1,
+         change_driver: unknown, inputs_fingerprint: same-method-inputs}
+  - skill_id: retirement-readiness
+    headline: Real target
+    calculated_at: 2026-01-05
+    model_version: pf-skills-v1
+    metrics:
+      - {metric_id: retirement.target, effective_date: 2025-12-31,
+         value: 2405714, unit: currency, currency: USD, basis: real,
+         scenario: current, source: retirement-readiness, clock: analysis,
+         status: derived, calculated_at: 2026-01-05,
+         model_version: pf-skills-v1, inputs_fingerprint: retirement-v1,
+         data_quality: complete}
+    findings: []
+  - skill_id: housing-affordability
+    headline: Named cases stay separate
+    calculated_at: 2026-01-05
+    model_version: pf-skills-v1
+    metrics:
+      - {metric_id: housing.cash_flow_price_ceiling,
+         effective_date: 2025-12-31, value: 481000, unit: currency,
+         currency: USD, basis: nominal, scenario: current,
+         entity_id: cash-current,
+         source: housing-affordability, clock: analysis, status: derived,
+         calculated_at: 2026-01-05, model_version: pf-skills-v1,
+         inputs_fingerprint: housing-v1, data_quality: complete}
+      - {metric_id: housing.cash_flow_price_ceiling,
+         effective_date: 2025-12-31, value: 337000, unit: currency,
+         currency: USD, basis: nominal, scenario: conservative,
+         entity_id: cash-conservative,
+         source: housing-affordability, clock: analysis, status: derived,
+         calculated_at: 2026-01-05, model_version: pf-skills-v1,
+         inputs_fingerprint: housing-v1, data_quality: complete}
+    findings: []
+restatements: []
+notes: [Historical analysis kept separate from observed facts.]

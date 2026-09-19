@@ -1,8 +1,8 @@
-"""What is in `documents/`, what the schema still needs, and the gap between.
+"""What source documents exist, what the schema still needs, and the gap between.
 
 ## The one idea
 
-Fifty-four skills read `inputs/facts.yml`. **Nothing writes it.** A new
+Sixty-two skills read `inputs/facts.yml`. **Nothing writes it.** A new
 household's first hour is spent hand-transcribing figures out of PDFs into a
 39KB example file — which is precisely the task most likely to introduce the
 transcription and figure-drift defects this repository exists to prevent.
@@ -45,20 +45,33 @@ DOC_HINTS: dict[str, tuple[str, ...]] = {
     "property": ("renter", "homeowner", "home-policy", "condo", "hazard",
                  "dwelling", "ho3", "ho-3", "ho6"),
     "umbrella": ("umbrella", "excess-liability"),
+    "insurance": ("inputs/insurance/",),
     "insurance.life": ("life", "term", "whole-life", "universal", "vul",
                        "annual-statement"),
     "insurance.disability": ("disability", "ltd", "di-policy", "income-protection"),
     "household.balance_sheet": ("statement", "brokerage", "401k", "401-k",
                                 "ira", "hsa", "529", "vanguard", "fidelity",
-                                "schwab", "bank", "checking", "savings"),
+                                "schwab", "bank", "checking", "savings",
+                                "inputs/investments/"),
+    "household.members": ("inputs/income/", "paystub", "pay-slip",
+                           "compensation"),
     "equity_comp": ("equity", "rsu", "grant", "vest", "stock-plan", "etrade",
                     "shareworks", "carta"),
-    "debts": ("loan", "mortgage", "student", "card-statement", "heloc"),
-    "tax": ("1040", "1099", "w-2", "w2", "tax-return", "schedule-", "8938",
-            "fbar", "114"),
-    "foreign_accounts": ("nre", "nro", "foreign", "overseas", "fbar", "8938"),
+    "debts": ("inputs/debts/", "loan", "mortgage", "student",
+              "card-statement", "heloc"),
+    "tax": ("inputs/tax/", "1040", "1099", "w-2", "w2", "tax-return",
+            "schedule-", "8938", "fbar", "114"),
+    "foreign_accounts": ("inputs/cross-border/", "nre", "nro", "foreign",
+                         "overseas", "fbar", "8938"),
     "property_real_estate": ("rental", "closing", "settlement", "hud-1",
-                             "depreciation-schedule"),
+                             "depreciation-schedule", "inputs/property/"),
+    "retirement": ("inputs/retirement/", "social-security", "ssa"),
+    "education": ("inputs/education/", "tuition", "college"),
+    "estate": ("inputs/estate/", "will", "trust", "power-of-attorney",
+               "directive", "beneficiary"),
+    "healthcare": ("inputs/healthcare/", "medicare", "health-plan"),
+    "business": ("inputs/business/", "payroll", "schedule-c", "k-1"),
+    "transitions": ("inputs/life-events/", "marriage", "divorce", "windfall"),
 }
 
 #: Documents worth having that no filename will announce, because they are
@@ -305,13 +318,14 @@ def looks_renamed_for_privacy(name: str) -> bool:
 
     A statement saved as `Jane-Q-Smith-acct-4417-Nov.pdf` puts a name and a
     partial account number into a directory listing, a shell history and any
-    screenshot of either. `documents/` is gitignored, so this never reaches
-    git — but gitignore does not protect a terminal recording or a support
-    ticket, and the fix costs one `mv`.
+    screenshot of either. Source-document directories are gitignored, so this
+    never reaches git — but gitignore does not protect a terminal recording or
+    a support ticket, and the fix costs one `mv`.
     """
-    if not _SAFE_NAME.match(name):
+    basename = name.replace("\\", "/").rsplit("/", 1)[-1]
+    if not _SAFE_NAME.match(basename):
         return False
-    stem = name.rsplit(".", 1)[0]
+    stem = basename.rsplit(".", 1)[0]
     # Two or more capitalised words reads as a person's name.
     if len(re.findall(r"\b[A-Z][a-z]{2,}\b", stem)) >= 2:
         return True

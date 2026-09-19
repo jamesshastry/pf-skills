@@ -84,6 +84,38 @@ def test_the_housing_conflict_needs_a_purchase():
     assert "downpayment-vs-retirement" in keys(C.check(facts))
 
 
+def test_housing_affordability_cross_checks_are_live_on_relevant_facts():
+    facts = {
+        **BASE,
+        "household": {"members": [
+            {"id": "a1", "role": "primary", "age": 52,
+             "income_annual": 100_000, "employer": "SyntheticCo"}],
+            "balance_sheet": []},
+        "housing": {
+            "purchase": {"price": 500_000},
+            "affordability": {
+                "post_close_reserve_months": 6,
+                "funding": {"taxable_liquidation": {"account_name": "b"}},
+            },
+            "transition": {"kind": "rental_then_owner"},
+        },
+        "cash_flow": {"scenarios": [
+            {"kind": "conservative", "minimum_savings": {"annual_amount": 1}},
+        ]},
+        "portfolio": {"wash_sale": {"harvesting_continuous": True}},
+        "real_estate": {"activities": [{"label": "home"}]},
+    }
+    live = keys(C.check(facts))
+    assert {
+        "downpayment-vs-retirement",
+        "downpayment-vs-emergency-reserve",
+        "housing-cashflow-vs-savings-floor",
+        "housing-liquidation-vs-wash-sale",
+        "rental-first-vs-passive-loss",
+        "employer-income-vs-housing-stress",
+    } <= live
+
+
 def test_the_harvesting_conflict_is_driven_by_the_policy_not_the_holdings():
     """Review F1. An earlier predicate required a balance-sheet row that was
     simultaneously tier: liquid and asset_class: equity. No such row existed
@@ -202,6 +234,7 @@ def test_the_registry_covers_the_new_clusters():
                   "feie-vs-ftc", "charitable-giving-strategy",
                   "asset-allocation-review", "hsa-review"):
         assert skill in covered, f"{skill} has no registered conflict"
+    assert "housing-affordability" in covered
 
 
 # ── aliased keys ────────────────────────────────────────────────────────────

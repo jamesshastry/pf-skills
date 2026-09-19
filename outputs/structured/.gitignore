@@ -1,0 +1,3 @@
+# Keep this scaffold; ignore every generated result.
+*
+!.gitignore

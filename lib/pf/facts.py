@@ -24,6 +24,16 @@ AGE_RESTRICTED = "age_restricted"
 ILLIQUID = "illiquid"
 TIERS = (LIQUID, AGE_RESTRICTED, ILLIQUID)
 
+#: Additive classifications used where ``tier`` is too broad.  In particular,
+#: ``liquid`` correctly includes stock that can settle in days, but stock is
+#: not cash for a closing reserve and not every asset funds retirement.
+CASH_EQUIVALENT = "cash_equivalent"
+MARKETABLE = "marketable"
+RESTRICTED = "restricted"
+RESERVE_ILLIQUID = "illiquid"
+LIQUIDITY_CLASSES = (CASH_EQUIVALENT, MARKETABLE, RESTRICTED,
+                     RESERVE_ILLIQUID)
+
 
 class FactsError(Exception):
     """The facts file cannot be used at all (unparseable, wrong version)."""
@@ -249,6 +259,15 @@ def household_income(facts: dict[str, Any]) -> float:
     return float(sum(m.get("income_annual", 0) or 0 for m in members))
 
 
+def household_income_components(facts: dict[str, Any]) -> dict[str, float]:
+    """Aggregate named compensation components across household members."""
+    out: dict[str, float] = {}
+    for member in _dig(facts, "household.members") or []:
+        for name, value in (member.get("income_components") or {}).items():
+            out[str(name)] = out.get(str(name), 0.0) + float(value or 0.0)
+    return out
+
+
 def dependents(facts: dict[str, Any]) -> list[dict[str, Any]]:
     members = _dig(facts, "household.members") or []
     return [m for m in members if m.get("role") == "dependent"]
@@ -259,6 +278,82 @@ def months_of_spending(facts: dict[str, Any]) -> float | None:
     if not spend:
         return None
     return liquid(facts) / (float(spend) / 12.0)
+
+
+@dataclass
+class ClassifiedAssets:
+    """An auditable balance-sheet slice, with unknown rows kept visible."""
+
+    included: float = 0.0
+    excluded: float = 0.0
+    unknown: list[str] = field(default_factory=list)
+    rows: list[tuple[str, float]] = field(default_factory=list)
+    by_class: dict[str, float] = field(default_factory=dict)
+
+
+def retirement_assets(facts: dict[str, Any]) -> ClassifiedAssets:
+    """Assets explicitly available to fund retirement.
+
+    ``retirement_eligible`` is authoritative.  For older facts files, an
+    account whose wrapper is unambiguously retirement-directed is included;
+    every other unclassified row is excluded and named.  This is deliberately
+    asymmetric: understating a projection with an explicit uncertainty is
+    safer than silently calling a home, 529, or personal property a retirement
+    portfolio.
+    """
+    out = ClassifiedAssets()
+    for row in _dig(facts, "household.balance_sheet") or []:
+        if row.get("pending"):
+            continue
+        name = str(row.get("name") or "unnamed asset")
+        value = max(
+            0.0,
+            float(row.get("value") or 0.0)
+            - float(row.get("margin_debt") or 0.0),
+        )
+        eligible = row.get("retirement_eligible")
+        if eligible is None:
+            account_type = row.get("account_type")
+            if account_type in ("tax_deferred", "roth", "hsa"):
+                eligible = True
+            else:
+                out.unknown.append(name)
+                out.excluded += value
+                continue
+        if eligible:
+            out.included += value
+            out.rows.append((name, value))
+        else:
+            out.excluded += value
+    return out
+
+
+def reserve_assets(facts: dict[str, Any]) -> ClassifiedAssets:
+    """Cash-equivalent reserves, without treating marketable stock as cash.
+
+    Rows classified ``marketable`` are returned in ``rows`` for disclosure,
+    but only ``cash_equivalent`` balances enter ``included``.  Unclassified
+    rows are never promoted from the legacy ``liquid`` tier at par.
+    """
+    out = ClassifiedAssets()
+    for row in _dig(facts, "household.balance_sheet") or []:
+        if row.get("pending"):
+            continue
+        name = str(row.get("name") or "unnamed asset")
+        value = float(row.get("value") or 0.0)
+        classification = row.get("liquidity_class")
+        if classification not in LIQUIDITY_CLASSES:
+            out.unknown.append(name)
+            out.excluded += value
+            continue
+        out.by_class[classification] = out.by_class.get(classification, 0.0) + value
+        if classification == CASH_EQUIVALENT:
+            out.included += value
+        else:
+            out.excluded += value
+            if classification == MARKETABLE:
+                out.rows.append((name, value))
+    return out
 
 
 # ── dates ───────────────────────────────────────────────────────────────────

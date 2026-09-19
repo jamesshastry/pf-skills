@@ -93,6 +93,11 @@ Choosing a specific 529 plan or investment option, scholarship strategy, aid
 appeals, and the tax treatment of scholarships. Cost figures come from the
 facts file — this skill does not know what any institution charges.
 
+## Time-series output
+
+Emit total and per-beneficiary nominal funding gaps with the cost-inflation and
+return assumptions. A beneficiary ID, not an account label, is the join key.
+
 ---
 
 *Not financial or tax advice. Aid formulas, 529 rules and state treatment

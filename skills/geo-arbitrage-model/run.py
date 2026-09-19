@@ -16,9 +16,19 @@ m = cli.money
 
 
 def build(data: dict, w: cli.Writer) -> None:
-    assets = (F.tier_total(data, F.LIQUID) + F.tier_total(data, F.AGE_RESTRICTED)
-              + F.tier_total(data, F.ILLIQUID))
+    classified = F.retirement_assets(data)
+    assets = classified.included
     savings = float(F._dig(data, "retirement.annual_savings"))
+    current = next(
+        (s for s in (F._dig(data, "cash_flow.scenarios") or [])
+         if s.get("kind") == "current"), {})
+    try:
+        savings_path = R.savings_path_from_obligations(
+            savings, current.get("obligations") or [])
+    except ValueError as exc:
+        w(f"## BLOCKED — {exc}")
+        cli.disclaimer(w, "lib/pf/crossborder.py")
+        return
 
     p = X.model(
         F._dig(data, "crossborder.locations") or [],
@@ -26,6 +36,7 @@ def build(data: dict, w: cli.Writer) -> None:
         annual_savings=savings,
         fixed_annual=float(F._dig(data, "crossborder.fixed_annual_costs") or 0),
         duplicate_housing=F._dig(data, "crossborder.duplicate_housing"),
+        savings_by_year=savings_path,
     )
 
     if not p.legs:
@@ -38,6 +49,10 @@ def build(data: dict, w: cli.Writer) -> None:
       f"**{m(p.target_reduction)}** at a {p.withdrawal_rate:.1%} withdrawal "
       f"rate.")
     w()
+    if classified.unknown:
+        w("Retirement projection excludes unclassified assets: "
+          + ", ".join(classified.unknown) + ".")
+        w()
 
     w("## The split")
     w()

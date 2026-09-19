@@ -4,7 +4,7 @@ Every skill here is individually correct and each is tested in isolation. **Noth
 
 A household running one skill sees confident advice and no hint the other exists. That is worse than either skill being wrong, because there is nothing on the page to be suspicious of.
 
-**14 conflict(s) live for this household**, involving 21 skills.
+**19 conflict(s) live for this household**, involving 23 skills.
 
 ## `probate-exposure` ⇄ `citizenship-status-review`
 
@@ -42,13 +42,53 @@ A household running one skill sees confident advice and no hint the other exists
 
 **How to resolve it.** The salary that minimises this year's tax is usually not the salary that maximises the shelter. Model both together — optimising either alone gives the wrong number, and the reasonable-salary figure has to survive scrutiny regardless.
 
-## `rent-vs-buy` ⇄ `retirement-readiness`
+## `housing-affordability` ⇄ `retirement-readiness`
 
-**The tension.** A down payment moves a large sum out of invested assets. `rent-vs-buy` counts its opportunity cost within the housing comparison; `retirement-readiness` projects from a balance sheet that still includes it.
+**The tension.** A down payment moves a large sum out of invested assets. `housing-affordability` uses it at closing while `retirement-readiness` otherwise projects from a balance sheet that still includes the pre-close assets.
 
 **When it bites.** A purchase under consideration while a retirement projection is being relied on.
 
 **How to resolve it.** Re-run the retirement projection with the down payment and closing costs removed from investable assets, and with ownership costs rather than rent in spending. The retirement date usually moves, and that movement is part of the price of the house.
+
+## `housing-affordability` ⇄ `emergency-fund-sizing`
+
+**The tension.** Closing funds and the emergency reserve compete for the same cash, while marketable stock is not cash at par for either purpose.
+
+**When it bites.** A purchase target with a post-close reserve rule.
+
+**How to resolve it.** Treat the reserve as a use at closing, not as money left over after the down payment. Count only cash equivalents at face value; convert planned securities through the taxable sources-and-uses ledger first. A price that needs the emergency reserve to close fails the liquidity test.
+
+## `housing-affordability` ⇄ `retirement-readiness`
+
+**The tension.** A lender may approve debt service that consumes the annual saving needed for the retirement plan.
+
+**When it bites.** An affordability scenario with an explicit savings floor.
+
+**How to resolve it.** Apply the greater of the dollar and gross-income-rate savings floors before calling a price feasible. The lender maximum remains a separate outer limit, never the household target.
+
+## `housing-affordability` ⇄ `wash-sale-policy` ⇄ `rebalancing-rules`
+
+**The tension.** Selling taxable lots for closing can realise gains or losses while automated purchases or rebalancing can disallow the loss during the wash-sale window.
+
+**When it bites.** A taxable portfolio sale alongside a household wash-sale policy.
+
+**How to resolve it.** Name the lots sold, reserve tax from basis and holding period, and clear every purchase channel against the exclusion list before relying on a loss. Use new money or tax-advantaged trades to rebalance without recreating the sold position.
+
+## `housing-affordability` ⇄ `passive-loss-eligibility`
+
+**The tension.** The rental-first plan may show a tax loss, but §469 can suspend it instead of reducing the cash cost of the tenant phase.
+
+**When it bites.** A home is rented to a tenant before owner occupancy.
+
+**How to resolve it.** Join the proposed property to its §469 activity by label. Keep the phase pre-investor-tax and use zero current tax benefit unless the gate affirmatively opens; a suspended loss is deferred value, not closing-period cash.
+
+## `housing-affordability` ⇄ `employer-concentration-risk` ⇄ `equity-comp-review`
+
+**The tension.** The same employer can supply salary, bonus, and equity while also driving the asset decline that accompanies a job loss.
+
+**When it bites.** Employer-linked income and a conservative affordability scenario.
+
+**How to resolve it.** Build the conservative case from named compensation components, reducing variable and employer-correlated income without counting any component twice. Use that case for the stress ceiling and keep the current case as capacity, not as the sole answer.
 
 ## `wash-sale-policy` ⇄ `rebalancing-rules`
 

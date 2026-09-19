@@ -162,15 +162,13 @@ def test_household_reports_do_not_read_the_system_clock(skill):
 
 
 def test_the_example_fixture_satisfies_every_household_skill():
-    """The shipped example must exercise everything, or a new user copying it
-    hits a wall of missing fields on their first run."""
+    """The shipped example must exercise every path documented for reference."""
     failed = [s.name for s in HOUSEHOLD if not run_skill(s).ok]
     assert not failed, f"example fixture does not satisfy: {failed}"
 
 
 def test_the_example_fixture_is_the_only_one_committed():
-    """inputs/ is gitignored except the example; a stray real facts file here
-    would be the whole privacy failure."""
+    """No private root-level facts file may sit beside the public example."""
     stray = [p.name for p in (EXAMPLE_FACTS.parent).iterdir()
              if p.is_file() and p.name not in {"facts.example.yml", "README.md"}
              and not p.name.startswith(".")]

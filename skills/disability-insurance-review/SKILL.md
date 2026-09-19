@@ -108,6 +108,11 @@ it means reducing required spending rather than buying more cover.
 3. **Any dated finding, with its date**, and a note to re-run before acting.
 4. **Whether employer group LTD exists** — if it isn't in the facts file, ask.
 
+## Time-series output
+
+Emit the monthly after-tax coverage gap per insured stable ID with the tax-rate
+assumption. Do not compare stated gross benefits with after-tax history.
+
 ---
 
 *Not financial, tax, or legal advice. Tax treatment depends on how premiums are

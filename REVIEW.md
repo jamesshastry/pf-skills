@@ -1,6 +1,6 @@
 # Adversarial Review
 
-**Date:** September 14, 2026 · **Scope:** 25 shipped skills, 26 proposed across clusters 10–18
+**Opened:** September 14, 2026 · **Updated:** September 19, 2026 · **Current scope:** 64 shipped skills
 
 > A roadmap without a list of its own weaknesses is a wish list. This is the honest inventory.
 
@@ -173,7 +173,7 @@ in-plan-conversion route.
 
 Minor, caught before building, and included here because it is the third instance this cycle of
 a new brief proposing something already shipped. That is a **discoverability** problem: the
-briefs are written without reading `README.md`, and at pushing sixty skills that is understandable. It
+briefs are written without reading `README.md`, and at sixty-four skills that is understandable. It
 argues for a one-line index of what each skill already covers, kept where a brief-writer would
 find it.
 
@@ -209,7 +209,7 @@ edges, not just nodes.
 
 ## A7 — Nothing here has been used by anyone
 
-Fifty-nine skills, on the order of three thousand tests, one household, zero users. Every design decision has been
+Sixty-four skills, 3,118 passing tests, one household, zero external users. Every design decision has been
 validated against a single set of facts and a single reader.
 
 Several patterns that feel settled may simply be untested: reports are long, they are markdown to
@@ -237,7 +237,7 @@ the point.
 
 ---
 
-## A9 — At pushing sixty skills the "not advice" framing deserves a fresh look
+## A9 — At sixty-four skills the "not advice" framing deserves a fresh look
 
 Twenty-five skills covering insurance and savings reads as analysis tooling. Sixty covering tax
 elections, estate structure, entity choice, charitable strategy, Medicare timing and portfolio
@@ -245,8 +245,44 @@ allocation reads like something else, and the distinction between *"showing a ho
 arithmetic"* and *"providing financial planning"* is not purely a matter of adding a footer.
 
 Not a legal opinion, and not a reason to stop. It is a reason to look at it deliberately — that
-"at some point" is now, at pushing sixty — and the honest answer may simply be that the disclaimers
+"at some point" is now — and the honest answer may simply be that the disclaimers
 and the refusal-to-conclude discipline are already doing the work.
+
+---
+
+## A10 — History contained private facts but had only the ignore-rule guard ⚠️ material · **CLOSED 2026-09-19**
+
+The new `history/` directory retains prior copies of account balances, income,
+spending and analysis results. At discovery, `.gitignore` excluded it and
+snapshot writes refused overwrite, but the local pre-commit hook that caught a
+forced add checked only `inputs/`. `scripts/doctor.py` likewise inspected only
+`inputs/` and `documents/`.
+
+That leaves a specific escape hatch: `git add -f history/<snapshot>.yml` can
+stage ordinary financial values that gitleaks does not recognize as secrets.
+The token privacy pass helps only when its source includes the same old values;
+a later facts file may not.
+
+**Fixed 2026-09-19.** The staged-file hook now blocks private files under
+`inputs/`, `outputs/`, and `history/`, while allowing their committed
+scaffolds. The doctor checks the ignore rules and inspects all private-source
+and generated-output locations for tracked files. Contract tests exercise both
+the deny rules and the committed exceptions.
+
+---
+
+## A11 — Task prompts could bypass the root-only privacy rule ⚠️ material · **CLOSED 2026-09-19**
+
+Implementation prompts routinely quote the household facts that exposed a
+defect. The original ignore rules protected only `/*-prompt.md` and
+`/*-brief.md`; placing the same artifact under `prompts/` made it a normal
+untracked public file. Pattern scanning does not reliably recognize an exact
+benefit, balance, or other identifying profile as private.
+
+**Fixed 2026-09-19.** Prompt and brief artifacts are ignored at both locations,
+the forced-add hook blocks them, and the doctor includes them in its tracked
+private-file check. Existing local task prompts remain available to their owner
+but are excluded from this commit.
 
 ---
 

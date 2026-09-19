@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
-from pf import cli, disability as D, facts as F, ssa as SS  # noqa: E402
+from pf import cli, disability as D, facts as F, skill_metrics as SM, ssa as SS  # noqa: E402
 
 REQUIRED = ["household.members", "household.annual_spending",
             "household.balance_sheet", "insurance.disability"]
@@ -19,6 +19,7 @@ URGENCY = {"passed": "❌ passed", "urgent": "🔴 urgent",
 
 
 def build(data: dict, w: cli.Writer) -> None:
+    w.add_metrics(SM.emit("disability-insurance-review", data))
     members = F._dig(data, "household.members") or []
     policies = F._dig(data, "insurance.disability") or []
     spending = float(F._dig(data, "household.annual_spending"))
@@ -89,4 +90,5 @@ def build(data: dict, w: cli.Writer) -> None:
 
 if __name__ == "__main__":
     raise SystemExit(cli.run(title="Disability insurance review",
-                             required=REQUIRED, build=build))
+                             required=REQUIRED, build=build,
+                             skill_id="disability-insurance-review"))

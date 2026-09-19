@@ -1,5 +1,7 @@
 # Rent vs buy
 
+**This compares the economics of renting and buying; it does not determine affordability.** Use `housing-affordability` to establish which purchase prices are feasible, then compare them here.
+
 **Renting is cheaper** over 7 years, by **$146,789**.
 
 |  |  |
@@ -9,6 +11,8 @@
 | Loan | $416,000 |
 | Monthly payment (P&I) | $2,616 |
 | Current rent | $2,400/mo |
+
+Assumed growth (nominal): rent 3.0%, appreciation 3.0% — implied **+0.0% real**.
 
 ## Wealth given up over 7 years
 

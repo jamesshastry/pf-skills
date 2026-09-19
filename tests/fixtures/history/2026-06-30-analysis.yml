@@ -1,0 +1,34 @@
+history_schema_version: 1
+snapshot_id: a2026-06-30
+kind: analysis
+effective_date: 2026-06-30
+observed_at: 2026-07-02
+completeness: complete
+source_snapshot_id: s2026-06-30
+observations: []
+analyses:
+  - skill_id: emergency-fund-sizing
+    headline: Reserve improving
+    calculated_at: 2026-07-02
+    model_version: pf-skills-v2
+    metrics:
+      - {metric_id: emergency_fund.months_held, effective_date: 2026-06-30,
+         value: 5.1, unit: months, basis: nonmonetary, scenario: current,
+         source: emergency-fund-sizing, clock: analysis, status: derived,
+         calculated_at: 2026-07-02, model_version: pf-skills-v2,
+         inputs_fingerprint: reserve-input-v2, data_quality: complete}
+    findings: []
+  - skill_id: retirement-readiness
+    headline: Nominal sensitivity kept separate
+    calculated_at: 2026-07-02
+    model_version: pf-skills-v2
+    metrics:
+      - {metric_id: retirement.target, effective_date: 2026-06-30,
+         value: 3120000, unit: currency, currency: USD, basis: nominal,
+         scenario: current, source: retirement-readiness-sensitivity,
+         clock: analysis, status: derived, calculated_at: 2026-07-02,
+         model_version: pf-skills-v2, inputs_fingerprint: retirement-v2,
+         data_quality: estimated}
+    findings: []
+restatements: []
+notes: [Historical analysis kept separate from observed facts.]

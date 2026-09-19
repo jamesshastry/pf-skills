@@ -1,0 +1,38 @@
+history_schema_version: 1
+snapshot_id: s2026-09-30
+kind: complete
+effective_date: 2026-09-30
+observed_at: 2026-10-03
+completeness: complete
+facts:
+  meta: {schema_version: 1, as_of: 2026-09-30, currency: USD,
+         jurisdiction: {country: US, state: TX}}
+  household:
+    members: [{id: p1, role: primary, age: 41, income_annual: 180300}]
+    balance_sheet:
+      - {id: acct-brokerage, name: Meridian Investments, value: 95000,
+         tier: liquid, liquidity_class: marketable}
+      - {id: acct-bond, name: Synthetic Treasury account, value: 25000,
+         tier: liquid, liquidity_class: marketable}
+    annual_spending: 87200
+observations:
+  - {metric_id: household.net_worth, effective_date: 2026-09-30,
+     value: 370000, unit: currency, currency: USD, basis: nominal,
+     scenario: observed, source: household.balance_sheet+debts,
+     clock: observed, status: measured, observed_at: 2026-10-03,
+     data_quality: complete}
+  - {metric_id: household.asset_balance, effective_date: 2026-09-30,
+     value: 95000, unit: currency, currency: USD, basis: nominal,
+     scenario: observed, source: household.balance_sheet, clock: observed,
+     status: measured, entity_id: acct-brokerage,
+     display_label: Meridian Investments, observed_at: 2026-10-03,
+     data_quality: complete}
+  - {metric_id: household.asset_balance, effective_date: 2026-09-30,
+     value: 25000, unit: currency, currency: USD, basis: nominal,
+     scenario: observed, source: household.balance_sheet, clock: observed,
+     status: measured, entity_id: acct-bond,
+     display_label: Synthetic Treasury account, observed_at: 2026-10-03,
+     data_quality: complete}
+analyses: []
+restatements: []
+notes: []

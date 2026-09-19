@@ -1,15 +1,31 @@
 # Rental deal underwriting
 
-**1 of 2 deals fail the 1.20 DSCR floor** — Gulf Coast cabin. At that leverage the property does not service its own debt and the borrower's salary is the reserve.
+**2 of 3 deals fail the 1.20 DSCR floor** — Maple Ridge home, Gulf Coast cabin. At that leverage the property does not service its own debt and the borrower's salary is the reserve.
 
 Every figure below is **pre-investor-tax and nominal**. No after-tax return is available until `passive-loss-eligibility` says a §469 door is open.
 
 | Deal | Price | Cash in | NOI yr1 | Cap rate | CoC | DSCR | IRR | Multiple |
 |---|---|---|---|---|---|---|---|---|
+| Maple Ridge home | $520,000 | $143,750 | $19,454 | 3.74% | -8.97% | **0.64** | -7.0% | 0.79× |
 | Cedar Park duplex | $420,000 | $156,000 | $28,740 | 6.84% | 3.12% | 1.34 | 9.6% | 1.81× |
 | Gulf Coast cabin | $420,000 | $51,000 | $13,116 | 3.12% | -35.62% | **0.44** | -5.6% | 0.30× |
 
 NOI excludes debt service **and** capital expenditure — that is what makes the cap rate comparable across differently financed buyers. The capital reserve is subtracted below NOI, in cash flow.
+
+## Maple Ridge home
+
+Loan $390,000 · annual debt service $30,354 · net sale proceeds at exit $150,423
+
+| Year | Gross rent | NOI | Debt service | Capex reserve | Cash flow |
+|---|---|---|---|---|---|
+| 1 | $46,284 | $19,454 | $30,354 | $1,990 | $-12,891 |
+| 2 | $47,719 | $19,913 | $30,354 | $2,052 | $-12,494 |
+| 3 | $49,198 | $20,380 | $30,354 | $2,116 | $-12,090 |
+
+- **DSCR of 0.64 is below the 1.20 lender floor.** Most DSCR and agency programmes will not write it at this leverage. The fix is a larger down payment or a lower price, not a more optimistic rent — and if the property cannot service its own debt, the borrower's W-2 is the reserve.
+- Cap rate of 3.7% is below 5.0%. Whatever return this deal produces is coming from appreciation and amortisation, not from the asset's income. The 2.8% appreciation assumption is therefore doing most of the work in the IRR below, and it is an assumption, not a cash flow.
+- Year-1 cash-on-cash is -9.0% — the property consumes $12,891 of outside cash per year. That is a position, not necessarily a mistake, but it has to be funded from somewhere for 3 years and the funding has to be named.
+- Weakest input: the **2.8% appreciation** assumption — $150,423 of the return arrives as sale proceeds at the horizon, so the IRR is a forecast wearing a metric's clothes. The year-1 figures above it are not.
 
 ## Cedar Park duplex
 

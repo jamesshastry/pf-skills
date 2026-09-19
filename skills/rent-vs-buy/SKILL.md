@@ -1,12 +1,16 @@
 ---
 name: rent-vs-buy
-description: Compare renting against buying on total cost of occupancy over a holding period, including property tax, maintenance, transaction costs and the opportunity cost of the down payment, and report the break-even holding period. Use when asked whether to buy a home, whether renting is throwing money away, or how long you need to stay for buying to pay off. Reads figures from a local facts file.
+description: Compare the economic cost of renting versus owning at an already-feasible purchase price, including transaction costs, opportunity cost, terminal equity, and the break-even year. Use when choosing between feasible rent and buy options or testing a holding period; do not use to answer how much home is affordable. Reads figures from a local facts file.
 requires:
   - housing.monthly_rent
   - housing.purchase
 ---
 
 # Rent vs buy
+
+**This compares the economics of renting and buying; it does not determine
+affordability.** Run `housing-affordability` first to identify feasible prices,
+then use this skill to compare those choices.
 
 ## The comparison everyone makes is the wrong one
 
@@ -77,6 +81,12 @@ Appreciation is a **dial, not a prediction**. The default is zero real. If the
 household wants to assume appreciation, set it explicitly and then show how
 much of the conclusion depends on it — if the answer flips on a one-point
 change, that is the finding.
+
+When either growth input is overridden, the report shows the implied real
+spread (appreciation minus rent growth) next to the inputs, and flags it when
+the override moves off the default spread. Moving one side without the other
+is usually accidental — lowering rent growth while holding appreciation fixed
+raises the real view without saying so.
 
 ## What it doesn't model
 

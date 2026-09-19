@@ -9,8 +9,8 @@ YAML file the user owns, runs tested arithmetic from a small Python library, and
 markdown report to stdout.
 
 There is no server, no account, and no network call. The repository is public; the numbers never
-are. Fifty-nine skill directories sit under `skills/`, backed by thirty-nine modules under
-`lib/pf/` and 2,865 passing tests. The work was built as eighteen thematic clusters plus several
+are. Sixty-four skill directories sit under `skills/`, backed by forty-four modules under
+`lib/pf/` and 3,118 passing tests. The work was built as eighteen thematic clusters plus several
 cross-cutting ones, landed over thirty-four commits — roughly one per cluster or piece of
 shared infrastructure.
 
@@ -51,8 +51,9 @@ or state; anything outside the table returns `UNKNOWN` and the report says so.
 The whole thing is driven by `uv run`. Every runner carries PEP 723 inline script metadata
 declaring its dependencies, so there is no install step, no virtualenv, and no lockfile to keep
 current. `scripts/doctor.py` checks the environment, `scripts/init_facts.py` writes a skeleton
-of nulls, and `scripts/privacy_audit.py` scans the working tree and full git history for values
-that should not have been committed.
+of nulls, `scripts/history.py` owns explicit immutable snapshots, and
+`scripts/privacy_audit.py` scans the public working tree and full git history for values that
+should not have been committed.
 
 ## Target Users
 
@@ -62,7 +63,8 @@ They have documents — policies, statements, returns — and no interest in upl
 
 **The agent itself is the second user, and arguably the closer one.** Skill descriptions are
 written to be routed on: 120–1024 characters, each containing an explicit "Use when …" clause.
-The intended loop is that the agent runs `document-intake`, reads the documents, *proposes*
+The intended loop is that the household sorts source files into categorized private
+`inputs/` directories, the agent runs `document-intake`, reads the documents, *proposes*
 values, the human confirms them into the facts file, and then the agent runs the relevant skills
 and explains the output.
 
@@ -106,6 +108,17 @@ canonical case: filling low tax brackets with Roth conversions raises the MAGI t
 subsidies taper against, and IRMAA looks back two years on top of that. For a household retiring
 before 65, those are the same years, and nothing in either single report would tell you.
 
+**History is an explicit act, not a side effect.** A normal skill run never creates a snapshot.
+The history command records when facts were effective, when they were observed, and when an
+analysis was calculated as separate clocks. It refuses overwrite, keeps corrections as separate
+restatements, never forward-fills a missing value, and rejects comparisons whose currency, basis,
+scenario, entity or dimensions do not match.
+
+**A scenario is not a fact.** The scenario engine applies typed events to a reconciled monthly
+cash-flow baseline, preserves intra-period failures even if the ending balance recovers, and
+emits projection-clock metrics through the same protocol as history. It is deterministic: no
+probability, inferred tax, market fetch, automatic liquidation, execution or write-back.
+
 **A test designed to go red.** `test_the_current_year_is_present_in_the_limits_table` fails when
 the calendar rolls past the last year `lib/pf/limits.py` covers. That is a maintenance signal,
 not a bug — a stale statutory limit gets quoted confidently and believed.
@@ -123,10 +136,17 @@ tests/test_<module>.py    unit tests on the module
 
 `lib/pf/facts.py` loads and validates the facts file against the schema version and resolves
 dotted paths. `lib/pf/cli.py` is the shared runner: parse `--facts`, load, check required paths,
-stop cleanly if any are missing, otherwise hand a `Writer` to the skill's `build()`. Modules
-return dataclasses with a `findings` list, never formatted report strings. No module reads the
-system clock — dates come from `meta.as_of` in the facts file, which is what makes output
-deterministic and golden-testable.
+stop cleanly if any are missing, otherwise hand a `Writer` to the skill's `build()`. Adapted
+skills may attach structured metric observations to that writer, but they are serialized only
+when the caller supplies `--structured-output`. Modules return dataclasses with a `findings`
+list, never formatted report strings. No module reads the system clock — dates come from
+`meta.as_of` in the facts file, which is what makes output deterministic and golden-testable.
+
+`lib/pf/timeseries.py` defines immutable snapshot, metric, finding and restatement records plus
+the comparability rules for observed, analysis and projection clocks. `lib/pf/skill_metrics.py`
+adapts domain calculations without moving storage into the skills. `lib/pf/scenario.py` owns the
+typed event parser, deterministic same-month ordering and monthly cash/net-worth reconciliation;
+the general planner and focused job-loss and windfall skills are views over that one engine.
 
 Reference data is segregated from reasoning. `limits.py`, `jurisdiction.py` and the country and
 statutory tables in `crossborder.py`, `healthcare.py`, `expat.py` and others register themselves
@@ -142,24 +162,28 @@ declares dependencies inline, every required path resolves in the example fixtur
 listed in `README.md` and `ROADMAP.md`, output is deterministic against a golden fixture, a
 missing field stops without a traceback, and nothing goes to stderr on success. Two skills —
 `document-intake` and `reference-data-refresh` — take no `--facts` and are excluded from the
-household-skill checks by name, with the reason recorded in the harness. The other fifty-seven
+household-skill checks by name, with the reason recorded in the harness. The other sixty-two
 each have a golden fixture. A generated suite also asserts that every household skill has an
 adapter in `household-review` (below), which is the mechanism that keeps whole-library
 coverage whole as skills are added.
 
-Privacy is enforced structurally rather than by care. `.gitignore` excludes everything in
-`inputs/`, `documents/` and `outputs/` except the example and the READMEs; a pre-commit hook runs
-gitleaks and a local hook that blocks any non-example file staged from `inputs/`, because
-`git add -f` exists and a mistyped ignore rule fails silently; a contract test asserts the
-example fixture is the only one committed.
+Privacy is enforced structurally rather than by care. `.gitignore` excludes private facts and
+the contents of categorized `inputs/` directories, plus private content under `documents/`,
+`outputs/` and `history/`, while retaining only explicit repository scaffolds;
+a pre-commit hook runs gitleaks and a local hook that blocks private files
+staged from `inputs/`, `outputs/`, or `history/`, because `git add -f` exists
+and a mistyped ignore rule fails silently. A contract test asserts the public
+example, directory scaffolds, and empty history marker are the only allowed
+files there.
 
 ## Design System
 
 **There is no GUI.** No web app, no TUI, no charts. The product surface is a command line, a text
 file, and markdown on stdout — and the consistency work went there instead.
 
-The *report* is the design system. `cli.Writer` offers exactly two operations: `w("text")`
-appends a line and `w.table(header, rows)` writes a markdown table. Nothing else. Every report
+The *report* is the design system. `cli.Writer` keeps Markdown narrow: `w("text")` appends a line
+and `w.table(header, rows)` writes a markdown table. Its separate `add_metrics()` channel holds
+structured observations without changing that report. Every report
 opens with a title, shows derivations as tables rather than asserting conclusions, names its
 weakest input explicitly, labels estimates as estimates and unverified figures as unverified,
 attaches dates to findings that expire, and closes with a disclaimer pointing at the module that
@@ -181,7 +205,7 @@ uncertainty, no hedging where the arithmetic is clear.
 
 ## Current Capabilities
 
-Fifty-nine skills run today. Fifty-seven read a facts file and cover property and casualty,
+Sixty-four skills run today. Sixty-two read a facts file and cover property and casualty,
 income protection, beneficiaries and estate, tax-advantaged space, cash and debt, concentration,
 retirement adequacy, housing, education, cross-border planning, expat tax filing, offshore assets
 and pensions, owner-operator business entities, portfolio policy, charitable giving, healthcare
@@ -189,11 +213,17 @@ and aging, life transitions, and real-estate investing — plus a cross-cutting 
 immigration-status and domicile review, `conflict-check` over the registry of contradictions,
 and `household-review`, which re-runs every skill's check in-process and ranks the findings
 into one worklist: expiring items first, then uncovered losses, priced drags, and optimizations.
-Two run without a facts file: `document-intake`, which builds the onboarding worklist from what
-is in `documents/`, and `reference-data-refresh`, which reports on the staleness of the
+`housing-affordability` adds reconciled current and conservative price ceilings, lender and
+cash-only constraints, closing liquidity and rent-first occupancy phases. The cross-cutting
+`financial-history-review` compares immutable snapshots without mixing clocks or methodologies;
+`financial-scenario-planner`, `job-loss-stress-test` and `windfall-deployment-planner` share one
+deterministic monthly engine.
+Two run without a facts file: `document-intake`, which builds the onboarding worklist from the
+categorized input directories and legacy `documents/` drop zone, and
+`reference-data-refresh`, which reports on the staleness of the
 repository's own tables and generates the verification checklist.
 
-Recent additions since the original eighteen clusters: a `social_security` schema block that
+Other additions since the original eighteen clusters include a `social_security` schema block that
 mirrors the SSA statement (retirement, disability, and survivor figures read, never computed;
 family maximum binds; `payable_abroad` stays nullable), which `survivor-needs` nets year by
 year out of the capital need while still reporting the un-netted total; insured-status
@@ -202,8 +232,8 @@ harvester in `lib/pf/intake.py` so the onboarding report and the whole-household
 each skill's declared inputs from one copy.
 
 Supporting all of it: the schema contract in `SCHEMA.md`, a fictional example household (the
-Riveras, Austin TX) as the committed fixture, three setup and safety scripts, gitleaks plus a
-local pre-commit hook, and 2,865 passing tests.
+Riveras, Austin TX) as the committed fixture, four setup, history and safety scripts, gitleaks
+plus a local pre-commit hook, and 3,118 passing tests.
 
 `REVIEW.md` is the standing inventory of what is wrong, and it is worth reading as part of the
 capability statement rather than against it. The 201 asserted reference values are generated,
@@ -258,8 +288,8 @@ erosion, because a boundary that gives way under repeated asking is not a bounda
 
 ## Portfolio Summary
 
-pf-skills is a local-first library of 59 agent skills for household financial decisions, built on
-39 tested Python modules with 2,865 passing tests and zero network dependencies. Its organising
+pf-skills is a local-first library of 64 agent skills for household financial decisions, built on
+44 Python modules with 3,118 passing tests and zero network dependencies. Its organising
 idea is that skills hold procedures and thresholds while the user's own gitignored file holds
 values — which is what allows the reasoning to be public and reviewable while the data never
 leaves the machine. The engineering interest is in what the system refuses to do: it stops and
@@ -270,4 +300,4 @@ standing adversarial review says so in the first paragraph.
 
 ---
 Created: 2026-09-15
-Last updated: 2026-09-17
+Last updated: 2026-09-19

@@ -9,6 +9,7 @@ rendering differs.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Callable
@@ -25,6 +26,8 @@ class Writer:
 
     def __init__(self) -> None:
         self.lines: list[str] = []
+        self.metrics: list[object] = []
+        self.structured_findings: list[object] = []
 
     def __call__(self, text: str = "") -> None:
         self.lines.append(text)
@@ -38,6 +41,13 @@ class Writer:
     def render(self) -> str:
         return "\n".join(self.lines)
 
+    def add_metrics(self, metrics) -> None:
+        """Attach typed metrics without putting machine data in Markdown."""
+        self.metrics.extend(metrics)
+
+    def add_structured_findings(self, findings) -> None:
+        self.structured_findings.extend(findings)
+
 
 def run(
     *,
@@ -45,10 +55,15 @@ def run(
     required: list[str],
     build: Callable[[dict, Writer], None],
     missing_hint: str = "See SCHEMA.md. Fill these in rather than letting the skill guess.",
+    skill_id: str | None = None,
     argv: list[str] | None = None,
 ) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--facts", required=True)
+    ap.add_argument(
+        "--structured-output",
+        help="explicitly save structured metrics/findings as local JSON",
+    )
     args = ap.parse_args(argv)
 
     try:
@@ -73,6 +88,30 @@ def run(
         return 1
 
     build(data, w)
+    if args.structured_output:
+        if not skill_id or not (w.metrics or w.structured_findings):
+            print("ERROR: this skill does not emit structured results", file=sys.stderr)
+            return 2
+        from pf import timeseries as T  # noqa: PLC0415
+        target = Path(args.structured_output)
+        if target.exists():
+            print(f"ERROR: refusing to overwrite {target}", file=sys.stderr)
+            return 2
+        calculated = F._as_date(F._dig(data, "meta.analysis_at")) or F.as_of(data)
+        if calculated is None:
+            print("ERROR: meta.as_of is required for structured output", file=sys.stderr)
+            return 2
+        result = T.StructuredResult(
+            skill_id=skill_id,
+            headline=title,
+            calculated_at=calculated,
+            model_version=T.ANALYSIS_MODEL_VERSION,
+            metrics=list(w.metrics),
+            findings=list(w.structured_findings),
+        )
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(result.to_dict(), indent=2) + "\n",
+                          encoding="utf-8")
     print(w.render())
     return 0
 

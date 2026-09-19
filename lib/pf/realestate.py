@@ -603,6 +603,153 @@ class YearRow:
 
 
 @dataclass
+class RentalSnapshot:
+    """Nominal, pre-investor-tax property cash lines exposed.
+
+    This is the shared property layer for rental underwriting and a temporary
+    tenant phase in a household housing plan.  Household rent and household
+    savings do not belong here.
+    """
+
+    gross_rent: float
+    other_income: float
+    vacancy_loss: float
+    credit_loss: float
+    management: float
+    leasing_turnover: float
+    maintenance: float
+    property_tax: float
+    landlord_insurance: float
+    hoa: float
+    other_operating: float
+    noi: float
+    debt_service: float
+    capital_reserve: float
+    cash_flow: float
+    defaults_used: list[str] = field(default_factory=list)
+
+
+def rental_snapshot(deal: dict, *, year: int = 1) -> RentalSnapshot:
+    """Expose one year's property cash flow using underwriting definitions.
+
+    NOI excludes debt service and capital reserves; cash flow includes both.
+    Rates grow from year one using the deal's own nominal growth assumptions.
+    Missing vacancy, credit-loss, and capital-reserve inputs use the same named
+    defaults as :func:`underwrite`, and the caller can disclose them from
+    ``defaults_used``.
+    """
+    if year < 1:
+        raise ValueError("year must be at least 1")
+    defaults: list[str] = []
+    vacancy = deal.get("vacancy_rate")
+    if vacancy is None:
+        vacancy = DEFAULT_VACANCY_RATE
+        defaults.append(f"vacancy {DEFAULT_VACANCY_RATE:.1%}")
+    credit = deal.get("credit_loss_rate")
+    if credit is None:
+        credit = DEFAULT_CREDIT_LOSS_RATE
+        defaults.append(f"credit loss {DEFAULT_CREDIT_LOSS_RATE:.1%}")
+    capex_rate = deal.get("capex_reserve_rate")
+    if capex_rate is None:
+        capex_rate = DEFAULT_CAPEX_RESERVE_RATE
+        defaults.append(f"capital reserve {DEFAULT_CAPEX_RESERVE_RATE:.1%}")
+
+    rent_growth = float(deal.get("rent_growth") or 0.0)
+    expense_growth = float(deal.get("expense_growth") or rent_growth)
+    rent_factor = (1.0 + rent_growth) ** (year - 1)
+    expense_factor = (1.0 + expense_growth) ** (year - 1)
+    gross = float(deal.get("gross_rent_monthly") or 0.0) * 12.0 * rent_factor
+    other_income = (
+        float(deal.get("other_income_monthly") or 0.0) * 12.0 * rent_factor
+    )
+    expenses = {
+        str(k): float(v or 0.0) * expense_factor
+        for k, v in (deal.get("operating_expenses") or {}).items()
+    }
+    known = {
+        "management", "leasing_turnover", "maintenance", "property_tax",
+        "insurance", "landlord_insurance", "hoa",
+    }
+    management = expenses.get("management", 0.0)
+    leasing = expenses.get("leasing_turnover", 0.0)
+    maintenance = expenses.get("maintenance", 0.0)
+    property_tax = expenses.get("property_tax", 0.0)
+    insurance = expenses.get(
+        "landlord_insurance", expenses.get("insurance", 0.0))
+    hoa = expenses.get("hoa", 0.0)
+    other_operating = sum(v for k, v in expenses.items() if k not in known)
+    opex = sum(expenses.values())
+    vacancy_loss = gross * float(vacancy)
+    credit_loss = gross * float(credit)
+    noi = net_operating_income(
+        gross_rent=gross,
+        other_income=other_income,
+        vacancy_rate=float(vacancy),
+        credit_loss_rate=float(credit),
+        operating_expenses=opex,
+    )
+    loan = max(0.0, float(deal.get("price") or 0.0)
+               - float(deal.get("down_payment") or 0.0))
+    debt_service = monthly_payment(
+        loan,
+        float(deal.get("loan_rate") or 0.0),
+        int(deal.get("loan_term_years") or 30),
+    ) * 12.0
+    capital_reserve = gross * float(capex_rate)
+    return RentalSnapshot(
+        gross_rent=gross,
+        other_income=other_income,
+        vacancy_loss=vacancy_loss,
+        credit_loss=credit_loss,
+        management=management,
+        leasing_turnover=leasing,
+        maintenance=maintenance,
+        property_tax=property_tax,
+        landlord_insurance=insurance,
+        hoa=hoa,
+        other_operating=other_operating,
+        noi=noi,
+        debt_service=debt_service,
+        capital_reserve=capital_reserve,
+        cash_flow=noi - debt_service - capital_reserve,
+        defaults_used=defaults,
+    )
+
+
+def rental_period(deal: dict, *, months: int) -> RentalSnapshot:
+    """Property cash-flow totals for an exact number of months.
+
+    Each twelve-month block uses the next underwriting year, so a tenant phase
+    longer than one year applies the recorded rent and expense growth instead
+    of multiplying year-one cash flow across the whole phase.
+    """
+    if months <= 0:
+        raise ValueError("months must be positive")
+    names = (
+        "gross_rent", "other_income", "vacancy_loss", "credit_loss",
+        "management", "leasing_turnover", "maintenance", "property_tax",
+        "landlord_insurance", "hoa", "other_operating", "noi",
+        "debt_service", "capital_reserve", "cash_flow",
+    )
+    totals = {name: 0.0 for name in names}
+    defaults: list[str] = []
+    remaining = months
+    year = 1
+    while remaining:
+        chunk = min(12, remaining)
+        annual = rental_snapshot(deal, year=year)
+        share = chunk / 12.0
+        for name in names:
+            totals[name] += float(getattr(annual, name)) * share
+        for default in annual.defaults_used:
+            if default not in defaults:
+                defaults.append(default)
+        remaining -= chunk
+        year += 1
+    return RentalSnapshot(**totals, defaults_used=defaults)
+
+
+@dataclass
 class Underwriting:
     label: str
     price: float

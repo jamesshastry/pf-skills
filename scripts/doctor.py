@@ -53,8 +53,10 @@ def environment() -> None:
 def privacy_guards() -> None:
     gi = (ROOT / ".gitignore")
     txt = gi.read_text() if gi.exists() else ""
-    for rule, what in (("inputs/*", "facts files"), ("documents/*", "statements"),
-                       ("outputs/*", "generated reports")):
+    for rule, what in (("inputs/*", "facts and source documents"),
+                       ("documents/*", "legacy statement drop zone"),
+                       ("outputs/*", "generated reports"),
+                       ("history/*", "historical facts and analyses")):
         if rule in txt:
             check(OK, f"gitignore {rule}", what)
         else:
@@ -75,10 +77,31 @@ def privacy_guards() -> None:
                                        "add -f` and typo'd ignore rules.")
 
     # The check that matters most: has anything private already been staged?
-    rc, out = _run("git", "-C", str(ROOT), "ls-files", "inputs/", "documents/")
-    tracked = [f for f in out.splitlines()
-               if f and not f.endswith(".example.yml")
-               and not f.endswith("README.md")]
+    rc, out = _run(
+        "git", "-C", str(ROOT), "ls-files", "inputs/", "documents/",
+        "outputs/", "history/", "prompts/"
+    )
+    allowed = {
+        "inputs/README.md", "documents/README.md", "outputs/README.md",
+        "outputs/.gitkeep", "history/.gitkeep", "prompts/README.md",
+    }
+
+    def public_scaffold(path: str) -> bool:
+        parts = Path(path).parts
+        return (
+            path in allowed
+            or (len(parts) == 2 and parts[0] == "inputs"
+                and parts[1].endswith(".example.yml"))
+            or (len(parts) == 3 and parts[0] in ("inputs", "outputs")
+                and parts[2] == ".gitignore")
+        )
+
+    tracked = [f for f in out.splitlines() if f and not public_scaffold(f)]
+    _, all_tracked = _run("git", "-C", str(ROOT), "ls-files")
+    tracked.extend(
+        f for f in all_tracked.splitlines()
+        if "/" not in f and f.endswith(("-prompt.md", "-brief.md"))
+    )
     if tracked:
         check(FAIL, "tracked private files",
               "IN GIT: " + ", ".join(tracked[:5]))
@@ -116,7 +139,8 @@ def facts() -> None:
     if as_of:
         import datetime as dt
         try:
-            d = as_of if isinstance(as_of, dt.date) else dt.date.fromisoformat(str(as_of))
+            d = (as_of if isinstance(as_of, dt.date)
+                 else dt.date.fromisoformat(str(as_of)))
             age = (dt.date.today() - d).days
             check(OK if age <= 400 else WARN, "meta.as_of",
                   f"{d} ({age} days old)"

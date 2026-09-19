@@ -1,8 +1,11 @@
-# documents/
+# documents/ *(legacy flat drop zone)*
 
-**Put your statements here.** Anything, any format, any filename.
+This directory remains supported, but new source documents should use the
+categorized scaffold under [`inputs/`](../inputs/README.md#source-document-scaffold).
+Anything already here will still be scanned.
 
-Nothing in this directory is committed. Nothing leaves your machine.
+Private contents are ignored and nothing leaves your machine; this README is
+the only committed file here.
 
 ```
 documents/
@@ -47,9 +50,10 @@ transaction export.
 
 ## Filenames are visible even when files are not
 
-This directory is gitignored, so nothing here reaches git. Gitignore does not
-protect a screen share, a terminal recording, a directory listing pasted into a
-chat, or a support ticket.
+This directory and the categorized input directories are gitignored, so their
+contents do not normally reach git. Gitignore does not protect a screen share,
+a terminal recording, a directory listing pasted into a chat, or a support
+ticket.
 
 A statement saved as `Jane-Q-Smith-acct-44172-Nov.pdf` puts a name and a partial
 account number into all of those. `document-intake` flags filenames that look

@@ -36,8 +36,8 @@ uv run --with pre-commit pre-commit install
 ```
 
 Two guards keep real data out of git: the ignore rules, and a hook that blocks
-any non-example file staged from `inputs/`. Both exist because `git add -f` is
-one keystroke away and a mistyped ignore rule fails silently.
+private files staged from `inputs/`, `outputs/`, or `history/`. Both exist because
+`git add -f` is one keystroke away and a mistyped ignore rule fails silently.
 
 ## 3. Make a facts file
 
@@ -54,17 +54,23 @@ difference between a number you entered and one the Riveras came with. A null
 fails loudly; an invented number produces a confident report.
 
 Fill in `household.members` and `meta.jurisdiction.state` first. That is about
-four lines of YAML and it unblocks roughly thirty of the fifty-three skills.
+four lines of YAML and it unblocks roughly thirty of the sixty-two skills that
+read a facts file.
 
 ## 4. Add your documents
 
 ```bash
-cp ~/Downloads/*.pdf documents/
+cp ~/Downloads/checking.pdf inputs/banking/
+cp ~/Downloads/brokerage.pdf inputs/investments/
+cp ~/Downloads/auto-policy.pdf inputs/insurance/
 uv run skills/document-intake/run.py
 ```
 
-Anything, any format, any filename. Nothing in `documents/` is committed and
-nothing is uploaded.
+Anything, any format, any filename. The committed category scaffolds cover
+banking, investments, retirement, insurance, income, debts, tax, property,
+estate, education, healthcare, business, cross-border records, and life events.
+Their contents are ignored and nothing is uploaded. The legacy flat
+`documents/` directory is still scanned.
 
 The report tells you which fields are still unset, **which of them block the
 most skills**, and which document probably answers each. Work that list from
@@ -88,8 +94,19 @@ not an error to work around.
 ```bash
 # Save a report
 uv run skills/auto-insurance-review/run.py --facts inputs/facts.yml \
-  > outputs/auto-2026.md
+  > outputs/reports/auto-2026.md
 ```
+
+The first history-enabled skills can also write their metrics to a separate,
+machine-readable file without changing the Markdown report:
+
+```bash
+uv run skills/emergency-fund-sizing/run.py --facts inputs/facts.yml \
+  --structured-output outputs/structured/emergency-fund-2026.json
+```
+
+That file is written only when requested and is not a history snapshot. The
+runner refuses to overwrite it.
 
 ## 6. Check the edges
 
@@ -102,6 +119,51 @@ Every skill is individually correct. Some of them give the same household
 raises the MAGI that premium subsidies taper against, and both pieces of advice
 are right. Nothing in a single report would tell you.
 
+## 7. Start a history only when you have a truthful observation *(optional)*
+
+Do not reconstruct old balances from memory. Start with the first date you can
+support, and distinguish when the facts were true from when you recorded them:
+
+```bash
+uv run scripts/history.py capture --facts inputs/facts.yml \
+  --snapshot-id s2026-08-30 --effective-date 2026-08-30 \
+  --observed-at 2026-08-31 --output history/2026-08-30.yml
+uv run scripts/history.py calculate --snapshot history/2026-08-30.yml \
+  --snapshot-id a2026-08-31 --calculated-at 2026-08-31 \
+  --output history/2026-08-30.analysis.yml
+```
+
+Capture refuses to overwrite a file. Corrections are separate restatement
+documents; the original remains intact. After a second capture, compare them:
+
+```bash
+uv run scripts/history.py compare \
+  history/2026-08-30.yml history/2026-11-30.yml
+```
+
+Add the files you want reviewed to `history.snapshot_files` in your facts file,
+then run `financial-history-review`. The three clocks—observed facts, analyses,
+and projections—remain separate, and missing values are never carried forward.
+See [SCHEMA.md](SCHEMA.md#history--immutable-local-snapshots) for the document
+contract and restatement command.
+
+## 8. Model a scenario without changing the facts *(optional)*
+
+Record a reconciled baseline under `cash_flow.scenarios` and deterministic,
+typed events under `scenario_planning.scenarios`; use the synthetic example for
+shape, never for amounts. Then run the general or focused report:
+
+```bash
+uv run skills/financial-scenario-planner/run.py --facts inputs/facts.yml
+uv run skills/job-loss-stress-test/run.py --facts inputs/facts.yml
+uv run skills/windfall-deployment-planner/run.py --facts inputs/facts.yml
+```
+
+These reports do not assign probabilities, fetch market data, execute an
+action, or write results back into the facts file. See
+[SCHEMA.md](SCHEMA.md#scenario_planning--deterministic-what-if-paths) for event
+types, reconciliation rules, and same-month ordering.
+
 ---
 
 ## Using this with an agent
@@ -109,7 +171,7 @@ are right. Nothing in a single report would tell you.
 The skills are written to be read by an agent as much as by you. The intended
 loop:
 
-1. You put documents in `documents/`
+1. You put documents in the matching `inputs/<category>/` directories
 2. The agent runs `document-intake` and reads the files
 3. The agent **proposes** values; **you** confirm them into `inputs/facts.yml`
 4. The agent runs the relevant skills and explains the reports
@@ -140,6 +202,10 @@ numbers) and your *actual values*, searched across the working tree **and the
 full git history**. A value deleted in a later commit is still published the
 moment the repository is.
 
+Files under `history/` contain retained copies of private facts. They are
+gitignored, and the commit hook blocks a forced add. Do not bypass either
+guard.
+
 The third pass is not automated and is usually the one that matters. Read your
 own prose asking: **could a stranger identify a household from this?**
 Nationality, immigration status, metro area, employer type and approximate net
@@ -155,7 +221,9 @@ by grepping.
 |---|---|
 | `README.md` | Every skill, one line each |
 | `SCHEMA.md` | The facts contract — every field, and why it exists |
-| `documents/README.md` | What documents are worth having |
+| `inputs/README.md` | Private facts, source-document categories, and history paths |
+| `outputs/README.md` | Private output categories and save examples |
+| `documents/README.md` | Compatibility notes for the legacy flat document directory |
 | `CONTRIBUTING.md` | House style, if you want to add a skill |
 | `ROADMAP.md` | What is built, what is not, and what was rejected |
 | `REVIEW.md` | The standing list of what is wrong with this |

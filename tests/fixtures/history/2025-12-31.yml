@@ -1,0 +1,60 @@
+history_schema_version: 1
+snapshot_id: s2025-12-31
+kind: complete
+effective_date: 2025-12-31
+observed_at: 2026-01-05
+completeness: complete
+facts:
+  meta: {schema_version: 1, as_of: 2025-12-31, currency: USD,
+         jurisdiction: {country: US, state: TX}}
+  household:
+    members: [{id: p1, role: primary, age: 40, income_annual: 171200}]
+    balance_sheet:
+      - {id: acct-brokerage, name: Alder Brokerage, value: 80000,
+         tier: liquid, liquidity_class: marketable}
+    annual_spending: 84200
+observations:
+  - metric_id: household.net_worth
+    effective_date: 2025-12-31
+    value: 300000
+    unit: currency
+    currency: USD
+    basis: nominal
+    scenario: observed
+    source: household.balance_sheet+debts
+    clock: observed
+    status: measured
+    observed_at: 2026-01-05
+    data_quality: complete
+  - metric_id: household.asset_balance
+    effective_date: 2025-12-31
+    value: 80000
+    unit: currency
+    currency: USD
+    basis: nominal
+    scenario: observed
+    source: household.balance_sheet
+    clock: observed
+    status: measured
+    entity_id: acct-brokerage
+    display_label: Alder Brokerage
+    observed_at: 2026-01-05
+    data_quality: complete
+  - metric_id: household.asset_balance
+    effective_date: 2025-12-31
+    value: 50250
+    unit: currency
+    currency: USD
+    basis: nominal
+    scenario: observed
+    source: foreign statement converted to USD
+    clock: observed
+    status: measured
+    entity_id: acct-fx
+    display_label: Synthetic foreign account
+    dimensions: {fx_date: 2025-12-31, source_currency: CAD}
+    observed_at: 2026-01-05
+    data_quality: complete
+analyses: []
+restatements: []
+notes: []

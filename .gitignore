@@ -1,12 +1,38 @@
 # ─── Real data. Never committed. ───────────────────────────────────
-# Only *.example.yml ships. Everything else in inputs/ is yours.
+# Only examples, documentation, and deny-all category scaffolds ship.
+# Everything else in inputs/ is yours.
 inputs/*
 !inputs/*.example.yml
 !inputs/README.md
+# Committed category scaffolds. Each directory has its own deny-all
+# .gitignore, so the folder exists without exposing the documents put in it.
+!inputs/banking/
+!inputs/business/
+!inputs/cross-border/
+!inputs/debts/
+!inputs/education/
+!inputs/estate/
+!inputs/healthcare/
+!inputs/income/
+!inputs/insurance/
+!inputs/investments/
+!inputs/life-events/
+!inputs/property/
+!inputs/retirement/
+!inputs/tax/
 
-# Generated reports. The folder ships; its contents never do.
+# Generated reports. The category scaffolds ship; generated contents never do.
 outputs/*
 !outputs/.gitkeep
+!outputs/README.md
+!outputs/history/
+!outputs/reports/
+!outputs/scenarios/
+!outputs/structured/
+
+# Immutable snapshots contain prior copies of the same private facts.
+history/*
+!history/.gitkeep
 
 # Your statements, policies and returns. The folder and its README ship;
 # nothing you put in it ever does. Note this ignores every extension, not a
@@ -45,3 +71,5 @@ Thumbs.db
 # useful -- and this is a public repository.
 /*-prompt.md
 /*-brief.md
+prompts/*-prompt.md
+prompts/*-brief.md

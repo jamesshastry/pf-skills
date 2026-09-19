@@ -305,6 +305,14 @@ def test_years_to_target_uses_the_retirement_projection():
         p.target, 500_000, 40_000, R.DEFAULT_REAL_RETURN)
 
 
+def test_geo_projection_accepts_a_time_varying_savings_path():
+    flat = X.model(LEGS_SPLIT, assets=500_000, annual_savings=40_000)
+    rising = X.model(
+        LEGS_SPLIT, assets=500_000, annual_savings=40_000,
+        savings_by_year=[40_000] * 3 + [60_000] * 57)
+    assert rising.years_to_target <= flat.years_to_target
+
+
 def test_a_cheaper_blend_reaches_the_target_sooner():
     p = X.model(LEGS_SPLIT, assets=500_000, annual_savings=40_000)
     assert p.years_to_target < p.years_to_baseline

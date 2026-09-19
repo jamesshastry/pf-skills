@@ -64,10 +64,23 @@ def target_for(annual_spending: float, withdrawal_rate: float) -> float:
 
 
 def project(assets: float, annual_savings: float, real_return: float,
-            years: float) -> float:
+            years: float, *, savings_by_year: list[float] | None = None) -> float:
     """Future value in **today's money**, contributions at year end."""
     if years <= 0:
         return assets
+    if savings_by_year is not None:
+        whole_years = int(years)
+        value = assets
+        for year in range(whole_years):
+            saving = (savings_by_year[year]
+                      if year < len(savings_by_year) else annual_savings)
+            value = value * (1 + real_return) + saving
+        remainder = years - whole_years
+        if remainder:
+            saving = (savings_by_year[whole_years]
+                      if whole_years < len(savings_by_year) else annual_savings)
+            value = value * (1 + real_return) ** remainder + saving * remainder
+        return value
     growth = (1 + real_return) ** years
     if real_return == 0:
         return assets + annual_savings * years
@@ -75,14 +88,18 @@ def project(assets: float, annual_savings: float, real_return: float,
 
 
 def years_to(target: float, assets: float, annual_savings: float,
-             real_return: float) -> float | None:
+             real_return: float, *,
+             savings_by_year: list[float] | None = None) -> float | None:
     """First whole year at which the projection reaches the target."""
     if assets >= target:
         return 0.0
-    if annual_savings <= 0 and real_return <= 0:
+    if (annual_savings <= 0
+            and not any(v > 0 for v in (savings_by_year or []))
+            and real_return <= 0):
         return None
     for y in range(1, MAX_PROJECTION_YEARS + 1):
-        if project(assets, annual_savings, real_return, y) >= target:
+        if project(assets, annual_savings, real_return, y,
+                   savings_by_year=savings_by_year) >= target:
             return float(y)
     return None
 
@@ -95,9 +112,11 @@ def assess_readiness(
     current_age: int | None,
     withdrawal_rate: float = DEFAULT_WITHDRAWAL_RATE,
     real_return: float = DEFAULT_REAL_RETURN,
+    savings_by_year: list[float] | None = None,
 ) -> Readiness:
     target = target_for(annual_spending, withdrawal_rate)
-    n = years_to(target, assets, annual_savings, real_return)
+    n = years_to(target, assets, annual_savings, real_return,
+                 savings_by_year=savings_by_year)
     r = Readiness(
         target=target, assets=assets, annual_savings=annual_savings,
         real_return=real_return, withdrawal_rate=withdrawal_rate,
@@ -133,12 +152,19 @@ def assess_readiness(
         "first few years of drawdown. For distributions rather than a single "
         "path, use a dedicated Monte Carlo tool."
     )
+    if savings_by_year is not None and any(
+            abs(v - annual_savings) > 0.01 for v in savings_by_year):
+        r.findings.append(
+            "The contribution path changes when explicitly redirected "
+            "obligations expire; it does not assume today's annual saving "
+            "continues forever."
+        )
     return r
 
 
 def sensitivity(
     *, annual_spending: float, assets: float, annual_savings: float,
-    current_age: int | None,
+    current_age: int | None, savings_by_year: list[float] | None = None,
 ) -> list[dict]:
     """Years to target across the plausible parameter space.
 
@@ -151,13 +177,52 @@ def sensitivity(
         target = target_for(annual_spending, wr)
         row = {"withdrawal_rate": wr, "target": target}
         for rr in REAL_RETURN_SCENARIOS:
-            n = years_to(target, assets, annual_savings, rr)
+            n = years_to(target, assets, annual_savings, rr,
+                         savings_by_year=savings_by_year)
             row[rr] = {
                 "years": n,
                 "age": (current_age + n) if (current_age is not None and n is not None) else None,
             }
         rows.append(row)
     return rows
+
+
+def savings_path_from_obligations(
+    annual_savings: float,
+    obligations: list[dict],
+    *,
+    years: int = MAX_PROJECTION_YEARS,
+) -> list[float]:
+    """A real annual savings path after committed cash uses expire.
+
+    The baseline is the current annual contribution while obligations active
+    at month one are being paid. Only an obligation explicitly marked
+    ``redirect_to_retirement: true`` increases future savings when it ends;
+    freed cash is never assumed to be saved by default.
+    """
+    path = [float(annual_savings)] * years
+    for obligation in obligations:
+        if obligation.get("redirect_to_retirement") is not True:
+            continue
+        if obligation.get("basis") != "real":
+            raise ValueError(
+                "redirected obligations must declare basis: real before "
+                "entering a real retirement projection")
+        if int(obligation.get("start_month") or 1) > 1:
+            raise ValueError(
+                "redirected obligations must be active in month 1 so the "
+                "annual_savings baseline is defined")
+        end = obligation.get("end_month")
+        amount = obligation.get("annual_amount")
+        if end is None or amount is None:
+            raise ValueError(
+                "redirected obligations need annual_amount and end_month")
+        for year in range(1, years + 1):
+            first_month = (year - 1) * 12 + 1
+            last_month = year * 12
+            freed_months = max(0, last_month - max(first_month, int(end) + 1) + 1)
+            path[year - 1] += float(amount) * freed_months / 12.0
+    return path
 
 
 # ── drawdown ────────────────────────────────────────────────────────────────

@@ -30,7 +30,8 @@ GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 #:
 #: `document-intake` runs *before* a facts file exists — it is the one skill
 #: that produces facts rather than consuming them. Its input is whatever the
-#: household dropped in `documents/`, which is gitignored and different for
+#: household dropped in categorized `inputs/` directories or legacy
+#: `documents/`, which are gitignored and different for
 #: everyone, so it can have no golden fixture either.
 #:
 #: Both are excluded from the contract checks that assume a household skill:

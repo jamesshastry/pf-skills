@@ -21,7 +21,7 @@ A skeleton of nulls fails loudly instead: the skill stops and names the field.
 ## Why this file is short
 
 It covers the fields that unblock the most skills, and stops. Roughly thirty of
-the fifty-three skills are waiting on `household.members` alone.
+the sixty-two facts-file skills are waiting on `household.members` alone.
 
 Add sections as you need them — `SCHEMA.md` has all of them, and
 `document-intake` tells you which one to add next and what it will unlock.
@@ -57,7 +57,7 @@ meta:
                          # all turn on it.
 
 household:
-  # Unblocks roughly 30 of the 53 skills on its own. Start here.
+  # Unblocks roughly 30 of the 62 facts-file skills on its own. Start here.
   #
   # role:   primary | spouse | dependent | other
   # income_annual: gross, before tax. Omit for dependents.

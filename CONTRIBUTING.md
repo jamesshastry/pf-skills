@@ -71,6 +71,47 @@ if __name__ == "__main__":
 
 `w()` appends a line, `w.table(header, rows)` writes a markdown table. Nothing else.
 
+### Adding a comparable history metric
+
+Do not add storage or history parsing to the skill. Add a small adapter to
+`lib/pf/skill_metrics.py` that calls the same domain function as the runner,
+returns `timeseries.MetricObservation` values with stable IDs and explicit
+clock/scenario/unit/currency/basis, and register it in `skill_metrics.ADAPTERS`.
+Then attach it without changing Markdown:
+
+```python
+w.add_metrics(SM.emit("skill-name", data))
+cli.run(..., skill_id="skill-name")
+```
+
+This enables the explicit `--structured-output` channel. Snapshot storage,
+restatements and comparisons remain owned by `lib/pf/timeseries.py` and
+`scripts/history.py`; a domain skill must not create history as a side effect.
+
+The Markdown and structured paths must call the same calculation. Add focused
+coverage in `tests/test_time_scenario_reports.py`, and prove the ordinary report
+did not move with `tests/test_skill_golden.py`. Structured-output and snapshot
+files refuse overwrite; do not weaken that property in a convenience wrapper.
+
+### Adding a scenario event or focused scenario skill
+
+Extend the typed event vocabulary in `lib/pf/scenario.py`; do not accept an
+executable expression or an unvalidated generic map. Assign the event to one
+documented same-month phase, define its cash, asset, debt, retirement and net
+worth effects, and add an ambiguity check anywhere two individually valid
+events could double count the same economic action.
+
+A focused skill such as `job-loss-stress-test` must remain a thin view over the
+shared engine. It may impose stricter required facts or surface domain-specific
+unknowns, but it must not fork the cash-flow calculation. Never infer taxes,
+liquidation, spending cuts, refinancing, market returns, or probabilities.
+Scenarios are projections: they do not mutate facts or become observed history.
+
+Pin engine behavior in `tests/test_scenario.py` and report behavior in
+`tests/test_time_scenario_reports.py`. Include a reconciliation invariant and
+an intra-period failure case; a recovered ending balance must not hide an
+earlier cash breach.
+
 ### `skills/<name>/SKILL.md`
 
 ```markdown

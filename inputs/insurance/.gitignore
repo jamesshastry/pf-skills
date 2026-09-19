@@ -1,0 +1,3 @@
+# Keep this scaffold; ignore every private source document.
+*
+!.gitignore

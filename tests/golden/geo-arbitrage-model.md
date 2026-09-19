@@ -19,7 +19,7 @@ Plus $18,000/yr of costs that do not move with location. Estimated days are mont
 | **Blended, as planned** | **$80,000** | **$2,000,000** | **17** |
 | Blended, 20% adverse FX | $82,600 | $2,065,000 | — |
 
-Assets $423,000, savings $42,000/yr, 5% real return. Targets use `retirement.target_for` and years use `retirement.years_to` — the same machinery as `retirement-readiness`, imported rather than reimplemented, so a location-adjusted target and an ordinary one cannot drift apart.
+Assets $350,679, savings $42,000/yr, 5% real return. Targets use `retirement.target_for` and years use `retirement.years_to` — the same machinery as `retirement-readiness`, imported rather than reimplemented, so a location-adjusted target and an ordinary one cannot drift apart.
 
 **Plan on the stressed row.** The saving is denominated in a currency the household neither earns nor holds, and that is the weakest input in the model — everything else here is arithmetic on figures you supplied.
 

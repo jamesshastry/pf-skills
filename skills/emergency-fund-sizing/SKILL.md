@@ -37,12 +37,14 @@ The generic advice ignores the two things that actually drive the number.
 The report shows the target built up from a base, one line per driver, so the
 household can disagree with a specific adjustment rather than with the total.
 
-## Measured against liquid assets only
+## Measured against cash equivalents only
 
 Not net worth, not retirement accounts. A household with a large 401(k) and no
-cash cannot pay a deductible. This is the same `liquid` tier the absorbability
-tests use, and it is the whole reason the schema requires a tier on every
-asset.
+cash cannot pay a deductible. The legacy `liquid` tier also contains marketable
+stock because it can settle within days; an emergency reserve cannot silently
+count that volatile, taxable position at par. The report therefore uses the
+additive `liquidity_class: cash_equivalent` boundary and names marketable or
+unclassified assets it excludes.
 
 ## Excess is a finding too
 
@@ -71,6 +73,12 @@ cut back" and having cut back is most of the failure.
 3. **If excess: hand off**, don't leave the money sitting.
 4. **Name the triggers**: a change in earners, a new dependent, a shift toward
    variable pay, or a materially different spending level.
+
+## Time-series output
+
+Emit stable observations for months held, target dollars, and shortfall through
+the shared structured-results channel. Compare only the same reserve definition;
+a classification change is methodology, not new cash.
 
 ---
 

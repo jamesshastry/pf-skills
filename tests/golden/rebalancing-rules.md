@@ -1,15 +1,15 @@
 # Rebalancing rules
 
-**The rule fires.** 3 class(es) breached their band; $67,750 of buying restores the target, of which **$0 would require a taxable sale**.
+**The rule fires.** 4 class(es) breached their band; $67,750 of buying restores the target, of which **$0 would require a taxable sale**.
 
 ## Drift against the bands
 
 | Class | Target | Actual | Drift | Band | Binds | Trade |
 |---|---|---|---|---|---|---|
 | bond | 25% | 15.2% | -9.8% | ±5.0% | absolute | buy $38,750 |
-| cash | 5% | 21.5% | +16.5% | ±1.2% | relative | sell $65,250 |
+| cash | 5% | 10.1% | +5.1% | ±1.2% | relative | sell $20,250 |
 | intl_equity | 20% | 12.7% | -7.3% | ±5.0% | absolute | buy $29,000 |
-| us_equity | 50% | 50.6% | +0.6% | ±5.0% | absolute | — |
+| us_equity | 50% | 62.0% | +12.0% | ±5.0% | absolute | sell $47,500 |
 
 The band is **5% absolute or 25% relative, whichever binds first** — the tighter of the two, per class.
 
@@ -43,7 +43,7 @@ Either beats the third option, which is what happens by default: the decision ge
 
 - $28,000 in earmarked account(s) (college_529) is excluded. Money committed to a dated obligation has its own glide path and its own deadline; counting it as household equity overstates how much risk this household can actually carry.
 
-- **3 of 4 classes are outside their band.** Overweight: cash +16.5%. Underweight: bond -9.8%, intl_equity -7.3%. What to do about it is `rebalancing-rules`, which is a separate decision from whether the target itself is right.
+- **4 of 4 classes are outside their band.** Overweight: cash +5.1%, us_equity +12.0%. Underweight: bond -9.8%, intl_equity -7.3%. What to do about it is `rebalancing-rules`, which is a separate decision from whether the target itself is right.
 
 
 ---

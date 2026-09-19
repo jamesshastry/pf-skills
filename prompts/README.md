@@ -33,8 +33,11 @@ nested `hoa` block.
 
 ## What is left here
 
-Nothing. This file exists so the question does not get re-litigated from scratch,
-and because a directory that vanishes without explanation invites someone to
+No prompt is committed. Local `*-prompt.md` and `*-brief.md` task artifacts may
+exist while work is in progress, but they are gitignored and the commit hook
+blocks a forced add because those briefs can quote private household facts.
+This file exists so the question does not get re-litigated from scratch, and
+because a directory that vanishes without explanation invites someone to
 recreate it.
 
 If a future artefact genuinely cannot be a skill — no decision, no rule, nothing

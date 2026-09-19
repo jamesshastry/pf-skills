@@ -80,6 +80,30 @@ def _buying_property(facts: dict) -> bool:
     return bool(_dig(facts, "housing.purchase"))
 
 
+def _housing_affordability_plan(facts: dict) -> bool:
+    return bool(_dig(facts, "housing.affordability"))
+
+
+def _housing_liquidation_with_wash_policy(facts: dict) -> bool:
+    return bool(
+        _dig(facts, "housing.affordability.funding.taxable_liquidation")
+        and _dig(facts, "portfolio.wash_sale"))
+
+
+def _rental_first_home(facts: dict) -> bool:
+    return _dig(facts, "housing.transition.kind") == "rental_then_owner"
+
+
+def _employer_income_stress(facts: dict) -> bool:
+    members = _dig(facts, "household.members") or []
+    scenarios = _dig(facts, "cash_flow.scenarios") or []
+    return (
+        any(m.get("employer") and float(m.get("income_annual") or 0) > 0
+            for m in members)
+        and any(s.get("kind") == "conservative" for s in scenarios)
+    )
+
+
 def _harvesting_and_rebalancing(facts: dict) -> bool:
     """Driven by the facts that establish the condition, not inferred.
 
@@ -242,11 +266,11 @@ REGISTRY: tuple[Conflict, ...] = (
     ),
     Conflict(
         key="downpayment-vs-retirement",
-        skills=("rent-vs-buy", "retirement-readiness"),
+        skills=("housing-affordability", "retirement-readiness"),
         tension="A down payment moves a large sum out of invested assets. "
-                "`rent-vs-buy` counts its opportunity cost within the housing "
-                "comparison; `retirement-readiness` projects from a balance "
-                "sheet that still includes it.",
+                "`housing-affordability` uses it at closing while "
+                "`retirement-readiness` otherwise projects from a balance "
+                "sheet that still includes the pre-close assets.",
         trigger="A purchase under consideration while a retirement projection "
                 "is being relied on.",
         resolution="Re-run the retirement projection with the down payment "
@@ -255,6 +279,75 @@ REGISTRY: tuple[Conflict, ...] = (
                    "retirement date usually moves, and that movement is part "
                    "of the price of the house.",
         applies=_buying_property,
+    ),
+    Conflict(
+        key="downpayment-vs-emergency-reserve",
+        skills=("housing-affordability", "emergency-fund-sizing"),
+        tension="Closing funds and the emergency reserve compete for the same "
+                "cash, while marketable stock is not cash at par for either "
+                "purpose.",
+        trigger="A purchase target with a post-close reserve rule.",
+        resolution="Treat the reserve as a use at closing, not as money left "
+                   "over after the down payment. Count only cash equivalents "
+                   "at face value; convert planned securities through the "
+                   "taxable sources-and-uses ledger first. A price that needs "
+                   "the emergency reserve to close fails the liquidity test.",
+        applies=_housing_affordability_plan,
+    ),
+    Conflict(
+        key="housing-cashflow-vs-savings-floor",
+        skills=("housing-affordability", "retirement-readiness"),
+        tension="A lender may approve debt service that consumes the annual "
+                "saving needed for the retirement plan.",
+        trigger="An affordability scenario with an explicit savings floor.",
+        resolution="Apply the greater of the dollar and gross-income-rate "
+                   "savings floors before calling a price feasible. The "
+                   "lender maximum remains a separate outer limit, never the "
+                   "household target.",
+        applies=lambda f: any(
+            bool(s.get("minimum_savings"))
+            for s in (_dig(f, "cash_flow.scenarios") or [])),
+    ),
+    Conflict(
+        key="housing-liquidation-vs-wash-sale",
+        skills=("housing-affordability", "wash-sale-policy",
+                "rebalancing-rules"),
+        tension="Selling taxable lots for closing can realise gains or losses "
+                "while automated purchases or rebalancing can disallow the "
+                "loss during the wash-sale window.",
+        trigger="A taxable portfolio sale alongside a household wash-sale policy.",
+        resolution="Name the lots sold, reserve tax from basis and holding "
+                   "period, and clear every purchase channel against the "
+                   "exclusion list before relying on a loss. Use new money or "
+                   "tax-advantaged trades to rebalance without recreating the "
+                   "sold position.",
+        applies=_housing_liquidation_with_wash_policy,
+    ),
+    Conflict(
+        key="rental-first-vs-passive-loss",
+        skills=("housing-affordability", "passive-loss-eligibility"),
+        tension="The rental-first plan may show a tax loss, but §469 can "
+                "suspend it instead of reducing the cash cost of the tenant phase.",
+        trigger="A home is rented to a tenant before owner occupancy.",
+        resolution="Join the proposed property to its §469 activity by label. "
+                   "Keep the phase pre-investor-tax and use zero current tax "
+                   "benefit unless the gate affirmatively opens; a suspended "
+                   "loss is deferred value, not closing-period cash.",
+        applies=_rental_first_home,
+    ),
+    Conflict(
+        key="employer-income-vs-housing-stress",
+        skills=("housing-affordability", "employer-concentration-risk",
+                "equity-comp-review"),
+        tension="The same employer can supply salary, bonus, and equity while "
+                "also driving the asset decline that accompanies a job loss.",
+        trigger="Employer-linked income and a conservative affordability scenario.",
+        resolution="Build the conservative case from named compensation "
+                   "components, reducing variable and employer-correlated "
+                   "income without counting any component twice. Use that "
+                   "case for the stress ceiling and keep the current case as "
+                   "capacity, not as the sole answer.",
+        applies=_employer_income_stress,
     ),
     Conflict(
         key="harvesting-vs-allocation",

@@ -1,11 +1,12 @@
 # Passive loss eligibility (§469 gate)
 
-**A door is open on 1 of 2 activities.** Gulf Coast cabin (via short-stay).
+**A door is open on 1 of 3 activities.** Gulf Coast cabin (via short-stay).
 
 Run this before `rental-deal-underwriting` and `cost-segregation-screen`. An after-tax return quoted behind a shut gate is wrong, not conservative.
 
 | Activity | Avg stay | Rental activity? | Material participation | Door | Deductible now | Suspends |
 |---|---|---|---|---|---|---|
+| Maple Ridge home | 365.0d | yes | no | **shut** | $0 | $12,731 |
 | Cedar Park duplex | 365.0d | yes | yes | **shut** | $0 | $36,000 |
 | Gulf Coast cabin | 4.0d | **no** — short-stay | yes | **short-stay** | $31,000 | $0 |
 
@@ -15,9 +16,14 @@ Run this before `rental-deal-underwriting` and `cost-segregation-screen`. An aft
 
 - **REPS door: closed** — 260 hours is below the 750-hour floor; 260 of 2,340 total working hours is not more than 50% — this is the test a full-time job makes close to unattainable, and it is tested per spouse, not per household.
 
-- 2 activities and no grouping election recorded. Material participation is then tested **separately for each property**, which is how a portfolio that clears the hours in aggregate fails on every individual property. Consider Reg. §1.469-9(g) — but read the disposition consequence above first; the election is not revocable at will.
+- 3 activities and no grouping election recorded. Material participation is then tested **separately for each property**, which is how a portfolio that clears the hours in aggregate fails on every individual property. Consider Reg. §1.469-9(g) — but read the disposition consequence above first; the election is not revocable at will.
 
 ## Per activity
+
+### Maple Ridge home
+
+- 37 hours does not establish material participation — someone else does more.
+- **Shut.** $12,731 suspends and carries forward indefinitely. It is not lost: it offsets future passive income, and the whole accumulated balance is released in full on a fully taxable disposition of the activity to an unrelated party.
 
 ### Cedar Park duplex
 

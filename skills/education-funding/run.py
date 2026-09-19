@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
-from pf import cli, education as E, facts as F, retirement as R  # noqa: E402
+from pf import cli, education as E, facts as F, retirement as R, skill_metrics as SM  # noqa: E402
 
 REQUIRED = ["household.members", "education.children"]
 m = cli.money
@@ -23,15 +23,27 @@ def _retirement_status(data: dict):
         return None, None
     members = F._dig(data, "household.members") or []
     primary = next((x for x in members if x.get("role") == "primary"), {})
-    assets = (F.tier_total(data, F.LIQUID) + F.tier_total(data, F.AGE_RESTRICTED)
-              + F.tier_total(data, F.ILLIQUID))
+    classified = F.retirement_assets(data)
+    if classified.unknown:
+        return None, None
+    assets = classified.included
+    current = next(
+        (s for s in (F._dig(data, "cash_flow.scenarios") or [])
+         if s.get("kind") == "current"), {})
+    try:
+        savings_path = R.savings_path_from_obligations(
+            float(savings), current.get("obligations") or [])
+    except ValueError:
+        return None, None
     r = R.assess_readiness(annual_spending=float(spending), assets=assets,
                            annual_savings=float(savings),
-                           current_age=primary.get("age"))
+                           current_age=primary.get("age"),
+                           savings_by_year=savings_path)
     return r.years_to_target is not None, r.age_at_target
 
 
 def build(data: dict, w: cli.Writer) -> None:
+    w.add_metrics(SM.emit("education-funding", data))
     edu = F._dig(data, "education") or {}
     state = F._dig(data, "meta.jurisdiction.state")
     p = E.plan_for(
@@ -129,4 +141,5 @@ def build(data: dict, w: cli.Writer) -> None:
 
 
 if __name__ == "__main__":
-    raise SystemExit(cli.run(title="Education funding", required=REQUIRED, build=build))
+    raise SystemExit(cli.run(title="Education funding", required=REQUIRED,
+                             build=build, skill_id="education-funding"))

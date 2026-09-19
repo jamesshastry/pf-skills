@@ -145,3 +145,20 @@ def test_collect_runs_the_whole_library_without_error_on_the_example():
     assert not rep.unwired
     assert rep.ranked, "the example is built to have findings"
     assert rep.checked, "the example is built to clear some skills too"
+
+
+def test_representative_skills_emit_structured_metrics_without_scraping_reports():
+    facts = example_facts()
+    rep = R.collect(facts, ROOT / "skills")
+    by_skill = {outcome.skill: outcome for outcome in rep.structured}
+    expected = {
+        "emergency-fund-sizing", "employer-concentration-risk",
+        "retirement-readiness", "housing-affordability", "education-funding",
+        "survivor-needs", "life-insurance-review",
+        "disability-insurance-review",
+    }
+    assert expected <= {skill for skill, outcome in by_skill.items()
+                        if outcome.metrics}
+    results = R.structured_results(rep, facts)
+    assert any(result.metrics for result in results)
+    assert all(result.findings for result in results)

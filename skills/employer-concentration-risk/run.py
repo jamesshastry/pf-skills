@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
-from pf import cli, concentration as C, facts as F  # noqa: E402
+from pf import cli, concentration as C, facts as F, skill_metrics as SM  # noqa: E402
 
 REQUIRED = ["household.members", "household.balance_sheet",
             "household.annual_spending", "equity_comp"]
@@ -16,6 +16,7 @@ m = cli.money
 
 
 def build(data: dict, w: cli.Writer) -> None:
+    w.add_metrics(SM.emit("employer-concentration-risk", data))
     eq = F._dig(data, "equity_comp") or {}
     members = F._dig(data, "household.members") or []
     employer = eq.get("employer") or "the employer"
@@ -93,4 +94,5 @@ def build(data: dict, w: cli.Writer) -> None:
 
 if __name__ == "__main__":
     raise SystemExit(cli.run(title="Employer concentration risk",
-                             required=REQUIRED, build=build))
+                             required=REQUIRED, build=build,
+                             skill_id="employer-concentration-risk"))

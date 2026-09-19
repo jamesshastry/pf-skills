@@ -7,7 +7,7 @@ description: Turns a pile of statements, policies and tax returns into a priorit
 
 ## The idea
 
-Fifty-three skills read a facts file. **Nothing writes one.** That gap is where
+Sixty-two skills read a facts file. **Nothing writes one.** That gap is where
 a new household actually stalls — not on understanding the schema, but on the
 hour of transcription between a folder of PDFs and the first useful report.
 
@@ -35,7 +35,7 @@ skills on its own. Four lines of YAML.
 
 | Section | What it answers |
 |---|---|
-| **Documents** | What is in `documents/`, and which schema area each filename suggests |
+| **Documents** | What is in categorized `inputs/<category>/` directories and the legacy `documents/` directory, and which schema area each path suggests |
 | **What runs today** | How many skills are unblocked right now |
 | **Next hour** | Skills blocked on one or two fields — shortest distance first |
 | **Fields by blast radius** | One field, and everything it is holding up |
@@ -43,8 +43,9 @@ skills on its own. Four lines of YAML.
 
 ## Working with an agent
 
-Put the documents in `documents/`. Run this. Hand an agent both the report and
-the files.
+Put documents in the closest `inputs/<category>/` directory. Run this. Hand an
+agent both the report and the files. The legacy flat `documents/` directory is
+still scanned.
 
 The report says which fields are open and which document probably answers
 each; the agent reads and **proposes** values; you confirm them into

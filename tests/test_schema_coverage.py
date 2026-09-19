@@ -3,7 +3,7 @@
 Three artefacts have to stay in step and nothing previously kept them there:
 
 * `SCHEMA.md` — what a user is told to provide
-* `inputs/facts.example.yml` — what they are given to copy
+* `inputs/facts.example.yml` — the complete synthetic shape they can consult
 * the `requires` on each skill — what is actually enforced
 
 Drift between them is silent and user-facing. A documented field absent from
@@ -43,7 +43,7 @@ def resolve(data, dotted: str):
 
 @pytest.mark.parametrize("skill", SKILLS, ids=IDS)
 def test_every_required_path_resolves_in_the_example(skill):
-    """The example must satisfy every skill's declared inputs.
+    """The complete synthetic example must satisfy every skill's inputs.
 
     This is the test that would have caught `birth_year` being added to the
     schema and to one member but not the other.
@@ -103,6 +103,46 @@ def test_every_balance_sheet_row_has_a_tier():
     """The single most load-bearing field in the schema."""
     for row in EXAMPLE["household"]["balance_sheet"]:
         assert row.get("tier") in ("liquid", "age_restricted", "illiquid"), row
+
+
+def test_housing_affordability_fields_are_documented_and_exemplified():
+    """The additive schema is intentionally explicit; every input that can
+    change a limit or a transition must be visible in both user-facing places.
+    """
+    fields = (
+        "liquidity_class", "retirement_eligible", "cash_flow", "scenarios",
+        "income_components", "gross_income_annual",
+        "after_tax_cash_income_annual", "taxes_annual",
+        "retirement_contributions_annual",
+        "employer_retirement_contributions_annual", "ira_contributions_annual",
+        "other_payroll_deductions_annual", "non_housing_spending_annual",
+        "other_committed_annual", "minimum_savings", "obligations", "basis",
+        "redirect_to_retirement",
+        "down_payment_rate", "closing_cost_rate", "pmi_rate",
+        "post_close_reserve_months", "maximum_housing_dti",
+        "tax_lots", "cost_basis", "holding_period", "taxable_liquidation",
+        "loss_carryforward", "margin_debt",
+        "federal_tax_rate", "state_tax_rate", "securities_sold",
+        "wash_sale_reviewed", "analysis_months", "tenant_months",
+        "occupancy_conversion_date", "financing_occupancy",
+        "investment_lender_test",
+        "loan_occupancy_requirement_months", "refinance_at_occupancy",
+        "refinance_cost", "owner_operating_cost_growth_rate",
+        "rental_deal_label",
+    )
+    example_text = EXAMPLE_FACTS.read_text(encoding="utf-8")
+    for field in fields:
+        assert field in SCHEMA, f"{field} absent from SCHEMA.md"
+        assert field in example_text, f"{field} absent from example facts"
+
+    optional_tax_fields = (
+        "filing_status", "itemizes_owner", "standard_deduction_annual",
+        "renter_itemized_deductions_annual",
+        "owner_deductible_housing_annual", "deduction_cap_annual",
+        "marginal_tax_rate", "modeled_price",
+    )
+    for field in optional_tax_fields:
+        assert field in SCHEMA, f"optional tax field {field} is undocumented"
 
 
 def test_every_vehicle_declares_its_value_basis():

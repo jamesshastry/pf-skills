@@ -14,14 +14,20 @@ file you own. This document defines those fields.
 ```
 inputs/facts.yml          ← yours. gitignored. never committed.
 inputs/facts.example.yml  ← synthetic sample. committed.
-outputs/                  ← generated reports. gitignored.
+inputs/<category>/        ← private source documents. contents gitignored.
+outputs/<purpose>/        ← generated reports/results. contents gitignored.
+history/                  ← private snapshots and analyses. gitignored.
 ```
 
-Copy the example, replace the values, keep the shape:
+Create a short skeleton of nulls, then add only fields you have verified:
 
 ```bash
-cp inputs/facts.example.yml inputs/facts.yml
+uv run scripts/init_facts.py
 ```
+
+`inputs/facts.example.yml` demonstrates the complete shape with an entirely
+synthetic household. Do not copy its values into a real facts file: an example
+number left behind is indistinguishable from a number you entered.
 
 ---
 
@@ -95,6 +101,35 @@ is counted on both sides and the survivor gap is overstated.
 
 Skills that ask *"can this household absorb an $8,000 loss?"* use **`liquid`**, never total net
 worth. A household with $2M in a 401(k) and $3,000 in cash cannot absorb an $8,000 loss.
+
+`tier` keeps that existing meaning. Two additive fields answer narrower
+questions without changing it:
+
+```yaml
+- name: brokerage
+  value: 45000
+  tier: liquid
+  liquidity_class: marketable       # cash_equivalent | marketable | restricted | illiquid
+  retirement_eligible: true         # explicitly available to fund the retirement goal
+```
+
+**`liquidity_class`** distinguishes closing cash from assets merely spendable
+within days. `cash_equivalent` is usable at face value. `marketable` requires a
+sale and its market, tax, and debt effects before it becomes closing cash.
+`restricted` and `illiquid` do not fund the reserve. An unclassified legacy row
+is excluded from cash reserves and named as uncertain.
+
+**`retirement_eligible`** is the auditable retirement-goal boundary. Primary
+residences, land not planned for sale, education accounts, and personal-use
+property should be `false`. Old tax-deferred, Roth, and HSA wrappers are safely
+inferred as eligible when the flag is absent; other unclassified legacy rows
+are excluded and named rather than silently counted as portfolio assets.
+
+A marketable taxable account may add `margin_debt` and `tax_lots[]` with
+`ticker`, current `value`, `cost_basis`, and `holding_period`. Housing funding
+selects lots by ticker so sale proceeds and basis have one source of truth.
+Each selected lot must be wholly `short_term` or `long_term`; mixed-period
+sales are modeled separately.
 
 ### Titling and designation — required by `probate-exposure`
 
@@ -464,6 +499,7 @@ to ACV.
 equity_comp:
   employer: Northwind            # label only; nothing looks it up
   held_value: 22000              # vested shares still held
+  held_value_in_balance_sheet: false # scenario net-worth reconciliation
   unvested_value: 41000          # pipeline that evaporates on separation
   sell_at_vest: false            # is there a standing policy?
   grants:
@@ -484,6 +520,11 @@ separated from any income that is not employer-linked:
 continued employment, which is the exact thing at risk in the scenario that matters. It is
 recorded here so the concentration skills can count it as *exposure* without it inflating net
 worth.
+
+`held_value_in_balance_sheet` says whether vested employer shares are already
+inside a balance-sheet account. Scenario planning requires it when
+`held_value` is nonzero so a price decline neither disappears nor reduces net
+worth twice. It does not change the concentration score.
 
 **`grants[].completes`** is what makes a vesting cliff visible. An annual equity figure hides the
 moment a multi-year grant finishes and the run rate steps down.
@@ -516,6 +557,66 @@ badly wrong retirement date.
 
 ---
 
+## `cash_flow` — required by `housing-affordability`
+
+Named scenarios are the canonical nominal household cash-flow ledger:
+
+```yaml
+cash_flow:
+  scenarios:
+    - id: cash-current              # stable history/scenario join key
+      label: Current compensation
+      kind: current                 # exactly one current; one or more conservative
+      income_components: { salary: 132700, bonus: 21350, equity: 25950 }
+      gross_income_annual: 180000   # optional check; components are authoritative
+      taxes_annual: 40173
+      after_tax_cash_income_annual: 139827
+      retirement_contributions_annual: 42000
+      employer_retirement_contributions_annual: 0 # counted in savings, not take-home uses
+      ira_contributions_annual: 0
+      other_payroll_deductions_annual: 2357
+      non_housing_spending_annual: 48321
+      other_committed_annual: 1775
+      minimum_savings: { annual_amount: 8500, gross_income_rate: 0.05 }
+      obligations:
+        - { label: education contributions, annual_amount: 7333,
+            start_month: 1, end_month: 48, basis: real,
+            redirect_to_retirement: true }
+```
+
+`after_tax_cash_income_annual` means compensation after income/payroll taxes
+but before every separately listed deduction and use. Supply it, or supply
+`taxes_annual` so it can be derived. If both exist they must reconcile to gross
+income. No tax rate is inferred. The current scenario also reconciles against
+the member income total and `retirement.annual_savings`; a material mismatch is
+a blocker. Employee and IRA contributions reduce after-tax cash in this ledger;
+employer retirement contributions reconcile to total annual savings but are
+not subtracted from household cash.
+
+`non_housing_spending_annual` explicitly excludes rent and ownership. This is
+why the affordability API cannot subtract an incremental owner cost from a
+surplus that still contains rent. `household.annual_spending` remains the
+legacy all-purpose input for existing skills and is not read here.
+
+Time-varying `obligations` use one-based inclusive months. Omit `end_month` for
+an ongoing use. Education belongs here when it is a current cash outflow; the
+separate `education` section models the long-horizon funding goal.
+`redirect_to_retirement: true` tells `retirement-readiness` to add the freed
+cash to its real contribution path after the obligation ends. Without that
+explicit instruction the projection does not assume the money will be saved.
+Because retirement is real throughout, a redirected obligation must also say
+`basis: real`; the current-year cash ledger can use that same amount, while a
+nominal future amount is refused rather than mixed into today's dollars.
+
+When both minimum-savings forms are present, the **greater** dollar requirement
+controls. Zero is a valid recorded amount; omission is not.
+
+`id` is optional for legacy cash-flow calculations and required before a named
+case is emitted into history. Labels are for display and may change; the stable
+ID is the join key.
+
+---
+
 ## `housing` — required by cluster 8
 
 ```yaml
@@ -525,14 +626,106 @@ housing:
   purchase:                        # the property being considered
     price: 520000
     down_payment: 104000
+    down_payment_rate: 0.20         # used to solve candidate-price ceilings
+    closing_cost_rate: 0.02
     mortgage_rate: 0.0645
     term_years: 30
     property_tax_rate: 0.0185      # annual, of assessed value
     insurance_annual: 1800
     hoa_monthly: 0
+    pmi_rate: 0                     # explicit zero when not applicable
     maintenance_rate: 0.01         # annual, of value
     expected_years: 7              # how long before selling
+
+  affordability:
+    target_price: 520000
+    candidate_prices: [87500, 287500, 363750, 520000]
+    post_close_reserve_months: 6
+    lender:                         # optional; omitted means not modeled
+      maximum_housing_dti: 0.28
+      other_debt_annual: 3600
+    funding:
+      taxable_liquidation:
+        account_name: brokerage     # balance-sheet row; must be marketable
+        loss_carryforward: 1111
+        federal_tax_rate: 0.15
+        state_tax_rate: 0
+        securities_sold: [XOM, PFE]
+        wash_sale_reviewed: false
+
+  transition:
+    kind: rental_then_owner         # see the four supported values below
+    analysis_months: 36
+    tenant_months: 15
+    occupancy_conversion_date: 2027-11-30
+    financing_occupancy: investment # investment | owner_occupied
+    investment_lender_test: dscr     # dscr | personal_dti
+    loan_occupancy_requirement_months: null
+    refinance_at_occupancy: true
+    refinance_cost: 6500
+    owner_operating_cost_growth_rate: 0.03
+    rental_deal_label: Maple Ridge home
 ```
+
+At `purchase.price`, `down_payment` and `down_payment_rate` must agree within
+rounding tolerance. The fixed amount preserves existing `rent-vs-buy`
+compatibility; the rate lets `housing-affordability` solve other candidate
+prices without inventing how leverage changes.
+
+The four transition kinds are `continue_renting`,
+`buy_immediately_occupy`, `rental_then_owner`, and
+`buy_land_continue_renting`. The last adds `land_costs` with annual debt
+service, property tax, insurance, maintenance, and HOA. A rental-first plan
+joins `rental_deal_label` to both `real_estate.deals[].label` and
+`real_estate.activities[].label`, reusing property underwriting and the §469
+gate. It is pre-investor-tax unless the gate is open and an explicit marginal
+rate exists.
+
+If `financing_occupancy` is `owner_occupied`, record the actual lender's
+`loan_occupancy_requirement_months`. The library has no legal deadline baked
+in; an absent or violated requirement blocks the plan. At conversion, current
+rent and tenant income stop, and owner cash costs start exactly once.
+`refinance_at_occupancy` determines whether the owner phase uses the proposed
+owner loan or continues the investment loan; a planned refinance also requires
+`refinance_cost`. `owner_operating_cost_growth_rate` is nominal and applies to
+tax, insurance, maintenance, HOA, PMI, and other owner costs, not fixed debt
+service. A refinance is modeled as no-cash-out: its principal is the amortized
+investment-loan balance at conversion, not a new loan recreated from the
+owner-occupancy down-payment percentage.
+`investment_lender_test` records how the initial loan is actually underwritten.
+When it is `dscr`, the existing rental underwriting floor is enforced and a
+sub-floor deal is a blocker; `personal_dti` leaves the supplied household DTI
+limit as the lender constraint.
+
+The optional `affordability.tax_benefit` is accepted only as a complete model:
+`filing_status`, `itemizes_owner`, `standard_deduction_annual`,
+`renter_itemized_deductions_annual`, `owner_deductible_housing_annual`,
+`deduction_cap_annual`, `marginal_tax_rate`, and `modeled_price`. A partial
+model is refused.
+When absent, the report shows gross owner cash cost and explicitly excludes the
+tax benefit. The complete model also records `modeled_price`; the benefit is
+credited only at that price, never extrapolated across the affordability
+ceiling as though mortgage interest and deduction caps were fixed.
+
+The liquidation's gross proceeds, basis, holding period, and margin payoff are
+derived from the selected balance-sheet `tax_lots` and the account's
+`margin_debt`; recording duplicate totals is optional and any mismatch is
+refused. Mixed holding periods must be modeled as separate sales. A taxable
+account `value` is its gross market value; `margin_debt` is a separate
+liability, not already netted from that value. Retirement eligibility totals
+use the account net of that debt.
+
+### Migration and backward compatibility
+
+Schema version 1 is unchanged. Existing skills continue to read the legacy
+`tier`, `household.annual_spending`, `retirement.annual_savings`, and
+`housing.purchase` keys. The new affordability skill additionally requires
+`cash_flow`, `housing.affordability`, the new purchase rates, and
+`housing.transition`; older facts therefore stop cleanly only when this new
+skill is invoked. `retirement-readiness` safely infers known retirement account
+wrappers, excludes other unclassified assets with a warning, and never again
+uses total net worth as the portfolio. Add `retirement_eligible` and
+`liquidity_class` row by row; do not change `tier` during migration.
 
 ---
 
@@ -1181,7 +1374,8 @@ an event changes the **tax character** of a dollar, not just its location.
 ```yaml
 transitions:
   windfall:
-    - label: Inheritance from Ana's aunt
+    - id: windfall-inheritance  # stable scenario/deployment join key
+      label: Inheritance from Ana's aunt
       kind: inheritance          # see the table below — this is the load-bearing field
       amount: 260000
       received: 2026-07-15       # the 90-day pause is measured from here
@@ -1615,6 +1809,250 @@ require their own credits. What changes is that they have no floor of their own,
 and that their benefit cannot begin until the worker files — so a delay-to-70
 decision defers their income too. `ss_insured: true | false` may be given
 instead where the credit count is unknown.
+
+## `history` — immutable local snapshots
+
+History has its own `history_schema_version`; it is not a new meaning for any
+facts-schema field. The facts file stores only the local files selected for a
+review:
+
+```yaml
+history:
+  snapshot_files:
+    - history/2026-03-31.yml
+    - history/2026-06-30.yml
+  selected_metrics:                 # optional; omission means all metrics
+    - household.net_worth
+    - emergency_fund.months_held
+```
+
+Paths are local. Nothing uploads, fetches, or treats git history as financial
+data. Run `scripts/history.py` from the repository root so relative paths have
+one unambiguous base.
+
+### Snapshot document
+
+One immutable file represents one complete, partial, analysis, or restatement
+snapshot:
+
+```yaml
+history_schema_version: 1
+snapshot_id: s2026-06-30
+kind: complete                     # complete | partial | analysis | restatement
+effective_date: 2026-06-30         # when the facts were true
+observed_at: 2026-07-02            # when the household obtained/entered them
+completeness: complete             # complete | partial
+facts:                             # retained for a current-model rerun
+  meta: {schema_version: 1, as_of: 2026-06-30, currency: USD, ...}
+  household: {...}
+observations: [...]
+analyses: [...]
+restatements: []
+notes: []
+```
+
+A complete or partial facts snapshot retains an independent copy of the facts;
+an analysis snapshot can instead name `source_snapshot_id`. A partial snapshot
+may carry account observations, but a household total such as net worth must be
+an explicit unknown. Missing values are never zero and are never carried to the
+next date.
+
+The kinds are exclusive: complete/partial documents contain observed metrics,
+analysis documents contain structured results, and restatement documents
+contain corrections. Keeping them in separate files prevents a report rerun
+from being mistaken for a newly observed household fact.
+
+Capture is explicit and refuses to overwrite an existing file. To correct an
+old value, `scripts/history.py restate` writes a separate document containing
+the original observation, corrected observation, reason, and `corrected_at`.
+The original file and originally reported value remain intact.
+
+### Metric protocol
+
+Every structured metric uses:
+
+```yaml
+- metric_id: household.asset_balance       # stable, machine-readable
+  effective_date: 2026-06-30
+  value: 90000                              # or null plus unknown_reason
+  unit: currency                            # currency | ratio | months | years ...
+  currency: USD                             # required only for currency
+  basis: nominal                            # nominal | real | nonmonetary
+  scenario: observed                        # observed/current/conservative/stress/...
+  source: household.balance_sheet
+  clock: observed                           # observed | analysis | projection
+  status: measured                          # measured | derived | projected | unknown
+  entity_id: acct-brokerage                 # stable join key
+  display_label: Meridian Investments       # may change without breaking history
+  observed_at: 2026-07-02
+  data_quality: complete                    # complete | partial | estimated | unknown
+  dimensions: {}
+```
+
+Analysis and projection metrics replace `observed_at` with `calculated_at` and
+require `model_version`. They may also record `inputs_fingerprint`,
+`assumptions_fingerprint`, `reference_version`, and flow-based `attribution`.
+A projection's future date never becomes an observation. Re-running old facts
+under current code creates analysis history, not the report that existed then.
+
+Comparability requires the same metric ID, clock, unit, currency, basis,
+scenario, stable entity ID, and dimensions. Current and conservative cases on
+one date remain distinct. Nominal and real dollars, different currencies, and
+different FX conversion-date dimensions are rejected unless a separate,
+recorded normalization creates a common series.
+
+Finding records use stable `finding_id`, `source_skill`, `state`, severity,
+original text, `calculated_at`, `model_version`, optional transition reason,
+and one of `household`, `facts`, `assumptions`, `reference_data`, `model`, or
+`unknown` as `change_driver`. Supported states are `unobserved`, `open`,
+`improved`, `closed`, `worsened`, and `superseded`. A changed result on the same
+input fingerprint with a different model version is methodology, not progress.
+
+Existing users start with the first truthful snapshot; they do not fabricate
+prior dates. A dated Markdown report can be transcribed into a structured
+analysis snapshot with its uncertainty labeled, but it is not parsed
+automatically because that import is necessarily lossy.
+
+The first numeric skill adapters are maintained in `lib/pf/skill_metrics.py`:
+emergency fund, employer concentration, retirement readiness, housing
+affordability, education funding, survivor need, life insurance, and disability
+insurance. Capture itself supplies net worth, account balance, cash reserve,
+income, spending, and retirement saving. Other review outcomes still have
+stable qualitative finding IDs and can add metrics without owning storage or
+charting.
+
+## `scenario_planning` — deterministic what-if paths
+
+A scenario is never a fact. It selects a recorded named cash-flow baseline,
+applies typed events by month, and produces a projection under explicit
+assumptions:
+
+```yaml
+scenario_planning:
+  objective: preserve_liquidity       # optional; compare_only declares no rank
+  scenarios:
+    - id: job-loss-12m
+      label: Primary earner unemployed for twelve months
+      baseline: current
+      kind: stress                     # scenario | stress | sensitivity
+      as_of: 2027-01-01
+      horizon_months: 60
+      currency: USD
+      basis: nominal                   # nominal | real
+      essential_spending_annual: 71100 # explicit; never inferred from current
+      liquidation_order: [cash-main, taxable-brokerage]
+      market_return_annual: 0          # optional, deterministic
+      retirement_return_annual: 0      # optional, deterministic
+      preliminary: false               # windfall planning before pause expires
+      events:
+        - id: primary-separation
+          type: employment_loss
+          person_id: p1
+          start_month: 1
+          duration_months: 12
+          after_tax_income_loss_monthly: 8500
+          employee_contribution_loss_monthly: 1800
+          employer_match_loss_monthly: 450
+          severance_after_tax: 24000
+          severance_month: 1
+          unemployment_after_tax_monthly: 1700
+          benefit_start_month: 2
+          benefit_duration_months: 6
+          replacement_health_cost_monthly: 1200
+          unvested_forfeiture: 38000
+          employer_stock_change: -0.50
+```
+
+`as_of` is the calculation date and month offsets are one-based. Duration is in
+months; omission means ongoing except where a focused skill explicitly reports
+it unknown. Money is in `currency` and `basis`. Every event must match both;
+convert explicitly before combining currencies or nominal/real amounts.
+`essential_spending_annual` is optional and remains unknown when omitted; the
+job-loss wrapper never assumes a percentage cut. `liquidation_order` records
+intent but does not itself sell anything—each sale still needs an explicit
+withdrawal event and its tax treatment.
+
+The monthly cash reconciliation is:
+
+```text
+opening cash
++ after-tax income and explicit inflows
+- current spending
+- employee retirement contributions
+- other explicit outflows
+= closing cash
+```
+
+`debts` must be present, using `[]` when there are none, and every recorded debt
+needs a balance. Missing liabilities cannot be treated as zero in a net-worth
+path.
+
+Employer contributions increase retirement assets but never reduce household
+cash. Market changes create no cash. Portfolio transfers change liquidity, not
+net worth. A down payment exchanges cash for home equity; the mortgage creates
+equal property and debt, while closing cost reduces net worth. No automatic
+asset sale, spending cut, refinancing, family help, or retirement withdrawal is
+assumed.
+
+### Event fields
+
+The serialized schema uses typed fields rather than executable or generic
+expression maps. YAML is loaded safely and the engine never calls `eval`.
+
+- `employment_loss`: requires `person_id`, `start_month`, and
+  `after_tax_income_loss_monthly`; supports the duration, employee contribution,
+  employer match, severance month/amount, benefit start/duration/amount,
+  replacement health cost, unvested forfeiture, and employer-stock percentage
+  shown above. Missing optional job-loss facts are reported as unknown, not zero.
+- `compensation_change`: `start_month`, optional `duration_months`,
+  `after_tax_income_change_monthly`, and
+  `retirement_contribution_change_monthly`. Use a negative amount for a step
+  down; it does not infer a tax rate from gross compensation.
+- `cash_receipt`: `source_event_id` plus either `after_tax_amount`, or both
+  `gross_amount` and `tax_reserve`. Reserve may be an explicit zero.
+  Withholding is not liability.
+- `asset_receipt`: `source_event_id`, `market_value`, `asset_type`, `cost_basis`, `holding_period`,
+  `restriction_status`, `tax_rate`, `transaction_cost`, and `liquidate`.
+  Liquidation requires basis and tax rate; retaining an asset permits unknown
+  sale inputs but names every gap and never calls its value cash.
+- `asset_price_change`: `target` (`marketable` or `employer_stock`) and signed
+  `price_change`. A decline changes value and produces no cash.
+- `one_time_expense`: positive `amount` in its `start_month`.
+- `recurring_expense_change`: signed `amount_monthly`, `start_month`, and
+  optional duration.
+- `debt_payoff`: positive `amount` and optional `payoff_penalty`; principal
+  reduces cash and debt equally, while the penalty reduces net worth.
+- `portfolio_contribution`: positive `amount`, optional `transaction_cost`, and
+  optional stable `account_id`; cash becomes marketable assets.
+- `portfolio_withdrawal`: positive `amount`, optional explicit `tax_reserve`,
+  `transaction_cost`, and account ID; no tax is inferred.
+- `home_purchase`: either explicit `purchase_price`, `down_payment`,
+  `closing_cost`, and `monthly_housing_cost_change`, or
+  `housing_adapter: true`. The adapter reuses the recorded
+  `housing.purchase` cash ledger and replaces rent exactly once.
+
+The deterministic same-month order is receipts, employment/compensation,
+asset repricing, expenses, withdrawals, debt payoff, home purchase, then
+portfolio contributions. YAML list order cannot change the answer. Multiple
+home purchases in one month, a contribution and withdrawal for the same
+account/month, or two employer-stock repricings are rejected as ambiguous.
+Windfall receipt events also require `source_event_id` matching exactly one
+`transitions.windfall[].id`, and their gross value must reconcile. Labels are
+display text and never join keys. Legacy windfall reports still work without an
+ID; deployment scenarios do not.
+
+Supported objectives are `preserve_liquidity`, `preserve_savings`,
+`minimize_debt`, `minimize_retirement_delay`, `preserve_goal`, and
+`compare_only`. An absent or mixed objective produces no winner. Results expose
+baseline and scenario monthly paths, minimum cash and month, reserve-floor
+breaches, saving during and after the event, retirement target age, terminal
+liquidity/net-worth changes, an isolated-event bridge plus residual, the
+binding constraint, unknowns, and recovery conditions. They also emit
+projection-clock observations using the history metric protocol.
+
+The first release is deterministic. It deliberately excludes Monte Carlo,
+probabilities, market/FX fetching, a tax-return engine, individual-security
+recommendations, execution, and automatic fact/result mutation.
 
 ## Extending
 

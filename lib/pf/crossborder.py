@@ -628,6 +628,7 @@ def model(
     withdrawal_rate: float = _ret.DEFAULT_WITHDRAWAL_RATE,
     real_return: float = _ret.DEFAULT_REAL_RETURN,
     fx_stress: float = FX_STRESS,
+    savings_by_year: list[float] | None = None,
 ) -> GeoPlan:
     """Blended burn across a split-living arrangement, and the target it implies.
 
@@ -653,9 +654,12 @@ def model(
         stressed_annual=stress, withdrawal_rate=withdrawal_rate,
         target=target, baseline_target=baseline_target,
         stressed_target=stress_target,
-        years_to_target=_ret.years_to(target, assets, annual_savings, real_return),
+        years_to_target=_ret.years_to(
+            target, assets, annual_savings, real_return,
+            savings_by_year=savings_by_year),
         years_to_baseline=_ret.years_to(baseline_target, assets, annual_savings,
-                                        real_return),
+                                        real_return,
+                                        savings_by_year=savings_by_year),
     )
 
     if not legs:

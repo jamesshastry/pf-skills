@@ -22,14 +22,19 @@ def build(data: dict, w: cli.Writer) -> None:
     # figure used against nominal debt rates, and silently reusing it here
     # once produced a real-vs-nominal mix that never broke even.
     ret = F._dig(data, "assumptions.nominal_investment_return") or H.DEFAULT_INVESTMENT_RETURN
-    appr = F._dig(data, "assumptions.home_appreciation")
-    appr = H.DEFAULT_APPRECIATION if appr is None else appr
-    growth = F._dig(data, "assumptions.rent_growth") or H.DEFAULT_RENT_GROWTH
+    appr_raw = F._dig(data, "assumptions.home_appreciation")
+    growth_raw = F._dig(data, "assumptions.rent_growth")
+    appr = H.DEFAULT_APPRECIATION if appr_raw is None else appr_raw
+    growth = H.DEFAULT_RENT_GROWTH if growth_raw is None else growth_raw
 
     c = H.compare(p, monthly_rent=rent, years=years,
                   investment_return=float(ret), appreciation=float(appr),
                   rent_growth=float(growth))
 
+    w("**This compares the economics of renting and buying; it does not "
+      "determine affordability.** Use `housing-affordability` to establish "
+      "which purchase prices are feasible, then compare them here.")
+    w()
     verdict = ("**Buying is cheaper**" if c.owning_cheaper else "**Renting is cheaper**")
     w(f"{verdict} over {years} years, by **{m(abs(c.difference))}**.")
     w()
@@ -40,6 +45,20 @@ def build(data: dict, w: cli.Writer) -> None:
         ["Monthly payment (P&I)", m(c.monthly_payment)],
         ["Current rent", f"{m(rent)}/mo"],
     ])
+
+    implied_real = float(appr) - float(growth)
+    default_real = H.DEFAULT_APPRECIATION - H.DEFAULT_RENT_GROWTH
+    if appr_raw is not None or growth_raw is not None:
+        w()
+        w(f"Assumed growth (nominal): rent {float(growth):.1%}, "
+          f"appreciation {float(appr):.1%} — "
+          f"implied **{implied_real:+.1%} real**.")
+        if abs(implied_real - default_real) > 1e-9:
+            w(f"**Check the real view:** the defaults imply "
+              f"{default_real:+.1%} real; this override implies "
+              f"**{implied_real:+.1%} real**. Changing one side without the "
+              f"other moves the real assumption silently — lowering rent "
+              f"growth while holding appreciation fixed raises it.")
 
     w()
     w(f"## Wealth given up over {years} years")

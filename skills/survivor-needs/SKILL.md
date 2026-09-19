@@ -109,6 +109,11 @@ hole, it doesn't fill it.
 Name what would move the number most: the survivor factor, the education
 obligation if it's missing, and the discount rate.
 
+## Time-series output
+
+Emit the real-dollar survivor capital gap per earning member's stable ID. Keep
+changes in Social Security modeling distinct from household changes.
+
 ---
 
 *Not financial, tax, or legal advice.*

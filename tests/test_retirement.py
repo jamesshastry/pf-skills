@@ -55,6 +55,40 @@ def test_project_zero_years_is_the_starting_balance():
     assert R.project(100_000, 10_000, 0.05, 0) == 100_000
 
 
+def test_expiring_education_obligation_can_change_the_savings_path():
+    path = R.savings_path_from_obligations(
+        10_000,
+        [{"label": "education", "annual_amount": 6_000,
+          "start_month": 1, "end_month": 24,
+          "basis": "real", "redirect_to_retirement": True}],
+        years=4,
+    )
+    assert path == [10_000, 10_000, 16_000, 16_000]
+    variable = R.project(0, 10_000, 0.0, 4, savings_by_year=path)
+    flat = R.project(0, 10_000, 0.0, 4)
+    assert variable == 52_000
+    assert variable > flat
+
+
+def test_freed_cash_is_not_assumed_saved_without_explicit_redirection():
+    path = R.savings_path_from_obligations(
+        10_000,
+        [{"annual_amount": 6_000, "start_month": 1, "end_month": 12}],
+        years=3,
+    )
+    assert path == [10_000, 10_000, 10_000]
+
+
+def test_nominal_obligation_is_refused_from_the_real_projection():
+    with pytest.raises(ValueError, match="basis: real"):
+        R.savings_path_from_obligations(
+            10_000,
+            [{"annual_amount": 6_000, "start_month": 1, "end_month": 12,
+              "basis": "nominal", "redirect_to_retirement": True}],
+            years=3,
+        )
+
+
 def test_target_is_spending_over_the_withdrawal_rate():
     assert R.target_for(96_000, 0.04) == 2_400_000
     assert R.target_for(96_000, 0.035) == pytest.approx(2_742_857, abs=1)

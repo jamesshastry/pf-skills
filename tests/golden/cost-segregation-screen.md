@@ -4,7 +4,7 @@
 
 **1 of them returns zero for a reason that is not arithmetic**: the §469 gate is shut, so the accelerated deduction enlarges a suspended passive loss rather than reducing tax. Accelerating a loss you cannot deduct is worth nothing — and the study fee is real money.
 
-§469 gate, per activity: **Cedar Park duplex** shut · **Gulf Coast cabin** short-stay.
+§469 gate, per activity: **Maple Ridge home** shut · **Cedar Park duplex** shut · **Gulf Coast cabin** short-stay.
 
 | Property | §469 gate | Depreciable basis | Reclassified (range) | Year-1 tax saving | PV of the timing benefit | Study fee | Ratio |
 |---|---|---|---|---|---|---|---|

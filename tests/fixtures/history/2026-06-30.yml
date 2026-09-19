@@ -1,0 +1,53 @@
+history_schema_version: 1
+snapshot_id: s2026-06-30
+kind: complete
+effective_date: 2026-06-30
+observed_at: 2026-07-02
+completeness: complete
+facts:
+  meta: {schema_version: 1, as_of: 2026-06-30, currency: USD,
+         jurisdiction: {country: US, state: TX}}
+  household:
+    members: [{id: p1, role: primary, age: 41, income_annual: 176500}]
+    balance_sheet:
+      - {id: acct-brokerage, name: Meridian Investments, value: 90000,
+         tier: liquid, liquidity_class: marketable}
+      - {id: acct-bond, name: Synthetic Treasury account, value: 19000,
+         tier: liquid, liquidity_class: marketable}
+    annual_spending: 86100
+observations:
+  - {metric_id: household.net_worth, effective_date: 2026-06-30,
+     value: 340000, unit: currency, currency: USD, basis: nominal,
+     scenario: observed, source: household.balance_sheet+debts,
+     clock: observed, status: measured, observed_at: 2026-07-02,
+     data_quality: complete}
+  - {metric_id: household.asset_balance, effective_date: 2026-06-30,
+     value: 90000, unit: currency, currency: USD, basis: nominal,
+     scenario: observed, source: household.balance_sheet, clock: observed,
+     status: measured, entity_id: acct-brokerage,
+     display_label: Meridian Investments, observed_at: 2026-07-02,
+     data_quality: complete}
+  - {metric_id: household.asset_balance, effective_date: 2026-06-30,
+     value: 19000, unit: currency, currency: USD, basis: nominal,
+     scenario: observed, source: household.balance_sheet, clock: observed,
+     status: measured, entity_id: acct-bond,
+     display_label: Synthetic Treasury account, observed_at: 2026-07-02,
+     data_quality: complete}
+  - metric_id: household.asset_balance
+    effective_date: 2026-06-30
+    value: 53100
+    unit: currency
+    currency: USD
+    basis: nominal
+    scenario: observed
+    source: foreign statement converted to USD
+    clock: observed
+    status: measured
+    entity_id: acct-fx
+    display_label: Synthetic foreign account
+    dimensions: {fx_date: 2026-06-30, source_currency: CAD}
+    observed_at: 2026-07-02
+    data_quality: complete
+analyses: []
+restatements: []
+notes: []

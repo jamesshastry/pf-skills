@@ -91,6 +91,11 @@ estate-tax planning for large estates. Beneficiary designations are audited by
 `beneficiary-audit`, which matters more than most of this — a perfect policy
 paid to the wrong person is a total loss.
 
+## Time-series output
+
+Emit the real-dollar portable coverage gap per insured stable ID. Policy names
+remain display labels and never identify the series.
+
 ---
 
 *Not financial, tax, or legal advice. Verify against your actual policy and

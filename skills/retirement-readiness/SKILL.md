@@ -61,6 +61,14 @@ assumptions it is under the household's control.
 Say this when the date looks too far away. It is more useful than any
 adjustment to the projection.
 
+## Use the retirement portfolio, not total net worth
+
+Only assets marked `retirement_eligible: true` fund the goal. Legacy
+tax-deferred, Roth, and HSA wrappers are safely inferred; an unclassified
+taxable or illiquid asset is excluded and named. A primary residence, land,
+education account, or personal-use asset is not investable merely because it
+has a balance and a liquidity tier.
+
 ## The withdrawal rate is a rule of thumb
 
 It came from historical sequences over a fixed horizon. Longer retirements,
@@ -74,6 +82,11 @@ report runs three rather than one.
 3. **The caveats**, particularly sequence risk, without burying them.
 4. If already funded, **say the question has changed**: from accumulation to
    sequencing, taxes, and purpose.
+
+## Time-series output
+
+Emit the real-dollar target and target-reached age with return, withdrawal, and
+savings-path assumptions. Never join these to nominal projections.
 
 ---
 

@@ -6,11 +6,24 @@ treated as unanswered, and that the privacy warning does not cry wolf.
 """
 from __future__ import annotations
 
+import importlib.util
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from pf import intake as I  # noqa: E402
+
+
+RUNNER_PATH = (Path(__file__).resolve().parents[1] / "skills"
+               / "document-intake" / "run.py")
+
+
+def _intake_runner():
+    spec = importlib.util.spec_from_file_location("document_intake_runner", RUNNER_PATH)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    return module
 
 
 # ── document classification ─────────────────────────────────────────────────
@@ -33,6 +46,28 @@ def test_matching_is_case_insensitive():
     assert I.classify("VANGUARD-Statement.PDF").suggests
 
 
+def test_categorized_source_documents_are_scanned_with_their_path(tmp_path):
+    banking = tmp_path / "banking"
+    insurance = tmp_path / "insurance"
+    banking.mkdir()
+    insurance.mkdir()
+    (banking / ".gitignore").write_text("*\n!.gitignore\n")
+    (banking / "checking-2026.pdf").write_text("synthetic")
+    (insurance / "policy.pdf").write_text("synthetic")
+
+    docs = _intake_runner().scan((
+        ("inputs/banking", banking),
+        ("inputs/insurance", insurance),
+    ))
+
+    assert [document.name for document in docs] == [
+        "inputs/banking/checking-2026.pdf",
+        "inputs/insurance/policy.pdf",
+    ]
+    assert "household.balance_sheet" in docs[0].suggests
+    assert "insurance" in docs[1].suggests
+
+
 # ── the privacy warning ─────────────────────────────────────────────────────
 
 def test_a_name_in_a_filename_is_flagged():
@@ -41,6 +76,12 @@ def test_a_name_in_a_filename_is_flagged():
 
 def test_an_account_number_in_a_filename_is_flagged():
     assert I.looks_renamed_for_privacy("statement-acct-44172.pdf")
+
+
+def test_a_categorized_path_still_checks_the_private_filename():
+    assert I.looks_renamed_for_privacy(
+        "inputs/banking/Jane-Q-Smith-acct-44172.pdf"
+    )
 
 
 def test_a_year_is_not_an_account_number():

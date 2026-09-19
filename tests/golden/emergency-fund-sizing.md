@@ -1,12 +1,12 @@
 # Emergency fund sizing
 
-✅ **Adequate.**
+⚠️ **$40,000 short of target.**
 
 |  |  |
 |---|---|
-| Liquid assets | $85,000 |
+| Cash and cash equivalents | $40,000 |
 | Monthly spending | $8,000 |
-| Months held | **10.6** |
+| Months held | **5.0** |
 | Target months | **10** |
 | Target | **$80,000** |
 
@@ -17,11 +17,12 @@
 - +2 dependents — longer job search, less room to cut living costs
 - +2 28% of income is variable — pay can fall sharply with no job loss at all
 
-Measured against **`liquid` assets only** — not net worth, and not retirement accounts. A household with a large 401(k) and no cash cannot pay a deductible.
+Measured against **cash and cash equivalents** — not total `liquid` assets, net worth, or retirement accounts. Marketable securities are spendable within days but are not a cash reserve at par.
+$45,000 of marketable securities is excluded from the cash reserve until sold and haircut for market and tax effects.
 
-- Adequate. No action.
+- **$40,000 short.** Until this is filled, treat every other recommendation as blocked — self-insuring a risk requires something to self-insure from, and an under-buffered household meets an ordinary setback with debt.
 
-- For context: cutting to essential spending only (about $6,000/month) stretches the same $85,000 to **14 months**. The target above deliberately uses full spending — a crisis is a bad time to be discovering which costs are actually fixed.
+- For context: cutting to essential spending only (about $6,000/month) stretches the same $40,000 to **7 months**. The target above deliberately uses full spending — a crisis is a bad time to be discovering which costs are actually fixed.
 
 ## Why this gates everything else
 

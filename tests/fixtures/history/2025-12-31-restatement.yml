@@ -1,0 +1,39 @@
+history_schema_version: 1
+snapshot_id: s2025-12-31-restatement
+kind: restatement
+effective_date: 2025-12-31
+observed_at: 2026-04-12
+completeness: partial
+observations: []
+analyses: []
+restatements:
+  - original_snapshot_id: s2025-12-31
+    original:
+      metric_id: household.net_worth
+      effective_date: 2025-12-31
+      value: 300000
+      unit: currency
+      currency: USD
+      basis: nominal
+      scenario: observed
+      source: household.balance_sheet+debts
+      clock: observed
+      status: measured
+      observed_at: 2026-01-05
+      data_quality: complete
+    corrected:
+      metric_id: household.net_worth
+      effective_date: 2025-12-31
+      value: 305000
+      unit: currency
+      currency: USD
+      basis: nominal
+      scenario: observed
+      source: household.balance_sheet+debts
+      clock: observed
+      status: measured
+      observed_at: 2026-01-05
+      data_quality: complete
+    reason: A synthetic year-end deposit was posted one day late.
+    corrected_at: 2026-04-12
+notes: [Original value retained in this correction document.]

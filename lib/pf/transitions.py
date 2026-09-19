@@ -272,6 +272,7 @@ def _sorted(findings: list[Finding]) -> list[Finding]:
 
 @dataclass
 class WindfallEvent:
+    id: str | None
     label: str
     kind: str
     amount: float
@@ -377,6 +378,7 @@ def assess_windfall(
         remaining = ((pause_until - as_of).days
                      if (pause_until and as_of) else None)
         plan.events.append(WindfallEvent(
+            id=e.get("id"),
             label=e.get("label") or kind or f"#{i}",
             kind=kind or "unknown",
             amount=float(e.get("amount") or 0),

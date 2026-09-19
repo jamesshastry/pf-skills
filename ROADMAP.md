@@ -63,10 +63,12 @@ answer.
 | 5b · Maintenance *(cross-cutting)* | `conflict-check` | ✅ shipped |
 | 5c · Onboarding *(cross-cutting)* | `document-intake` | ✅ shipped |
 | 5d · Review *(cross-cutting)* | `household-review` | ✅ shipped |
+| 5e · History *(cross-cutting)* | `financial-history-review` | ✅ shipped |
+| 5f · Scenario planning *(cross-cutting)* | `financial-scenario-planner` · `job-loss-stress-test` · `windfall-deployment-planner` | ✅ shipped |
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped — closes `REVIEW.md` A1 |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |
-| 8 · Housing | `rent-vs-buy` · `mortgage-review` · `ca-sfh-disclosure-review` · `ca-condo-hoa-disclosure-review` | ✅ shipped |
+| 8 · Housing | `housing-affordability` · `rent-vs-buy` · `mortgage-review` · `ca-sfh-disclosure-review` · `ca-condo-hoa-disclosure-review` | ✅ shipped |
 | 9 · Education | `education-funding` | ✅ shipped |
 | 10 · Cross-border planning | ~~`roth-portability-check`~~ ✅ · ~~`geo-arbitrage-model`~~ ✅ · ~~`cross-border-healthcare`~~ ✅ | ✅ shipped |
 | 11 · Expat tax filing | ~~`feie-vs-ftc`~~ ✅ · ~~`foreign-presence-tests`~~ ✅ · ~~`state-domicile-exit`~~ ✅ · ~~`cfc-gilti-screen`~~ ✅ | ✅ shipped |
@@ -83,7 +85,9 @@ Clusters ship whole. A cluster is done when every skill in it runs, its schema e
 documented, its tests pass, and it has been validated against real data at least once.
 
 **All eighteen clusters are shipped, plus the cross-cutting skills** (`conflict-check`,
-`document-intake`, `household-review`, `citizenship-status-review`) **and maintenance.**
+`document-intake`, `household-review`, `financial-history-review`,
+`financial-scenario-planner`, `job-loss-stress-test`,
+`windfall-deployment-planner`, `citizenship-status-review`) **and maintenance.**
 What follows is maintenance and whatever the next
 real gap turns out to be — see the open questions at the bottom. Resist adding clusters for
 symmetry; the filter at the top of this file still applies.
@@ -249,6 +253,13 @@ Depends on cluster 7's assumptions. The one durable rule worth encoding now: **t
 affordability against the conservative income case, not the current one.** Variable
 compensation is the first thing to fall and the last thing people model.
 
+`housing-affordability` now owns that question. It reconciles named current and
+conservative cash-flow scenarios, preserves a savings floor, and separates the
+cash-flow ceiling from lender and cash-only reserve limits. It also models a
+rental-first home as explicit tenant and owner-occupancy phases, reusing the
+investment-property underwriting and §469 gate by label. `rent-vs-buy` remains
+the economic-cost comparison for prices already shown feasible.
+
 ---
 
 ## Cross-cutting infrastructure
@@ -263,6 +274,26 @@ Not skills. Built when a skill needs them, extracted at rule-of-three.
 | Absorbability / exposure helpers | `auto` and `property` already share the shape. Third consumer triggers extraction. |
 | Band propagation | `Band` currently lives in `auto`. Any second consumer moves it. |
 | Conclusion-consistency check | A validator that compares **peer items resolved by different rules** — the failure where every figure is right and the reasoning is inconsistent. Figure-level validation cannot see it. |
+| `lib/pf/timeseries.py` | One metric/finding protocol for observed history, historical analyses and projections, plus immutable snapshots, restatements and guarded comparison. |
+| `lib/pf/scenario.py` | One typed event model and reconciled monthly cash spine for deterministic what-if analysis; scenario metrics reuse the history protocol. |
+
+### History and scenario planning *(shipped 2026-09-19)*
+
+History uses three clocks rather than one overloaded date: observed facts,
+analysis results, and forward projections. Snapshot capture is an explicit
+command, refuses overwrite, retains restatements, and never forward-fills a
+gap. The first structured adapters cover net worth, liquidity, income, saving,
+emergency reserves, employer concentration, retirement, housing affordability,
+education and the main protection gaps. Other skills already contribute stable
+qualitative finding IDs and can add numeric metrics incrementally.
+
+Scenario planning reuses that metric protocol but does not require history. It
+ships one monthly engine plus the general planner, correlated job-loss wrapper,
+and post-pause windfall deployment wrapper. The first event vocabulary covers
+employment and compensation changes, receipts, asset repricing, expenses,
+debt, portfolio transfers and a housing adapter. Stochastic simulation,
+automatic market/FX data, tax-return computation, disability/death/rental
+wrappers, and security-level execution remain deliberately deferred.
 
 ---
 

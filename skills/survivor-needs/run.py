@@ -8,13 +8,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
-from pf import cli, facts as F, ssa as SS, survivor as S  # noqa: E402
+from pf import cli, facts as F, skill_metrics as SM, ssa as SS, survivor as S  # noqa: E402
 
 REQUIRED = ["household.members", "household.annual_spending", "household.balance_sheet"]
 m = cli.money
 
 
 def build(data: dict, w: cli.Writer) -> None:
+    w.add_metrics(SM.emit("survivor-needs", data))
     members = F._dig(data, "household.members") or []
     earners = [x for x in members
                if x.get("role") in ("primary", "spouse") and (x.get("income_annual") or 0) > 0]
@@ -107,4 +108,5 @@ def build(data: dict, w: cli.Writer) -> None:
 
 
 if __name__ == "__main__":
-    raise SystemExit(cli.run(title="Survivor needs", required=REQUIRED, build=build))
+    raise SystemExit(cli.run(title="Survivor needs", required=REQUIRED,
+                             build=build, skill_id="survivor-needs"))

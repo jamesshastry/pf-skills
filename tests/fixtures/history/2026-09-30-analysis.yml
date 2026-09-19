@@ -1,0 +1,60 @@
+history_schema_version: 1
+snapshot_id: a2026-09-30
+kind: analysis
+effective_date: 2026-09-30
+observed_at: 2026-10-03
+completeness: complete
+source_snapshot_id: s2026-09-30
+observations: []
+analyses:
+  - skill_id: emergency-fund-sizing
+    headline: Reserve target reached
+    calculated_at: 2026-10-03
+    model_version: pf-skills-v2
+    metrics:
+      - {metric_id: emergency_fund.months_held, effective_date: 2026-09-30,
+         value: 6.0, unit: months, basis: nonmonetary, scenario: current,
+         source: emergency-fund-sizing, clock: analysis, status: derived,
+         calculated_at: 2026-10-03, model_version: pf-skills-v2,
+         inputs_fingerprint: reserve-input-v3, data_quality: complete}
+    findings:
+      - {finding_id: skill.employer.concentration.risk.verdict,
+         effective_date: 2026-09-30, source_skill: employer-concentration-risk,
+         state: closed, severity: ok, text: Employer shares were diversified,
+         calculated_at: 2026-10-03, model_version: pf-skills-v2,
+         transition_reason: Household sold vested employer shares,
+         change_driver: household, inputs_fingerprint: changed-household-inputs}
+  - skill_id: retirement-readiness
+    headline: Real target remains comparable
+    calculated_at: 2026-10-03
+    model_version: pf-skills-v2
+    metrics:
+      - {metric_id: retirement.target, effective_date: 2026-09-30,
+         value: 2491429, unit: currency, currency: USD, basis: real,
+         scenario: current, source: retirement-readiness, clock: analysis,
+         status: derived, calculated_at: 2026-10-03,
+         model_version: pf-skills-v2, inputs_fingerprint: retirement-v3,
+         data_quality: complete}
+    findings: []
+  - skill_id: housing-affordability
+    headline: Named cases stay separate
+    calculated_at: 2026-10-03
+    model_version: pf-skills-v2
+    metrics:
+      - {metric_id: housing.cash_flow_price_ceiling,
+         effective_date: 2026-09-30, value: 498000, unit: currency,
+         currency: USD, basis: nominal, scenario: current,
+         entity_id: cash-current,
+         source: housing-affordability, clock: analysis, status: derived,
+         calculated_at: 2026-10-03, model_version: pf-skills-v2,
+         inputs_fingerprint: housing-v2, data_quality: complete}
+      - {metric_id: housing.cash_flow_price_ceiling,
+         effective_date: 2026-09-30, value: 342000, unit: currency,
+         currency: USD, basis: nominal, scenario: conservative,
+         entity_id: cash-conservative,
+         source: housing-affordability, clock: analysis, status: derived,
+         calculated_at: 2026-10-03, model_version: pf-skills-v2,
+         inputs_fingerprint: housing-v2, data_quality: complete}
+    findings: []
+restatements: []
+notes: [Historical analysis kept separate from observed facts.]

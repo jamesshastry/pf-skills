@@ -1,0 +1,24 @@
+history_schema_version: 1
+snapshot_id: a2026-03-31
+kind: analysis
+effective_date: 2026-03-31
+observed_at: 2026-04-03
+completeness: partial
+source_snapshot_id: s2026-03-31
+observations: []
+analyses:
+  - skill_id: employer-concentration-risk
+    headline: Method changed the severity
+    calculated_at: 2026-04-03
+    model_version: pf-skills-v2
+    metrics: []
+    findings:
+      - {finding_id: skill.employer.concentration.risk.verdict,
+         effective_date: 2026-03-31, source_skill: employer-concentration-risk,
+         state: worsened, severity: uncovered,
+         text: Employer income is now included in the joint score,
+         calculated_at: 2026-04-03, model_version: pf-skills-v2,
+         transition_reason: Model now includes the income side,
+         change_driver: model, inputs_fingerprint: same-method-inputs}
+restatements: []
+notes: [Historical analysis kept separate from partial observed facts.]

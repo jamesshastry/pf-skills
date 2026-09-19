@@ -59,6 +59,41 @@ def test_attachable_excludes_retirement_but_includes_illiquid():
     assert F.attachable(SAMPLE) == 113_000
 
 
+def test_retirement_assets_exclude_earmarked_and_personal_assets():
+    facts = {"household": {"balance_sheet": [
+        {"name": "brokerage", "value": 50_000, "tier": "liquid",
+         "retirement_eligible": True},
+        {"name": "401k", "value": 300_000, "tier": "age_restricted",
+         "account_type": "tax_deferred"},  # safe legacy inference
+        {"name": "home", "value": 600_000, "tier": "illiquid",
+         "retirement_eligible": False},
+        {"name": "529", "value": 40_000, "tier": "illiquid",
+         "account_type": "education", "retirement_eligible": False},
+        {"name": "land", "value": 100_000, "tier": "illiquid"},
+    ]}}
+    result = F.retirement_assets(facts)
+    assert result.included == 350_000
+    assert result.excluded == 740_000
+    assert result.unknown == ["land"]
+
+
+def test_retirement_assets_are_net_of_account_margin_debt():
+    facts = {"household": {"balance_sheet": [
+        {"name": "taxable", "value": 50_000, "margin_debt": 7_000,
+         "retirement_eligible": True},
+    ]}}
+    assert F.retirement_assets(facts).included == 43_000
+
+
+def test_legacy_taxable_assets_are_uncertain_not_silently_investable():
+    result = F.retirement_assets(SAMPLE)
+    assert "cash" in result.unknown
+    assert "brokerage" in result.unknown
+    assert "retirement_401k" in result.unknown
+    assert "college_529" in result.unknown
+    assert result.included == 0
+
+
 def test_a_401k_rich_cash_poor_household_cannot_absorb():
     """The case SCHEMA.md calls out: $2M in a 401(k), $3,000 in cash."""
     poor = {

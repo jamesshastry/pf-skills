@@ -71,6 +71,11 @@ rule is exactly what this project is organised to prevent.
 3. **The policy question**, not a trade recommendation.
 4. **Hand off** the execution question, with the seam named.
 
+## Time-series output
+
+Emit income share, asset share, joint loss, and runway with the recorded stress
+assumptions. A changed model version must not be described as diversification.
+
 ---
 
 *Not financial or tax advice. Selling concentrated positions has tax

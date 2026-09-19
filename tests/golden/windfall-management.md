@@ -2,14 +2,15 @@
 
 ## Do nothing for ninety days
 
-**Do nothing irreversible for another 44 day(s).** 1 of 2 events are inside the 90-day window. Park the money somewhere safe and liquid, decline every opportunity, and let the urgency pass. Nothing on this list — not a house, not a business, not a loan to a relative, not an annuity — gets worse by waiting three months, and the decisions people regret are made in the first one. The only things worth doing now are the reversible ones: park it, cover the tax, name beneficiaries.
+**Do nothing irreversible for another 44 day(s).** 1 of 3 events are inside the 90-day window. Park the money somewhere safe and liquid, decline every opportunity, and let the urgency pass. Nothing on this list — not a house, not a business, not a loan to a relative, not an annuity — gets worse by waiting three months, and the decisions people regret are made in the first one. The only things worth doing now are the reversible ones: park it, cover the tax, name beneficiaries.
 
-**$355,000** across 2 event(s).
+**$615,000** across 3 event(s).
 
 | Event | Amount | Kind | Income on receipt? | Basis | Pause |
 |---|---|---|---|---|---|
 | Inheritance from Ana's aunt | $260,000 | `inheritance` | no | stepped up | **44d left** |
 | Northwind RSU vest | $95,000 | `equity_vest` | yes | unchanged | elapsed |
+| Synthetic family stock gift | $260,000 | `gift` | no | carryover | elapsed |
 
 |  | Amount |
 |---|---|
@@ -25,6 +26,8 @@
 
 - **Northwind RSU vest** — RSUs vesting at or after an IPO are **ordinary wage income** at vest, reported on the W-2, with basis equal to the amount included. There is no step-up and no preferential rate. Shares held afterwards start a fresh holding period from the vest date, so selling within a year of vest produces a short-term gain on top of income already taxed.
 
+- **Synthetic family stock gift** — A gift is not income to the recipient, and any gift tax is the donor's problem, not yours. But basis **carries over** from the donor — there is no step-up — so a gifted asset can arrive with a large embedded gain that becomes yours on sale. This is the sharpest difference between receiving something now and inheriting the same thing later.
+
 ## Tax and withholding
 
 - ⚠️ **About $22,800 of federal tax on $95,000 of taxable receipt** at 24%. Federal only, nominal, and a floor: state tax, NIIT on investment income, and the bracket this pushes you into are all on top. Against $20,900 withheld, the gap is **$1,900**.
@@ -35,7 +38,7 @@
 
 ## Where it sits meanwhile
 
-- $355,000 exceeds the $250,000 FDIC limit — per depositor, per insured bank, per ownership category. 'Safe and liquid' means insured or Treasury-backed, which in practice means splitting across banks, or a Treasury money market fund, or direct bills. Brokerage SIPC coverage ($500,000, of which $250,000 cash) is **not the same thing** — it covers the custodian failing, not the investments falling. See `cash-yield-review` for where the parked money should actually sit; parking it is not the same as leaving it at 0.01%.
+- $615,000 exceeds the $250,000 FDIC limit — per depositor, per insured bank, per ownership category. 'Safe and liquid' means insured or Treasury-backed, which in practice means splitting across banks, or a Treasury money market fund, or direct bills. Brokerage SIPC coverage ($500,000, of which $250,000 cash) is **not the same thing** — it covers the custodian failing, not the investments falling. See `cash-yield-review` for where the parked money should actually sit; parking it is not the same as leaving it at 0.01%.
 
 ## Reporting
 
