@@ -4,11 +4,13 @@ Two layers, and they catch different things.
 
 ## `lib/` unit tests — is the arithmetic right?
 
-Examples include the insurance, cash, retirement, housing, cross-border,
-real-estate, history, and scenario modules. `test_timeseries.py` pins clock and
-comparability rules; `test_scenario.py` pins monthly cash reconciliation and
-typed event semantics; `test_housing_affordability.py` pins the distinct cash,
-lender, savings, and occupancy constraints.
+Examples include the insurance, cash, cash-flow, retirement, housing,
+cross-border, real-estate, history, and scenario modules. `test_cashflow.py`
+pins income, explicit-rule tax estimates, and annual cash reconciliation;
+`test_timeseries.py` pins clock and comparability rules; `test_scenario.py` pins
+monthly cash reconciliation and typed event semantics;
+`test_housing_affordability.py` pins the distinct cash, lender, savings, and
+occupancy constraints.
 
 Pure functions, synthetic fixtures, no subprocesses. These are where thresholds and
 derivations are pinned.
@@ -58,6 +60,9 @@ uv run --with pytest --with pyyaml pytest -q \
 uv run --with pytest --with pyyaml pytest -q \
   tests/test_housing_affordability.py \
   tests/test_housing_affordability_report.py
+
+# Focused annual cash-flow checks
+uv run --with pytest --with pyyaml pytest tests/test_cashflow.py -q
 ```
 
 The skill tests spawn a subprocess per skill, so they are slower than the unit

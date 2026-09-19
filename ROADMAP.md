@@ -276,6 +276,7 @@ Not skills. Built when a skill needs them, extracted at rule-of-three.
 | Conclusion-consistency check | A validator that compares **peer items resolved by different rules** — the failure where every figure is right and the reasoning is inconsistent. Figure-level validation cannot see it. |
 | `lib/pf/timeseries.py` | One metric/finding protocol for observed history, historical analyses and projections, plus immutable snapshots, restatements and guarded comparison. |
 | `lib/pf/scenario.py` | One typed event model and reconciled monthly cash spine for deterministic what-if analysis; scenario metrics reuse the history protocol. |
+| `lib/pf/cashflow.py` | Reusable income, explicit-rule tax estimates, and annual cash-flow reconciliation; private repositories supply their own inputs and retain their own renderers. |
 
 ### History and scenario planning *(shipped 2026-09-19)*
 
