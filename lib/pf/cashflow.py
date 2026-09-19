@@ -209,11 +209,19 @@ class CashFlowScenario:
 
     @property
     def savings_rate_during_obligations(self) -> float:
-        return self.total_savings_during_obligations / self.gross
+        return (
+            self.total_savings_during_obligations / self.gross
+            if self.gross
+            else 0.0
+        )
 
     @property
     def savings_rate_after_obligations(self) -> float:
-        return self.total_savings_after_obligations / self.gross
+        return (
+            self.total_savings_after_obligations / self.gross
+            if self.gross
+            else 0.0
+        )
 
 
 def income_scenarios(

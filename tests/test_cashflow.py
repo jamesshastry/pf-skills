@@ -88,6 +88,18 @@ def test_progressive_tax_uses_each_bracket_once():
         40_000, ((0.10, 10_000), (0.20, 30_000), (0.30, None))) == 8_000
 
 
+def test_zero_income_has_zero_effective_and_savings_rates():
+    zero_uses = C.CashFlowInputs(**{
+        name: 0 for name in vars(uses())
+    })
+    result = C.build_cash_flow_scenarios(
+        {"no_income": 0}, tax_rules=rules(), cash=zero_uses)["no_income"]
+
+    assert result.taxes.effective_rate == 0.0
+    assert result.savings_rate_during_obligations == 0.0
+    assert result.savings_rate_after_obligations == 0.0
+
+
 def test_unknown_or_contradictory_inputs_are_refused():
     with pytest.raises(C.CashFlowError, match="unknown"):
         C.income_scenarios({"current": {"salary": 100_000, "bonus": None}})
