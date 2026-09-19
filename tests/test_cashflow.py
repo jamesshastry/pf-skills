@@ -100,6 +100,29 @@ def test_zero_income_has_zero_effective_and_savings_rates():
     assert result.savings_rate_after_obligations == 0.0
 
 
+def test_non_finite_inputs_are_refused():
+    with pytest.raises(C.CashFlowError, match="current salary must be finite"):
+        C.income_scenarios({"current": {"salary": float("nan")}})
+    with pytest.raises(C.CashFlowError, match="annual rent must be finite"):
+        C.CashFlowInputs(**{
+            **vars(uses()),
+            "annual_rent": float("inf"),
+        })
+    with pytest.raises(C.CashFlowError, match="upper bound must be finite"):
+        C.validate_brackets(((0.10, float("nan")), (0.20, None)))
+    with pytest.raises(C.CashFlowError, match="taxable income must be finite"):
+        C.progressive_tax(float("-inf"), ((0.10, None),))
+    with pytest.raises(C.CashFlowError, match="rate must be finite"):
+        C.PayrollTaxRules(
+            state_payroll_rate=float("nan"),
+            social_security_wage_base=80_000,
+            social_security_rate=0.06,
+            medicare_rate=0.015,
+            additional_medicare_threshold=90_000,
+            additional_medicare_rate=0.01,
+        )
+
+
 def test_unknown_or_contradictory_inputs_are_refused():
     with pytest.raises(C.CashFlowError, match="unknown"):
         C.income_scenarios({"current": {"salary": 100_000, "bonus": None}})

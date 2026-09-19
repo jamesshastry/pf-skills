@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from math import isfinite
 
 
 class CashFlowError(ValueError):
@@ -24,25 +25,27 @@ class CashFlowError(ValueError):
 Bracket = tuple[float, float | None]
 
 
-def _nonnegative(value: float | int | None, label: str) -> float:
+def _finite_number(value: float | int | None, label: str) -> float:
     if value is None:
         raise CashFlowError(f"{label} is required; unknown is not zero")
     try:
         number = float(value)
     except (TypeError, ValueError) as exc:
         raise CashFlowError(f"{label} must be numeric") from exc
+    if not isfinite(number):
+        raise CashFlowError(f"{label} must be finite")
+    return number
+
+
+def _nonnegative(value: float | int | None, label: str) -> float:
+    number = _finite_number(value, label)
     if number < 0:
         raise CashFlowError(f"{label} cannot be negative")
     return number
 
 
 def _rate(value: float | int | None, label: str) -> float:
-    if value is None:
-        raise CashFlowError(f"{label} is required; unknown is not zero")
-    try:
-        number = float(value)
-    except (TypeError, ValueError) as exc:
-        raise CashFlowError(f"{label} must be numeric") from exc
+    number = _finite_number(value, label)
     if not 0 <= number <= 1:
         raise CashFlowError(f"{label} must be between zero and one")
     return number
@@ -66,7 +69,8 @@ def validate_brackets(brackets: Sequence[Bracket]) -> tuple[Bracket, ...]:
                     "only the final federal tax bracket may be open-ended")
             bound = None
         else:
-            bound = float(upper)
+            bound = _finite_number(
+                upper, f"federal bracket {index} upper bound")
             if bound <= previous_bound:
                 raise CashFlowError(
                     "federal tax bracket bounds must be strictly increasing")
@@ -259,7 +263,7 @@ def income_scenarios(
 
 def progressive_tax(taxable_income: float, brackets: Sequence[Bracket]) -> float:
     """Tax an amount through validated marginal brackets."""
-    taxable = max(0.0, float(taxable_income))
+    taxable = max(0.0, _finite_number(taxable_income, "taxable income"))
     rows = validate_brackets(brackets)
     lower = 0.0
     total = 0.0
