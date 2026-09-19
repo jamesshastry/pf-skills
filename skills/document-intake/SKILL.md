@@ -47,6 +47,10 @@ Put documents in the closest `inputs/<category>/` directory. Run this. Hand an
 agent both the report and the files. The legacy flat `documents/` directory is
 still scanned.
 
+When `--facts` points to `<project>/inputs/facts.yml`, the runner scans that
+project's input directories rather than pf-skills' own scaffold. Use
+`--source-root` only when the facts file lives somewhere else.
+
 The report says which fields are open and which document probably answers
 each; the agent reads and **proposes** values; you confirm them into
 `inputs/facts.yml`.

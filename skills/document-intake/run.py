@@ -25,10 +25,29 @@ INPUT_CATEGORIES = (
     "healthcare", "income", "insurance", "investments", "life-events",
     "property", "retirement", "tax",
 )
-DOCUMENT_ROOTS = (
-    *((f"inputs/{name}", ROOT / "inputs" / name) for name in INPUT_CATEGORIES),
-    ("documents", ROOT / "documents"),  # legacy flat drop zone
-)
+
+
+def document_roots(project_root: Path) -> tuple[tuple[str, Path], ...]:
+    """Source-document roots for one consuming project."""
+    return (
+        *((f"inputs/{name}", project_root / "inputs" / name)
+          for name in INPUT_CATEGORIES),
+        ("documents", project_root / "documents"),  # legacy flat drop zone
+    )
+
+
+DOCUMENT_ROOTS = document_roots(ROOT)
+
+
+def project_root(facts_path: Path | None, source_root: Path | None) -> Path:
+    """Resolve the repository whose private source documents should be read."""
+    if source_root is not None:
+        return source_root.resolve()
+    if facts_path is not None:
+        full = facts_path.resolve()
+        if full.parent.name == "inputs":
+            return full.parent.parent
+    return ROOT
 
 
 def requirements() -> dict[str, list[str]]:
@@ -85,8 +104,9 @@ def build(facts: dict, facts_path: str, docs: list[I.Document], w: cli.Writer) -
         w("**No source documents found.** Drop statements, policies and prior "
           "returns into the matching `inputs/<category>/` directory — "
           "anything, any name, any format. The legacy flat `documents/` "
-          "directory is scanned too. Nothing in those locations is committed, "
-          "and nothing leaves this machine.")
+          "directory is scanned too. This command does not upload or modify "
+          "those files; your repository's retention policy controls whether "
+          "they are committed.")
     else:
         named = [d for d in docs if I.looks_renamed_for_privacy(d.name)]
         w(f"**{len(docs)} file(s).** Filenames are matched against the schema "
@@ -101,9 +121,9 @@ def build(facts: dict, facts_path: str, docs: list[I.Document], w: cli.Writer) -
             w()
             w(f"> **{len(named)} filename(s) carry personal data**: "
               + ", ".join(f"`{d.name}`" for d in named[:5])
-              + ". Source-document directories are gitignored, so this never "
-                "reaches git — but "
-                "gitignore does not protect a screen share, a terminal "
+              + ". Check the consuming repository's retention policy before "
+                "committing them. Gitignore does not protect a screen share, "
+                "a terminal "
                 "recording or a support ticket. Renaming costs one `mv`.")
 
     # ── where the household stands ──────────────────────────────────────
@@ -193,12 +213,18 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--facts", type=Path, default=None,
                     help="facts file (default: inputs/facts.yml if it exists)")
+    ap.add_argument(
+        "--source-root", type=Path, default=None,
+        help=("repository containing categorized inputs (default: inferred "
+              "from --facts, otherwise the pf-skills repository)"),
+    )
     a = ap.parse_args()
     facts, path = load_facts(a.facts)
+    source_root = project_root(a.facts, a.source_root)
     w = cli.Writer()
     w("# Document intake")
     w()
-    build(facts, path, scan(), w)
+    build(facts, path, scan(document_roots(source_root)), w)
     print(w.render())
     return 0
 

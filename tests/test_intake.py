@@ -68,6 +68,32 @@ def test_categorized_source_documents_are_scanned_with_their_path(tmp_path):
     assert "insurance" in docs[1].suggests
 
 
+def test_external_facts_path_selects_the_consuming_repository(tmp_path):
+    project = tmp_path / "private-plan"
+    facts = project / "inputs" / "facts.yml"
+    statement = project / "inputs" / "banking" / "checking-2026.pdf"
+    statement.parent.mkdir(parents=True)
+    facts.write_text("meta: {}\n")
+    statement.write_text("synthetic")
+
+    runner = _intake_runner()
+    root = runner.project_root(facts, None)
+    docs = runner.scan(runner.document_roots(root))
+
+    assert root == project
+    assert [document.name for document in docs] == [
+        "inputs/banking/checking-2026.pdf",
+    ]
+
+
+def test_explicit_source_root_wins_over_facts_location(tmp_path):
+    runner = _intake_runner()
+    chosen = tmp_path / "chosen"
+    other_facts = tmp_path / "other" / "inputs" / "facts.yml"
+
+    assert runner.project_root(other_facts, chosen) == chosen.resolve()
+
+
 # ── the privacy warning ─────────────────────────────────────────────────────
 
 def test_a_name_in_a_filename_is_flagged():
