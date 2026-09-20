@@ -12,6 +12,7 @@ from collections.abc import Callable
 
 from . import cash as C
 from . import concentration as CN
+from . import continuity as CO
 from . import disability as D
 from . import education as E
 from . import facts as F
@@ -346,7 +347,36 @@ def tax_planning(data: dict) -> list[T.MetricObservation]:
     return metrics
 
 
+def continuity(data: dict) -> list[T.MetricObservation]:
+    plan = CO.build_plan(data)
+    return [
+        _metric(
+            data,
+            "continuity.critical_gaps",
+            float(len(plan.critical_gaps)),
+            unit="count",
+            basis=T.BASIS_NONMONETARY,
+            source="continuity-plan",
+            assumptions={"readiness": plan.readiness},
+        ),
+        _metric(
+            data,
+            "continuity.last_review_age_days",
+            float(plan.review_age_days)
+            if plan.review_age_days is not None else None,
+            unit="days",
+            basis=T.BASIS_NONMONETARY,
+            source="continuity-plan",
+            unknown_reason=(
+                "continuity plan review date is not recorded"
+                if plan.review_age_days is None else None
+            ),
+        ),
+    ]
+
+
 ADAPTERS: dict[str, Callable[[dict], list[T.MetricObservation]]] = {
+    "continuity-plan": continuity,
     "disability-insurance-review": disability_insurance,
     "education-funding": education,
     "emergency-fund-sizing": emergency_fund,

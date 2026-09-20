@@ -381,6 +381,115 @@ assets into it is the part they skip. This field is separate from `exists` for t
 
 ---
 
+## `continuity` — operational death and incapacity runbook
+
+This section contains only facts needed for another person to execute the
+first steps without the plan author. It points to private contact and recovery
+material; it does not duplicate credentials, full identifiers, document
+contents, beneficiary data, balances, or insurance terms already recorded
+elsewhere.
+
+```yaml
+continuity:
+  intended_reader_id: a2
+  intended_reader_knows_location: true
+  authorized_helper_contact_id: helper-primary
+  plan_last_reviewed: 2026-08-15
+
+  # Display-safe descriptions only. Never put a combination, password,
+  # recovery code, full account number, or secret itself in these fields.
+  offline_plan_copy_location: Printed continuity binder
+  document_package_location: Sealed estate-document packet
+  tax_records_location: Tax-record index in the document packet
+  account_inventory_location: Printed account inventory in the packet
+  recovery_package_location: Sealed recovery packet named in the inventory
+  recovery_process_tested: true
+
+  essential_obligations_reviewed: true
+  notification_contacts_reviewed: true
+
+  contacts:
+    - id: helper-primary
+      role: trusted_helper
+      label: Trusted family helper
+      contact_via: Contact card in the sealed document packet
+      confirmed: true
+      authority_scope_recorded: true
+    - id: benefits-primary
+      role: employer_benefits
+      label: Primary employer benefits desk
+      contact_via: Employer contact card in the packet
+      confirmed: true
+    - id: healthcare-agent
+      role: healthcare_agent
+      label: Healthcare agent
+      contact_via: Healthcare contact card in the packet
+      confirmed: true
+      authority_scope_recorded: true
+
+  essential_obligations:
+    - id: housing-payment
+      label: Housing payment
+      category: housing
+      cadence: monthly
+      autopay_status: true
+      continuation_instruction: Keep the current payment method active and verify it against the bill inventory
+
+  immediate_duties:
+    - id: dependent-care
+      label: Confirm immediate dependent care
+      category: dependent_care
+      applies_to: both
+      instruction: Follow the dependent-care page in the document packet
+      confirmed: true
+
+  review_triggers:
+    - A birth, adoption, death, marriage, or divorce
+    - A move or a change in a named helper, account, policy, debt, or employer
+    - Any failed recovery-path test
+```
+
+`intended_reader_id` links to `household.members[].id`.
+`authorized_helper_contact_id` links to `continuity.contacts[].id`.
+`authority_scope_recorded: true` means the plan records what authority is
+claimed; it does **not** establish that the authority is legally effective.
+
+Contact roles are `trusted_helper`, `estate_attorney`, `tax_professional`,
+`employer_benefits`, `insurance_claims`, `financial_institution`,
+`government_benefits`, `healthcare_agent`, `dependent_care`, `property`,
+`business`, and `other`.
+`contact_via` should point to a private contact card, directory, or sealed
+packet. The printable report suppresses obvious secrets and long numeric
+identifiers, but that is defense in depth rather than a secret detector.
+
+Obligation categories are `housing`, `utilities`, `insurance`, `debt`,
+`dependent_care`, `pet_care`, `property`, `business`, and `other`.
+`autopay_status` is tri-state: `true` means confirmed on autopay, `false` means
+confirmed manual, and `null` or omission means nobody knows. An explicit
+`essential_obligations_reviewed: true` permits an empty list; omission does not
+silently mean there are no obligations.
+
+Immediate-duty categories are `life_safety`, `dependent_care`, `pet_care`,
+`property`, `business`, and `other`; `applies_to` is `death`, `incapacity`, or
+`both`. A household with dependents or a business needs a confirmed matching
+duty before the plan can be operationally ready.
+
+The readiness labels are operational, not legal opinions. `blocked` means the
+reader cannot locate the plan or documents, reach a confirmed helper, maintain
+essential obligations, execute required care/business duties, use the recovery
+path, or identify required institutions. `incomplete` means those immediate
+paths work but review, inventory, or transfer facts remain open. `ready` means
+no recorded completion item remains. The report reuses `estate.documents`,
+`estate.digital`, beneficiary lists, household resources, insurance, and debts;
+do not copy those facts into this section.
+
+Only display-safe references belong in the public example. Real contact and
+location details remain in gitignored `inputs/facts.yml` and the referenced
+offline package. Structured output contains only critical-gap count and plan
+review age, never contacts, locations, identifiers, or free-form instructions.
+
+---
+
 ## `contributions` — required by `contribution-space-audit` and `employer-match-audit`
 
 ```yaml

@@ -271,6 +271,74 @@ estate:
     account_inventory: false
     two_factor_recovery_documented: false
 
+# Operational runbook references only. Every label is fictional and points to
+# a sealed/private package rather than reproducing credentials or identifiers.
+# BLOCKED CASE — the existing estate and digital facts above deliberately leave
+# authority and recovery gaps, which continuity-plan must carry through.
+continuity:
+  intended_reader_id: a2
+  intended_reader_knows_location: true
+  authorized_helper_contact_id: helper-primary
+  plan_last_reviewed: 2026-08-15
+  offline_plan_copy_location: Printed continuity binder
+  document_package_location: Sealed estate-document packet
+  tax_records_location: Tax-record index in the document packet
+  account_inventory_location: Printed account inventory in the packet
+  recovery_package_location: Sealed recovery packet named in the inventory
+  recovery_process_tested: false
+  essential_obligations_reviewed: true
+  notification_contacts_reviewed: true
+  contacts:
+    - { id: helper-primary, role: trusted_helper,
+        label: Trusted family helper,
+        contact_via: Contact card in the sealed document packet,
+        confirmed: true, authority_scope_recorded: true }
+    - { id: healthcare-agent, role: healthcare_agent,
+        label: Healthcare agent,
+        contact_via: Healthcare contact card in the packet,
+        confirmed: true, authority_scope_recorded: true }
+    - { id: benefits-primary, role: employer_benefits,
+        label: Primary employer benefits desk,
+        contact_via: Employer contact card in the packet, confirmed: true }
+    - { id: insurer-primary, role: insurance_claims,
+        label: Life insurance claims desk,
+        contact_via: Insurance contact card in the packet, confirmed: true }
+    - { id: institutions, role: financial_institution,
+        label: Account institution directory,
+        contact_via: Institution index in the account inventory, confirmed: true }
+    - { id: counsel, role: estate_attorney,
+        label: Estate counsel,
+        contact_via: Professional contact card in the packet, confirmed: true }
+    - { id: tax-help, role: tax_professional,
+        label: Tax professional,
+        contact_via: Professional contact card in the packet, confirmed: true }
+    - { id: public-benefits, role: government_benefits,
+        label: Government survivor-benefits desk,
+        contact_via: Benefits contact card in the packet, confirmed: true }
+  essential_obligations:
+    - { id: housing-payment, label: Housing payment, category: housing,
+        cadence: monthly, autopay_status: true,
+        continuation_instruction: Keep active and verify against the bill inventory }
+    - { id: household-services, label: Essential household services,
+        category: utilities, cadence: monthly, autopay_status: true,
+        continuation_instruction: Keep active and verify against the bill inventory }
+    - { id: active-coverage, label: Essential insurance coverage,
+        category: insurance, cadence: policy schedule, autopay_status: true,
+        continuation_instruction: Keep in force until claims and needs are reviewed }
+  immediate_duties:
+    - { id: dependent-care, label: Confirm immediate dependent care,
+        category: dependent_care, applies_to: both,
+        instruction: Follow the dependent-care page in the document packet,
+        confirmed: true }
+    - { id: business-continuity, label: Stabilize owner-operated business duties,
+        category: business, applies_to: both,
+        instruction: Use the business continuity page and contact card,
+        confirmed: true }
+  review_triggers:
+    - A birth, adoption, death, marriage, or divorce
+    - A move or a change in a named helper, account, policy, debt, or employer
+    - Any failed recovery-path test
+
 contributions:
   year: 2026
   employer_plan:

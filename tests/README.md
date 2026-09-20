@@ -27,6 +27,7 @@ Everything above tests `pf.*`. None of it touches the thing a user runs. These d
 | `test_schema_coverage.py` | Do `SCHEMA.md`, the example, and the skills' `requires` agree? |
 | `test_time_scenario_reports.py` | Do history/scenario reports preserve gaps, clocks, intra-period failures, and explicit structured-output behavior? |
 | `test_tax_planning.py` | Does filed-return history remain distinct from payments, and are tax opportunities quantified without hiding their tradeoffs? |
+| `test_continuity.py` | Can another person execute the first death/incapacity steps without exposing credentials or overstating authority and transfers? |
 | `test_housing_affordability_report.py` | Does the report keep affordability, economic cost, sources/uses, and transition phases distinct? |
 | `test_privacy_audit.py` | Does the audit include nonignored untracked public files? |
 

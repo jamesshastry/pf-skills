@@ -282,6 +282,7 @@ from . import cash as _cash  # noqa: E402
 from . import charity as _charity  # noqa: E402
 from . import concentration as _conc  # noqa: E402
 from . import conflicts as _conflicts  # noqa: E402
+from . import continuity as _continuity  # noqa: E402
 from . import contributions as _contrib  # noqa: E402
 from . import crossborder as _xb  # noqa: E402
 from . import debt as _debt  # noqa: E402
@@ -767,6 +768,30 @@ def _digital_estate(data: dict) -> "Outcome":
     else:
         out.headline = "Digital access is recoverable by the person named"
     return out
+
+
+# continuity-plan: the domain module owns operational readiness and reuses the
+# estate/digital/designation audits. A blocked first-response path is an
+# uncovered risk; noncritical completion work is an optimization.
+def _continuity_plan(data: dict) -> "Outcome":
+    skill = "continuity-plan"
+    plan = _continuity.build_plan(data)
+    if plan.readiness == _continuity.READY:
+        return ok(skill, "Death and incapacity paths are operationally ready")
+    count = len(plan.critical_gaps)
+    if count:
+        return act(
+            skill,
+            f"Continuity plan blocked by {count} critical operational gap(s)",
+            TIER_UNCOVERED,
+            detail=plan.critical_gaps[0].detail,
+        )
+    return act(
+        skill,
+        f"Continuity plan has {len(plan.noncritical_gaps)} completion item(s)",
+        TIER_OPTIMISE,
+        detail=plan.noncritical_gaps[0].detail,
+    )
 
 
 # probate-exposure: mirrors run.py build lines 25-34 calling probate.assess plus lines 101/142 calling probate.cost/probate.recommend; tier because an exposed account passes through court on death, a route that cannot be repriced afterwards (uncovered); unknown titling/designation needs phone calls first, neither expiring nor priced (optimise).
@@ -2853,6 +2878,7 @@ ADAPTERS: dict[str, Callable[[dict], Outcome]] = {
     "charitable-giving-strategy": _charitable_giving_strategy,
     "citizenship-status-review": _citizenship_status_review,
     "contribution-space-audit": _contribution_space_audit,
+    "continuity-plan": _continuity_plan,
     "cost-segregation-screen": _cost_segregation_screen,
     "cross-border-healthcare": _cross_border_healthcare,
     "debt-payoff-priority": _debt_payoff_priority,

@@ -1,6 +1,6 @@
 # Household review
 
-**133 action(s)** from 62 skill(s) that run · 8 clean · 0 blocked on missing inputs.
+**134 action(s)** from 63 skill(s) that run · 8 clean · 0 blocked on missing inputs.
 
 ## 1. Things that expire
 
@@ -34,6 +34,8 @@
 - `beneficiary-audit` — college_529: **Minor named directly: Mateo Rivera, Lucia Rivera.** A minor cannot receive the proceeds, so a court appoints a guardian of the estate — expensive, slow, supervised, and it hands the money over outright at majority. Name a trust for their benefit instead, which is usually why the trust exists. *(—)*
 - `beneficiary-audit` — college_529: **No contingent beneficiary.** If the primary dies first, or with you, the asset lands in the estate — the exact outcome the designation exists to avoid. This is the most common real defect, because people name a spouse and stop. *(—)*
 - `beneficiary-audit` — retirement_401k: **No beneficiary named.** The asset falls into the estate and goes through probate — slower, public, and governed by the will rather than by choice. On a retirement account it can also collapse the distribution period for the heirs. *(—)*
+- `continuity-plan` — Continuity plan blocked by 5 critical operational gap(s) *(—)*
+  - A reachable account inventory is not confirmed.
 - `digital-estate` — account_inventory: **Missing.** A written inventory of accounts and institutions. A survivor cannot close or claim what they do not know exists. *(—)*
 - `digital-estate` — combination: **A password manager with no emergency access is a single point of failure, not a plan.** Every credential is in one place and nobody else can reach it. This is worse than no manager, because it creates the belief that the problem is solved. *(—)*
 - `digital-estate` — emergency_access_configured: **Missing.** Emergency or legacy access configured in that manager. Having the vault and no way in is the same as not having it. *(—)*

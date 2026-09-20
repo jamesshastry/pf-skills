@@ -56,7 +56,7 @@ answer.
 |---|---|---|
 | 1 · Property & casualty | `auto-insurance-review` · `renters-homeowners-review` · `umbrella-liability` | ✅ shipped |
 | 2 · Income protection | `survivor-needs` · `life-insurance-review` · `disability-insurance-review` | ✅ shipped |
-| 3 · Beneficiaries & estate | `beneficiary-audit` · `estate-document-review` · `digital-estate` · `probate-exposure` | ✅ shipped |
+| 3 · Beneficiaries & estate | `beneficiary-audit` · `estate-document-review` · `digital-estate` · `continuity-plan` · `probate-exposure` | ✅ shipped |
 | 4 · Tax-advantaged space | `contribution-space-audit` · `employer-match-audit` · `hsa-review` | ✅ shipped |
 | 5 · Cash & debt | `emergency-fund-sizing` · `cash-yield-review` · `debt-payoff-priority` | ✅ shipped |
 | 5a · Maintenance | `reference-data-refresh` | ✅ shipped |
@@ -141,6 +141,12 @@ justifies the skill.
 
 **`digital-estate`** — account inventory, password manager access, and 2FA recovery. Modern,
 routinely forgotten, and the reason an otherwise well-prepared survivor gets locked out.
+
+**`continuity-plan`** is the operational layer over those audits. It asks whether
+an intended reader can locate the plan and documents, reach a confirmed helper,
+maintain essential obligations, follow a tested recovery path, and identify
+institutions after death or incapacity. It preserves title and beneficiary
+entries as recorded facts rather than turning them into legal conclusions.
 
 *Shape note:* these are **audit** skills, not calculation skills. Nearly no arithmetic, mostly
 completeness and consistency checks. Worth saying so in each `SKILL.md` — a checklist that

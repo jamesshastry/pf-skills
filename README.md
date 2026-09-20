@@ -24,6 +24,7 @@ that run entirely on your own machine against your own data.
 | `estate-document-review` | Will, powers of attorney, directive, and whether the trust is actually funded |
 | `probate-exposure` | Which assets go through court, what it costs in your state, and the cheapest instrument per account — a pour-over will is not one |
 | `digital-estate` | Could anyone actually log in tomorrow, without you |
+| `continuity-plan` | Printable death/incapacity runbook: immediate actions, safe contact and record references, continuity resources, and operational readiness gaps |
 | `contribution-space-audit` | Unused tax-advantaged room, the after-tax route, and the backdoor pro-rata trap |
 | `employer-match-audit` | Whether front-loading deferrals is forfeiting match |
 | `hsa-review` | Eligibility, space, and treating an HSA as a retirement account |
@@ -175,7 +176,7 @@ difference between a number you entered and one the example came with. A null
 stops the skill and names the field; an invented number produces a confident
 report.
 
-**Step 4 is the one that saves the hour.** Sixty-three skills read a facts file
+**Step 4 is the one that saves the hour.** Sixty-four skills read a facts file
 and nothing writes one, so the real onboarding cost is transcription.
 `document-intake` makes it ordered and finite: it ranks the unset fields by how
 many skills each one unblocks, and `household.members` alone is about thirty of
