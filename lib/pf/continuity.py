@@ -594,16 +594,56 @@ def _beneficiary_audit(
     assets = _rows(household.get("balance_sheet"), "household.balance_sheet")
     insurance = _mapping(data.get("insurance"), "insurance")
     policies = _rows(insurance.get("life"), "insurance.life")
+    members = _rows(household.get("members"), "household.members")
+    member_roles = {
+        str(row.get("id")): row.get("role")
+        for row in members
+        if row.get("id") is not None
+    }
+
+    def normalized(row: Mapping[str, Any]) -> Mapping[str, Any]:
+        """Translate the schema's beneficiary shorthand for the shared audit."""
+        if "beneficiaries" in row or row.get("beneficiary_applicable") is False:
+            return row
+        if "beneficiary_primary" not in row:
+            return row
+
+        result = dict(row)
+        beneficiaries: list[dict[str, Any]] = []
+        for kind, key in (
+            ("primary", "beneficiary_primary"),
+            ("contingent", "beneficiary_contingent"),
+        ):
+            target = row.get(key)
+            if target is None:
+                continue
+            entry: dict[str, Any] = {"type": kind, "share": 100}
+            target_text = str(target)
+            if target_text in member_roles:
+                entry["member_id"] = target_text
+                entry["relationship"] = member_roles[target_text]
+            elif target_text in {"trust", "estate", "charity"}:
+                entry["relationship"] = target_text
+            else:
+                entry["name"] = target_text
+                entry["relationship"] = "other"
+            beneficiaries.append(entry)
+        result["beneficiaries"] = beneficiaries
+        return result
+
     items: list[tuple[str, str, Mapping[str, Any]]] = []
     for index, row in enumerate(assets):
-        items.append((f"asset-{index + 1}", f"Asset {index + 1}", row))
+        items.append(
+            (f"asset-{index + 1}", f"Asset {index + 1}", normalized(row))
+        )
     for index, row in enumerate(policies):
-        items.append((f"policy-{index + 1}", f"Policy {index + 1}", row))
+        items.append(
+            (f"policy-{index + 1}", f"Policy {index + 1}", normalized(row))
+        )
 
     estate = _mapping(data.get("estate"), "estate")
     docs = _rows(estate.get("documents"), "estate.documents")
     trust = next((row for row in docs if row.get("type") == "revocable_trust"), None)
-    members = _rows(household.get("members"), "household.members")
     audit = E.audit_beneficiaries(
         [(internal, dict(row)) for internal, _fallback, row in items],
         members=[dict(row) for row in members],

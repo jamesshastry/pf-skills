@@ -326,6 +326,25 @@ def test_unknowns_remain_unknown_instead_of_becoming_false_or_clear():
     assert any("not recorded" in item.recorded_route for item in plan.transfers)
 
 
+def test_schema_beneficiary_shorthand_is_reused_by_the_shared_audit():
+    data = complete_facts()
+    account = data["household"]["balance_sheet"][1]
+    account.pop("beneficiaries")
+    account["beneficiary_primary"] = "adult-2"
+    account["beneficiary_contingent"] = "trust"
+
+    plan = C.build_plan(data)
+    transfer = next(
+        item
+        for item in plan.transfers
+        if item.subject == "Workplace retirement plan"
+    )
+
+    assert "primary → member adult-2" in transfer.recorded_route
+    assert "contingent → trust" in transfer.recorded_route
+    assert "not recorded" not in transfer.recorded_route
+
+
 def test_printable_output_suppresses_credentials_and_long_identifiers(tmp_path):
     data = complete_facts()
     contact_number = "".join(("1234", "5678", "9012", "3456"))
