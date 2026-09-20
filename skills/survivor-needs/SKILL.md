@@ -1,6 +1,6 @@
 ---
 name: survivor-needs
-description: Compute how much capital a household needs if an earner's income stops — a present-valued capital-needs analysis against actual spending and the actual balance sheet, not a multiple of income. Use when asked how much life or disability insurance is needed, what would happen financially if someone died, or to size a coverage gap. Feeds life-insurance-review and disability-insurance-review. Reads figures from a local facts file.
+description: Compute how much capital a household needs after an earner's death — a present-valued capital-needs analysis against actual spending and the actual balance sheet, not a multiple of income. Use when asked how much life insurance is needed, what would happen financially if someone died, or to size a survivor coverage gap. Feeds life-insurance-review and provides related household-loss context for disability-insurance-review, which sizes income replacement independently. Reads figures from a local facts file.
 requires:
   - household.members
   - household.annual_spending
@@ -11,11 +11,13 @@ requires:
 
 ## Why this is its own skill
 
-Life insurance and disability insurance ask the same question — *what does this
-household need if an income stops* — and answer it with different products.
-Computing the need twice guarantees two answers that eventually disagree.
-
-So the need is computed once, here, and both coverage skills consume it.
+Life insurance and disability insurance both ask what happens when earnings
+stop, but they model different losses. This skill computes the death and
+survivor capital need once, and `life-insurance-review` consumes that result.
+`disability-insurance-review` is a related sibling analysis: it independently
+compares after-tax monthly benefits with ongoing spending and tests the
+elimination period against liquid reserves. It shares household context, not
+this capital-needs result.
 
 ## Capital needs, not a multiple of income
 

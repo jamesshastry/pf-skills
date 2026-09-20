@@ -81,9 +81,11 @@ that run entirely on your own machine against your own data.
 | `job-loss-stress-test` | Correlated employment loss: income, vesting, match, employer stock, health cost, runway, and intra-period cash failure |
 | `windfall-deployment-planner` | After the decision pause: compare cash, investing, debt, home, and split uses of net proceeds without treating stock as cash |
 
-Run them in that order. Each of the first two checks whether the underlying
-limits qualify for an umbrella to attach above them; `umbrella-liability`
-depends on both being fixed first.
+This table is a catalog, not an execution order. Start with the cross-cutting
+workflow below, then follow only the domain chain relevant to the decision. For
+example, the property-and-casualty chain runs `auto-insurance-review` and
+`renters-homeowners-review` before `umbrella-liability`, because the umbrella
+depends on adequate underlying limits.
 
 What comes next, and what this project deliberately won't do: [ROADMAP.md](ROADMAP.md).
 
@@ -126,15 +128,45 @@ open. That's their privacy policy, not ours. For maximum privacy, run against a 
 ## How it works
 
 ```
-1. Check the setup       uv run scripts/doctor.py
-2. Start a facts file    uv run scripts/init_facts.py
-3. Add your documents    cp ~/Downloads/checking.pdf inputs/banking/
-4. Get a worklist        uv run skills/document-intake/run.py
-5. Ask your agent        "review my auto insurance"
-6. Read the report       outputs/
+1. Check the setup        uv run scripts/doctor.py
+2. Start a facts file     uv run scripts/init_facts.py
+3. Add your documents     cp ~/Downloads/checking.pdf inputs/banking/
+4. Fill the next facts    uv run skills/document-intake/run.py
+5. Rank the live issues   uv run skills/household-review/run.py
+6. Follow one chain       run the specialist reports named by the review
+7. Check interactions     uv run skills/conflict-check/run.py
+8. Test material changes  run a scenario before acting, when applicable
+9. Preserve observations  capture history explicitly and repeat the review
 ```
 
 Full walkthrough: **[QUICKSTART.md](QUICKSTART.md)**.
+
+### Skill chains
+
+These are routing paths, not hard software dependencies. Stop when a report is
+irrelevant or its required facts are unavailable. `household-review` chooses
+the live starting point; the chains show which neighboring reports must be read
+together before acting.
+
+| Decision | Recommended chain |
+|---|---|
+| Property and casualty | `auto-insurance-review` + `renters-homeowners-review` → `umbrella-liability` |
+| Income protection | `emergency-fund-sizing` → (`survivor-needs` → `life-insurance-review`) + `disability-insurance-review` → `beneficiary-audit` → `continuity-plan` |
+| Estate continuity | `beneficiary-audit` + `estate-document-review` + `probate-exposure` + `digital-estate` → `continuity-plan` |
+| Retirement transition | `retirement-readiness` → `social-security-timing` + `withdrawal-sequencing` + `roth-conversion-window` → applicable ACA, Medicare, tax, and cross-border reviews → `conflict-check` → scenario |
+| Portfolio changes | `asset-allocation-review` → `rebalancing-rules` → `wash-sale-policy` → `tax-planning` → `conflict-check` |
+| Home purchase | `housing-affordability` + `rent-vs-buy` → applicable disclosure review → `mortgage-review` + `renters-homeowners-review` → `conflict-check` → scenario |
+| Owner-operated business | `entity-structure-comparison` → `solo-retirement-plan-choice` + `depreciation-election` → `tax-planning` → `conflict-check` |
+| Cross-border move | `citizenship-status-review` → `foreign-presence-tests` + `state-domicile-exit` → applicable tax, reporting, pension, investment, healthcare, and Roth reviews → `conflict-check` |
+| Rental property | `rental-deal-underwriting` → `passive-loss-eligibility` → `cost-segregation-screen` → `1031-exchange-modeling` when disposition is considered |
+| Windfall | `windfall-management` → decision pause → `windfall-deployment-planner` → affected specialist reports → `conflict-check` |
+
+Run `financial-scenario-planner` before a recommendation that materially
+changes cash flow, liquidity, debt, or the balance sheet. Capture a truthful
+baseline and later observations explicitly, then use `financial-history-review`
+to identify changes and re-run `household-review`. `continuity-plan` is the
+operational endpoint of the protection and estate chains, not a substitute for
+their legal, coverage, and transfer analysis.
 
 ### History and scenarios are explicit
 
@@ -176,7 +208,7 @@ difference between a number you entered and one the example came with. A null
 stops the skill and names the field; an invented number produces a confident
 report.
 
-**Step 4 is the one that saves the hour.** Sixty-four skills read a facts file
+**Step 4 is the one that saves the hour.** Sixty-two skills read a facts file
 and nothing writes one, so the real onboarding cost is transcription.
 `document-intake` makes it ordered and finite: it ranks the unset fields by how
 many skills each one unblocks, and `household.members` alone is about thirty of

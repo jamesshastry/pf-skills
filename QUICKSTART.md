@@ -79,7 +79,21 @@ the top — it is ordered by what the next hour buys you.
 Nothing in there is parsed. Filenames are matched against schema areas as a
 hint for whoever reads them.
 
-## 5. Run a skill
+## 5. Rank the live issues
+
+Once the confirmed facts support useful analysis, run the whole-household
+review before choosing a specialist report:
+
+```bash
+uv run skills/household-review/run.py --facts inputs/facts.yml
+```
+
+It ranks expiring findings, uncovered losses, priced drags, and then
+optimizations. It also lists blocked skills and the facts that would unlock
+them. The report chooses the live starting point; it does not replace the
+specialist reports that calculate each conclusion.
+
+## 6. Follow the relevant skill chain
 
 ```bash
 uv run skills/emergency-fund-sizing/run.py --facts inputs/facts.yml
@@ -90,6 +104,21 @@ answer is easy to sanity-check against what you already believe.
 
 A skill missing a field **stops and names it**. That is the designed behaviour,
 not an error to work around.
+
+Do not run the catalog from top to bottom. Follow the domain chain around the
+issue selected by `household-review`. Common examples include:
+
+- property reviews before `umbrella-liability`;
+- survivor needs before life-insurance review, with disability reviewed as a
+  related but independently sized income-replacement risk;
+- allocation before rebalancing, then wash-sale and tax review before a taxable
+  trade;
+- retirement readiness before Social Security, withdrawal, Roth, healthcare,
+  and tax decisions; and
+- beneficiary, estate-document, probate, and digital-estate reviews before the
+  operational `continuity-plan`.
+
+The complete routing table is in [README.md](README.md#skill-chains).
 
 ```bash
 # Save a report
@@ -108,7 +137,7 @@ uv run skills/emergency-fund-sizing/run.py --facts inputs/facts.yml \
 That file is written only when requested and is not a history snapshot. The
 runner refuses to overwrite it.
 
-## 6. Check the edges
+## 7. Check the edges
 
 ```bash
 uv run skills/conflict-check/run.py --facts inputs/facts.yml
@@ -119,7 +148,30 @@ Every skill is individually correct. Some of them give the same household
 raises the MAGI that premium subsidies taper against, and both pieces of advice
 are right. Nothing in a single report would tell you.
 
-## 7. Start a history only when you have a truthful observation *(optional)*
+Run this after the relevant specialist reports and again when a scenario would
+activate a previously dormant conflict. Resolve the tradeoff before acting;
+the conflict report deliberately does not choose for you.
+
+## 8. Model a scenario before a material change *(when applicable)*
+
+Record a reconciled baseline under `cash_flow.scenarios` and deterministic,
+typed events under `scenario_planning.scenarios`; use the synthetic example for
+shape, never for amounts. Then run the general or focused report:
+
+```bash
+uv run skills/financial-scenario-planner/run.py --facts inputs/facts.yml
+uv run skills/job-loss-stress-test/run.py --facts inputs/facts.yml
+uv run skills/windfall-deployment-planner/run.py --facts inputs/facts.yml
+```
+
+Use a scenario when a recommendation materially changes cash flow, liquidity,
+debt, retirement timing, or the balance sheet. These reports do not assign
+probabilities, fetch market data, execute an action, or write results back into
+the facts file. See
+[SCHEMA.md](SCHEMA.md#scenario_planning--deterministic-what-if-paths) for event
+types, reconciliation rules, and same-month ordering.
+
+## 9. Start a history only when you have a truthful observation *(optional)*
 
 Do not reconstruct old balances from memory. Start with the first date you can
 support, and distinguish when the facts were true from when you recorded them:
@@ -144,25 +196,10 @@ uv run scripts/history.py compare \
 Add the files you want reviewed to `history.snapshot_files` in your facts file,
 then run `financial-history-review`. The three clocks—observed facts, analyses,
 and projections—remain separate, and missing values are never carried forward.
+After recording a later truthful observation, use the history review to explain
+what changed and run `household-review` again to reprioritize the worklist.
 See [SCHEMA.md](SCHEMA.md#history--immutable-local-snapshots) for the document
 contract and restatement command.
-
-## 8. Model a scenario without changing the facts *(optional)*
-
-Record a reconciled baseline under `cash_flow.scenarios` and deterministic,
-typed events under `scenario_planning.scenarios`; use the synthetic example for
-shape, never for amounts. Then run the general or focused report:
-
-```bash
-uv run skills/financial-scenario-planner/run.py --facts inputs/facts.yml
-uv run skills/job-loss-stress-test/run.py --facts inputs/facts.yml
-uv run skills/windfall-deployment-planner/run.py --facts inputs/facts.yml
-```
-
-These reports do not assign probabilities, fetch market data, execute an
-action, or write results back into the facts file. See
-[SCHEMA.md](SCHEMA.md#scenario_planning--deterministic-what-if-paths) for event
-types, reconciliation rules, and same-month ordering.
 
 ---
 
@@ -174,7 +211,10 @@ loop:
 1. You put documents in the matching `inputs/<category>/` directories
 2. The agent runs `document-intake` and reads the files
 3. The agent **proposes** values; **you** confirm them into `inputs/facts.yml`
-4. The agent runs the relevant skills and explains the reports
+4. The agent runs `household-review`, follows the relevant specialist chain,
+   and explains the reports
+5. The agent checks cross-skill conflicts and models material changes before
+   you decide whether to act
 
 **Keep step 3.** Every skill treats a recorded figure as established fact and
 builds a confident recommendation on it. A misread statement does not stay a

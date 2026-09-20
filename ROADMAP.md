@@ -103,9 +103,13 @@ symmetry; the filter at the top of this file still applies.
 The same shape as property & casualty, which is why it comes first: a risk-transfer decision
 with a survivability test underneath it. Much of `lib/pf` carries over.
 
-**`survivor-needs`** is the engine the other two consume, and it is deliberately separate.
-Both life and disability cover reduce to the same question — *what does this household need if
-an income stops* — and computing it twice guarantees two answers.
+**`survivor-needs`** is the death and survivor capital-needs engine consumed by
+`life-insurance-review`, and it is deliberately separate. Disability is a
+related sibling analysis, not a consumer of that result: it compares after-tax
+monthly benefits with ongoing spending and tests the elimination period
+against liquid reserves. Both use the same household context without pretending
+that a permanent death benefit and a monthly disability benefit are the same
+loss model.
 
 **`life-insurance-review`** covers the need-versus-in-force gap and the cash-value trap. The
 recurring defect in the wild is a permanent policy sold as an investment: a negative real
@@ -310,6 +314,36 @@ eligibility, and future-tax costs are visible. It reuses contribution limits
 and charitable-giving arithmetic, reads taxable loss lots, and treats Roth
 conversion as a multi-year scenario. Refunds and balances due stay separate
 from liability, and no opportunity totals are added before overlap is modeled.
+
+### Workflow chaining — next cross-cutting infrastructure
+
+The library has a conflict registry, but no equivalent source of truth for
+directed workflow edges. Documentation currently has to remember that property
+reviews precede umbrella sizing, portfolio policy precedes a taxable rebalance,
+or estate and protection reviews precede a continuity runbook.
+
+The next orchestration change should be a declarative registry, not another
+user-facing umbrella skill. Each edge should identify its type — prerequisite,
+recommended follow-up, conditional companion, or rerun trigger — and its reason.
+`household-review` can then show the relevant next chain after ranking the live
+issue. Contract tests should reject unknown skill IDs, unintended cycles, and
+chains that silently bypass `conflict-check` where an existing conflict edge is
+implicated.
+
+Three possible skill gaps remain evidence-gated rather than scheduled:
+
+- **Retirement transition plan.** A year-by-year decision across Social
+  Security, withdrawals, Roth conversions, ACA, Medicare/IRMAA, and taxes would
+  own a result none of those specialist reports owns separately. This is the
+  strongest candidate for a new analytical skill.
+- **Annual review and implementation cycle.** This is justified only if it owns
+  action status, due dates, completed recommendations, and rerun triggers. A
+  report that merely bundles `household-review` and `financial-history-review`
+  would not clear the duplication bar.
+- **Death, disability, and rental scenario wrappers.** These would be focused
+  views over the existing scenario engine, analogous to `job-loss-stress-test`.
+  They remain deferred until a real decision case establishes their event
+  vocabulary and expected output.
 
 ---
 
