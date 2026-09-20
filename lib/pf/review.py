@@ -310,6 +310,7 @@ from . import retirement as _retire  # noqa: E402
 from . import ssa as _ssa  # noqa: E402
 from . import status as _status  # noqa: E402
 from . import survivor as _survivor  # noqa: E402
+from . import tax_planning as _taxplan  # noqa: E402
 from . import transitions as _trans  # noqa: E402
 from . import umbrella as _umbrella  # noqa: E402
 import datetime as _dt  # noqa: E402
@@ -2789,6 +2790,17 @@ def _financial_history_review(data: dict) -> Outcome:
     )
 
 
+def _tax_planning(data: dict) -> Outcome:
+    skill = "tax-planning"
+    plan = _taxplan.plan_from_facts(data)
+    return ok(
+        skill,
+        f"{len(plan.opportunities)} tax-planning candidate(s) summarized; "
+        "excluded from the action worklist to avoid duplicating the "
+        "specialist skills",
+    )
+
+
 def _financial_scenario_planner(data: dict) -> Outcome:
     from . import scenario as _scenario  # noqa: PLC0415
     specs = _scenario.scenarios_from_facts(data)
@@ -2882,6 +2894,7 @@ ADAPTERS: dict[str, Callable[[dict], Outcome]] = {
     "solo-retirement-plan-choice": _solo_retirement_plan_choice,
     "state-domicile-exit": _state_domicile_exit,
     "survivor-needs": _survivor_needs,
+    "tax-planning": _tax_planning,
     "umbrella-liability": _umbrella_liability,
     "wash-sale-policy": _wash_sale_policy,
     "windfall-management": _windfall_management,

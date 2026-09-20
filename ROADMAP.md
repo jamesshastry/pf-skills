@@ -65,6 +65,7 @@ answer.
 | 5d · Review *(cross-cutting)* | `household-review` | ✅ shipped |
 | 5e · History *(cross-cutting)* | `financial-history-review` | ✅ shipped |
 | 5f · Scenario planning *(cross-cutting)* | `financial-scenario-planner` · `job-loss-stress-test` · `windfall-deployment-planner` | ✅ shipped |
+| 5g · Tax planning *(cross-cutting)* | `tax-planning` | ✅ shipped |
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped — closes `REVIEW.md` A1 |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |
@@ -87,7 +88,8 @@ documented, its tests pass, and it has been validated against real data at least
 **All eighteen clusters are shipped, plus the cross-cutting skills** (`conflict-check`,
 `document-intake`, `household-review`, `financial-history-review`,
 `financial-scenario-planner`, `job-loss-stress-test`,
-`windfall-deployment-planner`, `citizenship-status-review`) **and maintenance.**
+`windfall-deployment-planner`, `tax-planning`,
+`citizenship-status-review`) **and maintenance.**
 What follows is maintenance and whatever the next
 real gap turns out to be — see the open questions at the bottom. Resist adding clusters for
 symmetry; the filter at the top of this file still applies.
@@ -295,6 +297,13 @@ employment and compensation changes, receipts, asset repricing, expenses,
 debt, portfolio transfers and a housing adapter. Stochastic simulation,
 automatic market/FX data, tax-return computation, disability/death/rental
 wrappers, and security-level execution remain deliberately deferred.
+
+Tax planning uses filed-return history as the baseline for one current-year
+decision: which tax-reduction candidates merit action after their cash,
+eligibility, and future-tax costs are visible. It reuses contribution limits
+and charitable-giving arithmetic, reads taxable loss lots, and treats Roth
+conversion as a multi-year scenario. Refunds and balances due stay separate
+from liability, and no opportunity totals are added before overlap is modeled.
 
 ---
 

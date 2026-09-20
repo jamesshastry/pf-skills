@@ -60,6 +60,7 @@ that run entirely on your own machine against your own data.
 | `rebalancing-rules` | Bands versus calendar, decided once, and how much of the correction needs a taxable sale |
 | `wash-sale-policy` | Which securities are unbuyable, in which accounts — an IRA purchase deletes the loss outright |
 | `charitable-giving-strategy` | Give appreciated stock in kind, bunch into a DAF, or run a QCD — and which AGI limit binds |
+| `tax-planning` | Filed-return history plus current facts: prioritize tax-reduction candidates and expose liquidity, timing, eligibility, and future-tax tradeoffs |
 | `aca-subsidy-optimization` | The pre-Medicare gap, the premium tax credit against MAGI as a share of FPL, and the taper as a marginal rate |
 | `medicare-enrollment-timing` | Which enrolment window applies, what a late Part B costs permanently, and the two-year IRMAA lookback |
 | `long-term-care-funding` | A multi-year care episode against investable assets, and whether the surviving spouse's retirement survives it |
@@ -174,7 +175,7 @@ difference between a number you entered and one the example came with. A null
 stops the skill and names the field; an invented number produces a confident
 report.
 
-**Step 4 is the one that saves the hour.** Sixty-two skills read a facts file
+**Step 4 is the one that saves the hour.** Sixty-three skills read a facts file
 and nothing writes one, so the real onboarding cost is transcription.
 `document-intake` makes it ordered and finite: it ranks the unset fields by how
 many skills each one unblocks, and `household.members` alone is about thirty of

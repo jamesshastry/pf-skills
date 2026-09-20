@@ -1,6 +1,6 @@
 # Household review
 
-**133 action(s)** from 61 skill(s) that run · 7 clean · 0 blocked on missing inputs.
+**133 action(s)** from 62 skill(s) that run · 8 clean · 0 blocked on missing inputs.
 
 ## 1. Things that expire
 
@@ -259,6 +259,7 @@
 - `financial-scenario-planner` — 5 hypothetical scenario(s) recorded; excluded from the current-action worklist
 - `job-loss-stress-test` — 1 job-loss stress case(s) recorded; hypothetical results are not current findings
 - `life-insurance-review` — Life cover meets the survivor need with no closing expiries
+- `tax-planning` — 4 tax-planning candidate(s) summarized; excluded from the action worklist to avoid duplicating the specialist skills
 - `windfall-deployment-planner` — 4 windfall deployment case(s) recorded; hypothetical results are not current findings
 
 **Weakest input:** the ranking itself. Tiers compare priced drags against unpriced gaps by judgment — the order says what to do first, not what matters most in any absolute sense. Each headline links to the skill report that actually prices it; read that before acting.

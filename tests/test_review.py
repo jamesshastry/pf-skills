@@ -155,7 +155,7 @@ def test_representative_skills_emit_structured_metrics_without_scraping_reports(
         "emergency-fund-sizing", "employer-concentration-risk",
         "retirement-readiness", "housing-affordability", "education-funding",
         "survivor-needs", "life-insurance-review",
-        "disability-insurance-review",
+        "disability-insurance-review", "tax-planning",
     }
     assert expected <= {skill for skill, outcome in by_skill.items()
                         if outcome.metrics}

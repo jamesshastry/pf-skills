@@ -555,6 +555,44 @@ cash_flow:
             start_month: 1, end_month: 48, basis: real,
             redirect_to_retirement: true }
 
+# Filed-return history plus the current tax projection. These are synthetic
+# return-level figures, not outputs inferred from gross income.
+tax_planning:
+  returns:
+    - { tax_year: 2023, filing_status: married_joint, state: TX,
+        adjusted_gross_income: 145000,
+        taxable_income: 115000, federal_total_tax: 19000,
+        state_income_tax: 0, payments: 19500 }
+    - { tax_year: 2024, filing_status: married_joint, state: TX,
+        adjusted_gross_income: 163000,
+        taxable_income: 132000, federal_total_tax: 23800,
+        state_income_tax: 0, payments: 22500 }
+    - { tax_year: 2025, filing_status: married_joint, state: TX,
+        adjusted_gross_income: 172000,
+        taxable_income: 141000, federal_total_tax: 26000,
+        state_income_tax: 0, payments: 24000 }
+  current_year:
+    tax_year: 2026
+    filing_status: married_joint
+    state: TX
+    projected_adjusted_gross_income: 155500
+    projected_taxable_income: 125500
+    projected_federal_total_tax: 24000
+    projected_state_income_tax: 0
+    projected_payments: 22000
+    retirement_contribution_state_deductible: false
+    remaining_roth_deferrals: 0
+    hsa_state_deductible: false
+    # Supplied by tax software after capital-gain netting; the planner does
+    # not infer either value from gross gains.
+    loss_harvest_usable_amount: 3000
+    loss_harvest_marginal_rate: 0.188
+    # Optional multi-year Roth-conversion assumptions. They are inactive for
+    # this working-age example but exercise the documented schema.
+    target_ordinary_bracket_top: 200000
+    expected_future_combined_marginal_rate: 0.30
+    roth_conversion_state_taxable: false
+
 # Immutable local history documents. The sample has four dates plus a separate
 # restatement; every file is fictional and exists only to exercise comparison.
 history:

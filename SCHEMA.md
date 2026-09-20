@@ -1810,6 +1810,82 @@ and that their benefit cannot begin until the worker files — so a delay-to-70
 decision defers their income too. `ss_insured: true | false` may be given
 instead where the credit count is unknown.
 
+## `tax_planning` — filed-return history and the current projection
+
+This section records actual filed-return totals separately from the current
+year's projection. `tax-planning` uses the history as a baseline, then tests
+current contribution, taxable-lot, charitable, and retirement facts for
+specific planning opportunities.
+
+```yaml
+tax_planning:
+  returns:
+    - tax_year: 2024
+      filing_status: married_joint
+      state: TX
+      adjusted_gross_income: 163000
+      taxable_income: 132000
+      federal_total_tax: 23800
+      state_income_tax: 0
+      payments: 22500                 # optional; federal + state payments
+    - tax_year: 2025
+      filing_status: married_joint
+      state: TX
+      adjusted_gross_income: 172000
+      taxable_income: 141000
+      federal_total_tax: 26000
+      state_income_tax: 0
+      payments: 24000
+
+  current_year:
+    tax_year: 2026
+    filing_status: married_joint
+    state: TX
+    projected_adjusted_gross_income: 155500
+    projected_taxable_income: 125500
+    projected_federal_total_tax: 24000
+    projected_state_income_tax: 0
+    projected_payments: 22000
+
+    # Optional strategy inputs. Supply them from current tax software or a
+    # professional; the skill will not reconstruct return-level netting.
+    retirement_contribution_state_deductible: false
+    remaining_roth_deferrals: 0       # future payrolls only; past Roth is fixed
+    hsa_state_deductible: false
+    loss_harvest_usable_amount: 3000
+    loss_harvest_marginal_rate: 0.188
+    target_ordinary_bracket_top: 200000
+    expected_future_combined_marginal_rate: 0.30
+    roth_conversion_state_taxable: false
+```
+
+`federal_total_tax` and `state_income_tax` are liabilities, not withholding.
+`payments` and `projected_payments` are kept separate because refund size is a
+payment-timing result, not a measure of tax efficiency. Historical rows must
+be unique tax years; gaps remain gaps and are never interpolated.
+
+`filing_status` and `state` are repeated on every row deliberately. A move or
+status change can explain a rate change; hiding those dimensions makes unlike
+years look comparable. The report keeps the figures visible but warns against
+interpreting the rate movement as planning performance.
+
+`loss_harvest_usable_amount` is the portion of a newly harvested loss that tax
+software says can affect the current return after carryforwards and gain/loss
+netting. `loss_harvest_marginal_rate` is the rate applicable to that next loss.
+Supplying these two values avoids embedding an incomplete capital-gain netting
+engine or assuming a statutory ordinary-loss limit.
+
+The two state-deduction flags are explicit because retirement and HSA treatment
+varies by state. Omitted means the estimate reports a federal-only floor. The
+`remaining_roth_deferrals` figure excludes contributions already made, which
+cannot be changed retroactively. The Roth fields create a scenario, not a
+recommendation: the skill considers it
+only after retirement, in a projected low-income year, and reports the current
+tax cost separately from the undiscounted possible future benefit.
+
+Return history is highly sensitive. Keep it only in gitignored
+`inputs/facts.yml`; the public example contains fictional values.
+
 ## `history` — immutable local snapshots
 
 History has its own `history_schema_version`; it is not a new meaning for any

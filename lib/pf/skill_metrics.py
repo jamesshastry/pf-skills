@@ -19,6 +19,7 @@ from . import housing_affordability as H
 from . import life as L
 from . import retirement as R
 from . import survivor as S
+from . import tax_planning as TP
 from . import timeseries as T
 
 
@@ -297,6 +298,54 @@ def disability_insurance(data: dict) -> list[T.MetricObservation]:
     return metrics
 
 
+def tax_planning(data: dict) -> list[T.MetricObservation]:
+    plan = TP.plan_from_facts(data)
+    assumptions = {
+        "history_years": [row.tax_year for row in plan.history.years],
+    }
+    metrics = [
+        _metric(
+            data,
+            "tax.projected_combined_tax",
+            plan.current.combined_tax,
+            unit="currency",
+            basis=T.BASIS_NOMINAL,
+            source="tax-planning",
+            assumptions=assumptions,
+        ),
+        _metric(
+            data,
+            "tax.projected_effective_rate",
+            plan.current.effective_rate,
+            unit="ratio",
+            basis=T.BASIS_NONMONETARY,
+            source="tax-planning",
+            assumptions=assumptions,
+        ),
+        _metric(
+            data,
+            "tax.historical_weighted_effective_rate",
+            plan.history.weighted_effective_rate,
+            unit="ratio",
+            basis=T.BASIS_NONMONETARY,
+            source="tax-planning",
+            scenario="historical_baseline",
+            assumptions=assumptions,
+        ),
+    ]
+    if plan.current.payment_gap is not None:
+        metrics.append(_metric(
+            data,
+            "tax.projected_payment_gap",
+            plan.current.payment_gap,
+            unit="currency",
+            basis=T.BASIS_NOMINAL,
+            source="tax-planning",
+            assumptions=assumptions,
+        ))
+    return metrics
+
+
 ADAPTERS: dict[str, Callable[[dict], list[T.MetricObservation]]] = {
     "disability-insurance-review": disability_insurance,
     "education-funding": education,
@@ -306,6 +355,7 @@ ADAPTERS: dict[str, Callable[[dict], list[T.MetricObservation]]] = {
     "life-insurance-review": life_insurance,
     "retirement-readiness": retirement,
     "survivor-needs": survivor_needs,
+    "tax-planning": tax_planning,
 }
 
 

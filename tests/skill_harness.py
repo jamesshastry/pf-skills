@@ -11,6 +11,7 @@ in `test_skill_*.py`.
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 import subprocess
@@ -111,11 +112,16 @@ class Skill:
         needs to work on a runner that is broken.
         """
         src = self.runner.read_text(encoding="utf-8")
-        m = re.search(r"^REQUIRED\s*=\s*(\[[^\]]*\])", src, re.M | re.S)
-        if not m:
-            return None
-        items = re.findall(r'"([^"]+)"', m.group(1))
-        return items
+        tree = ast.parse(src)
+        for node in tree.body:
+            if not isinstance(node, ast.Assign):
+                continue
+            if not any(isinstance(target, ast.Name)
+                       and target.id == "REQUIRED" for target in node.targets):
+                continue
+            value = ast.literal_eval(node.value)
+            return [str(item) for item in value]
+        return None
 
     def has_pep723_header(self) -> bool:
         src = self.runner.read_text(encoding="utf-8")
