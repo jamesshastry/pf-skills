@@ -9,11 +9,11 @@ repos:
       # Ignore rules should make this impossible. It is here because
       # `git add -f` exists, and because a mistyped rule fails silently.
       - id: no-private-financial-data
-        name: block private files in inputs/, outputs/, and history/
+        name: block private files in inputs/, outputs/, history/, and prompts/
         entry: >-
           bash -c 'f=$(git diff --cached --name-only --diff-filter=A
-          | grep -E "^(inputs/|outputs/|history/|[^/]+-(prompt|brief)\.md$|prompts/.*-(prompt|brief)\.md$)"
-          | grep -Ev "^(inputs/README\.md|inputs/[^/]+\.example\.yml|inputs/[^/]+/\.gitignore|outputs/README\.md|outputs/\.gitkeep|outputs/[^/]+/\.gitignore|history/\.gitkeep)$" || true);
+          | grep -E "^(inputs/|outputs/|history/|prompts/|[^/]+-(prompt|brief)\.md$)"
+          | grep -Ev "^(inputs/README\.md|inputs/[^/]+\.example\.yml|inputs/[^/]+/\.gitignore|outputs/README\.md|outputs/\.gitkeep|outputs/[^/]+/\.gitignore|history/\.gitkeep|prompts/README\.md)$" || true);
           if [ -n "$f" ]; then echo "BLOCKED — real data staged:"; echo "$f"; exit 1; fi'
         language: system
         pass_filenames: false

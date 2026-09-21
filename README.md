@@ -115,6 +115,8 @@ The first question anyone should ask of a personal-finance tool, answered plainl
 - **Statements go in categorized `inputs/<category>/` directories.** Their
   contents are gitignored and read only by you and whichever agent you hand
   them to. The legacy flat `documents/` directory remains supported.
+- **Local task briefs go in `prompts/`.** Everything there except the README is
+  gitignored because prompts can quote the same private facts as their inputs.
 
 If you install via `npx skills add`, that CLI reports an anonymous install count and nothing
 else — it never sees your data, because it isn't involved once the files are on disk.
@@ -230,6 +232,7 @@ inputs/     facts plus private, categorized source-document drop zones
 documents/  legacy flat source-document drop zone; still scanned
 outputs/    private reports, history views, scenarios, and structured results
 history/    immutable local snapshots and analyses; gitignored
+prompts/    private local task prompts and briefs; gitignored except its README
 tests/      synthetic fixtures only
 SCHEMA.md   the facts contract
 ```

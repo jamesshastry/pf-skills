@@ -56,7 +56,8 @@ def privacy_guards() -> None:
     for rule, what in (("inputs/*", "facts and source documents"),
                        ("documents/*", "legacy statement drop zone"),
                        ("outputs/*", "generated reports"),
-                       ("history/*", "historical facts and analyses")):
+                       ("history/*", "historical facts and analyses"),
+                       ("prompts/*", "private task prompts and briefs")):
         if rule in txt:
             check(OK, f"gitignore {rule}", what)
         else:

@@ -36,8 +36,9 @@ uv run --with pre-commit pre-commit install
 ```
 
 Two guards keep real data out of git: the ignore rules, and a hook that blocks
-private files staged from `inputs/`, `outputs/`, or `history/`. Both exist because
-`git add -f` is one keystroke away and a mistyped ignore rule fails silently.
+private files staged from `inputs/`, `outputs/`, `history/`, or `prompts/`.
+Both exist because `git add -f` is one keystroke away and a mistyped ignore
+rule fails silently.
 
 ## 3. Make a facts file
 

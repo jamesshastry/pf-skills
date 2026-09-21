@@ -171,7 +171,7 @@ Privacy is enforced structurally rather than by care. `.gitignore` excludes priv
 the contents of categorized `inputs/` directories, plus private content under `documents/`,
 `outputs/` and `history/`, while retaining only explicit repository scaffolds;
 a pre-commit hook runs gitleaks and a local hook that blocks private files
-staged from `inputs/`, `outputs/`, or `history/`, because `git add -f` exists
+staged from `inputs/`, `outputs/`, `history/`, or `prompts/`, because `git add -f` exists
 and a mistyped ignore rule fails silently. A contract test asserts the public
 example, directory scaffolds, and empty history marker are the only allowed
 files there.

@@ -1,4 +1,4 @@
-"""Structural privacy checks for private input and history paths."""
+"""Structural privacy checks for private input, output, history, and prompt paths."""
 
 from __future__ import annotations
 
@@ -44,15 +44,25 @@ def test_history_contents_are_ignored_but_scaffold_is_committed():
     assert not check_ignored("history/.gitkeep")
 
 
-def test_commit_hook_covers_inputs_outputs_and_history():
+def test_root_private_contents_are_ignored_but_documentation_is_committed():
+    assert check_ignored("inputs/private-facts.yml")
+    assert check_ignored("outputs/private-report.md")
+    assert not check_ignored("inputs/README.md")
+    assert not check_ignored("outputs/README.md")
+
+
+def test_commit_hook_covers_every_private_directory():
     config = (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
-    assert "inputs/|outputs/|history/" in config
+    assert "inputs/|outputs/|history/|prompts/" in config
     assert "prompt|brief" in config
     assert "inputs/[^/]+/\\.gitignore" in config
     assert "outputs/[^/]+/\\.gitignore" in config
     assert "history/\\.gitkeep" in config
+    assert "prompts/README\\.md" in config
 
 
 def test_private_task_prompts_are_ignored():
     assert check_ignored("private-household-prompt.md")
     assert check_ignored("prompts/private-household-prompt.md")
+    assert check_ignored("prompts/private-household-notes.md")
+    assert not check_ignored("prompts/README.md")
