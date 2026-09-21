@@ -21,6 +21,18 @@ All values are **nominal dollars**. This offline calculator uses only supplied, 
 | Median adjusted value | $520,000 |
 | Full adjusted-value range | $515,000–$520,000 |
 
+## Subject-to-comparable data points
+
+| Property | Basis | Type | Living area | Date | Distance | Price | Raw $/sf | Concessions | Use |
+|---|---|---|---|---|---|---|---|---|---|
+| Maple Ridge home | subject listing | townhome | 1,800 | — | — | $525,000 | $292 | — | subject |
+| comp-a | closed sale | townhome | 1,700 | <DATE> | 0.4 mi | $510,000 | $300 | $5,000 | included |
+| comp-b | closed sale | townhome | 1,850 | <DATE> | 1.1 mi | $530,000 | $286 | $10,000 | included |
+| comp-c | closed sale | townhome | 1,800 | <DATE> | 0.8 mi | $515,000 | $286 | $0 | included |
+| comp-old | closed sale | townhome | 1,800 | <DATE> | 4.5 mi | $600,000 | $333 | $0 | excluded |
+
+The subject price is its list price; comparable prices are closed-sale prices before concessions and adjustments. Unknown research fields must remain unknown rather than appear as zero.
+
 ## Comparable adjustments
 
 | Comp | Source | Sold | Age | Miles | Concessions | Adjustments | Adjusted | Adj. $/sf | Gross adj. | Use |

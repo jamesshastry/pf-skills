@@ -878,6 +878,11 @@ zero. The calculation first nets concessions, then adds the signed adjustment
 ledger. Each adjustment converts the comp to the subject: positive when the
 subject is worth more, negative when the comp is worth more.
 
+The report places the subject and every supplied comp in a data-point
+comparison table before showing the adjustment ledger. The subject row uses
+its list price; comp rows use unadjusted closed-sale prices, so the two are
+explicitly labeled rather than presented as equivalent evidence.
+
 `verified` confirms the recorded sale facts; `adjustments_supported` separately
 confirms that material differences—such as living area, property type,
 condition, location, lot, parking, view, and HOA—were reviewed and that the

@@ -94,6 +94,46 @@ def build(data: dict, w: cli.Writer) -> None:
     w.table(["Measure", "Result"], evidence_rows)
     w()
 
+    w("## Subject-to-comparable data points")
+    w()
+    comparison_rows = [[
+        result.subject_label,
+        "subject listing",
+        result.subject_type.replace("_", " "),
+        f"{result.subject_square_feet:,.0f}",
+        "—",
+        "—",
+        m(result.list_price),
+        f"${result.list_price / result.subject_square_feet:,.0f}",
+        "—",
+        "subject",
+    ]]
+    comparison_rows.extend([
+        [
+            comp.label,
+            "closed sale",
+            comp.property_type.replace("_", " "),
+            f"{comp.square_feet:,.0f}",
+            comp.sale_date.isoformat(),
+            f"{comp.distance_miles:g} mi",
+            m(comp.sale_price),
+            f"${comp.sale_price / comp.square_feet:,.0f}",
+            m(comp.sale_price - comp.net_sale_price),
+            ("included" if comp.included else "excluded"),
+        ]
+        for comp in result.comparables
+    ])
+    w.table(
+        ["Property", "Basis", "Type", "Living area", "Date", "Distance",
+         "Price", "Raw $/sf", "Concessions", "Use"],
+        comparison_rows,
+    )
+    w()
+    w("The subject price is its list price; comparable prices are closed-sale "
+      "prices before concessions and adjustments. Unknown research fields "
+      "must remain unknown rather than appear as zero.")
+    w()
+
     w("## Comparable adjustments")
     w()
     w.table(

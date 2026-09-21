@@ -36,6 +36,7 @@ class OfferError(ValueError):
 class ComparableResult:
     label: str
     source: str
+    property_type: str
     sale_price: float
     sale_date: date
     age_days: int
@@ -53,6 +54,8 @@ class ComparableResult:
 @dataclass
 class OfferAnalysis:
     subject_label: str
+    subject_type: str
+    subject_square_feet: float
     list_price: float
     affordability_ceiling: float
     comparables: tuple[ComparableResult, ...]
@@ -212,6 +215,7 @@ def _review_comparable(
     return ComparableResult(
         label=label,
         source=source,
+        property_type=property_type,
         sale_price=sale_price,
         sale_date=sold,
         age_days=age_days,
@@ -342,6 +346,8 @@ def assess(
 
     result = OfferAnalysis(
         subject_label=subject_label,
+        subject_type=subject_type,
+        subject_square_feet=subject_square_feet,
         list_price=list_price,
         affordability_ceiling=float(affordability_ceiling),
         comparables=reviewed,

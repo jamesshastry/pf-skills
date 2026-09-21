@@ -249,6 +249,10 @@ def test_report_renders_the_actionable_offer_ladder(monkeypatch):
     report = writer.render()
     assert "Open at $525,000 and do not exceed $535,000" in report
     assert "## Offer ladder" in report
+    assert "## Subject-to-comparable data points" in report
+    assert "| Property | Basis | Type | Living area | Date | Distance |" in report
+    assert "| Maple Ridge home | subject listing | townhome | 1,800 |" in report
+    assert "| c1 | closed sale | townhome | 1,800 | 2026-07-01 |" in report
     assert "MLS record c1" in report
     assert "Appraisal-gap cash ceiling" in report
     assert "Weakest input" in report

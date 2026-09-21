@@ -47,7 +47,11 @@ selection rules, **continue with public-web research instead of stopping at the
 missing facts**. Read [references/comparable-research.md](references/comparable-research.md)
 and follow its source, citation, privacy, and stopping rules. Search for the
 subject's public listing and nearby closed sales, verify the fields the model
-needs, and present the proposed comparable rows with citations.
+needs, and present the proposed comparable rows with citations. Every research
+or analysis response must include a table that places the subject and each
+candidate or accepted comp in rows with the material property and transaction
+data points in columns. Keep unknown values visible as `unknown`; do not omit a
+material column or convert missing data to zero.
 
 The Python runner remains deliberately offline. Web research is performed by
 the agent invoking this skill, not hidden inside `run.py`. Do not write
@@ -73,6 +77,13 @@ count are facts for the market being analyzed, not universal constants. A comp
 outside those limits stays visible in the report with the reason it was
 excluded. Active and pending listings may inform competition, but their asking
 prices are not closed-sale evidence and do not belong in `comparables`.
+
+Before the adjustment ledger, show a subject-to-comparable data-point table.
+At minimum compare status/basis, property type, living area, sale date, distance,
+price, raw price per square foot, concessions, and inclusion status. During web
+research also compare beds/baths, lot, year built, parking, HOA, and condition
+when material and publicly supportable. The table is an evidence audit, not a
+license to infer generic adjustment rates from raw differences.
 
 The central estimate is the median adjusted sale. The core range is the middle
 half of adjusted values, and the full observed range remains visible. Neither

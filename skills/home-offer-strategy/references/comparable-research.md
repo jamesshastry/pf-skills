@@ -66,10 +66,28 @@ absence to zero. A comp with unknown concessions cannot be marked verified for
 the deterministic valuation, although it can remain in the research table as a
 candidate needing agent or recorder confirmation.
 
+## Comparison and source tables
+
+Before proposing YAML or an offer, present both:
+
+1. A subject-to-candidate comparison table with one row for the subject and
+   each candidate. Use columns for listing/closed status, property type, living
+   area, beds/baths, lot, year built, parking, HOA, condition, sale date,
+   distance, price, raw price per square foot, known concessions, verification,
+   and proposed inclusion. Keep a cell as `unknown` when the source does not
+   establish it; never show missing concessions or features as zero.
+2. A source-audit table with candidate, publisher, exact URL, access date,
+   source type, and conflicts or unresolved fields. Cite the comparison rows
+   back to this table.
+
+Columns that truly do not apply may be marked `n/a`; retain all material
+comparison columns. Distinguish verified facts, inferences, and unresolved
+fields. The comparison reveals differences but does not itself support a
+dollar adjustment.
+
 ## Handoff to the calculator
 
-Present a source table before proposing YAML. Distinguish verified facts,
-inferences, and unresolved fields. Do not silently modify `inputs/facts.yml`.
+Do not silently modify `inputs/facts.yml`.
 After confirmation, record the supported rows under
 `housing.offer.comparables`, refresh `meta.as_of`, and run:
 
