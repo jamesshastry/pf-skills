@@ -1,0 +1,52 @@
+name: Reference data readiness
+
+on:
+  schedule:
+    # Weekly at 15:17 UTC. November and December check the next tax year;
+    # the rest of the year checks the current one.
+    - cron: "17 15 * * 1"
+  workflow_dispatch:
+    inputs:
+      target_year:
+        description: "Tax year to audit (blank selects automatically)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reference-data-readiness
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Audit annual reference data
+        shell: bash
+        env:
+          REQUESTED_YEAR: ${{ inputs.target_year }}
+        run: |
+          audit_args=(--scheduled)
+          if [[ -n "$REQUESTED_YEAR" ]]; then
+            audit_args=(--target-year "$REQUESTED_YEAR")
+          fi
+          set +e
+          uv run skills/reference-data-refresh/run.py \
+            --annual-only --strict "${audit_args[@]}" \
+            | tee reference-data-report.md
+          audit_status=${PIPESTATUS[0]}
+          cat reference-data-report.md >> "$GITHUB_STEP_SUMMARY"
+          exit "$audit_status"
+
+      - name: Run provenance tests
+        if: always()
+        run: >-
+          uv run --with pytest --with pyyaml pytest
+          tests/test_provenance.py tests/test_annual_parameters.py -q

@@ -225,7 +225,11 @@ deterministic monthly engine.
 Two run without a facts file: `document-intake`, which builds the onboarding worklist from the
 categorized input directories and legacy `documents/` drop zone, and
 `reference-data-refresh`, which reports on the staleness of the
-repository's own tables and generates the verification checklist.
+repository's own tables, generates the verification checklist, and audits
+year/source metadata for active assumptions in an explicitly supplied local
+facts file without printing their values. A read-only weekly GitHub workflow
+runs the strict tracked-data check; it selects next year in November and
+December but never receives ignored household data or changes the repository.
 
 Other additions since the original eighteen clusters include a `social_security` schema block that
 mirrors the SSA statement (retirement, disability, and survivor figures read, never computed;

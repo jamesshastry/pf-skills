@@ -76,7 +76,7 @@ the home-offer research workflow can query public property sources when invoked.
 | `cost-segregation-screen` | Whether a study is worth commissioning, and whether the deduction is usable at all |
 | `conflict-check` | Cross-cutting: where two skills' recommendations pull the same dollar in opposite directions |
 | `document-intake` | Onboarding: which fields are still unset, what each one unblocks, and which document answers it |
-| `reference-data-refresh` | Maintenance: when the repo's own statutory tables were last checked |
+| `reference-data-refresh` | Maintenance: annual statutory readiness plus provenance for private tax-year assumptions |
 | `household-review` | Cross-cutting: every skill's verdict re-read in-process, ranked — expiring findings, uncovered losses, priced drags, then optimizations |
 | `financial-history-review` | Cross-cutting: immutable observed snapshots, historical skill results, comparable metric changes, finding transitions, and methodology attribution |
 | `financial-scenario-planner` | Cross-cutting: deterministic baseline-versus-scenario monthly liquidity, net worth, saving, debt, and recovery conditions |
@@ -99,6 +99,21 @@ mechanism, not a bug — statutory limits change annually, and a stale one gets
 quoted confidently and believed. The skills themselves degrade safely, so it is
 a maintenance signal rather than a functional break. Run
 `reference-data-refresh`.
+
+The read-only `Reference data readiness` GitHub Actions workflow runs weekly.
+It checks the current tax year through October and next-year readiness in
+November and December, then writes the audit to the job summary. It never reads
+ignored `inputs/`, researches figures, or commits an update; a failed run is the
+signal to invoke `reference-data-refresh`, review primary sources, and submit a
+normal change. Run a local private-assumption audit with:
+
+```bash
+uv run skills/reference-data-refresh/run.py \
+  --facts inputs/facts.yml --annual-only --strict
+```
+
+Setup, manual-dispatch, failure-resolution, and privacy details are in the
+[reference-data automation runbook](docs/reference-data-automation.md).
 
 ---
 

@@ -48,6 +48,13 @@ def test_a_missing_current_year_is_reported_as_a_blocker():
     assert "is missing from" in blockers[0].detail
 
 
+def test_a_requested_future_year_can_be_checked_before_january():
+    future_year = max(L.years_available()) + 1
+    blockers = P.blockers(TODAY, required_year=future_year)
+    assert len(blockers) == 1
+    assert blockers[0].key == str(future_year)
+
+
 def test_no_blockers_while_the_current_year_is_present():
     present = dt.date(max(L.years_available()), 6, 1)
     assert P.blockers(present) == []

@@ -158,6 +158,25 @@ Run this after the relevant specialist reports and again when a scenario would
 activate a previously dormant conflict. Resolve the tradeoff before acting;
 the conflict report deliberately does not choose for you.
 
+### Refresh year-sensitive parameters
+
+GitHub's weekly `Reference data readiness` workflow checks tracked annual
+tables without access to household files. Locally, audit both those tables and
+the provenance metadata for annual values in your ignored facts file:
+
+```bash
+uv run skills/reference-data-refresh/run.py --annual-only --strict
+uv run skills/reference-data-refresh/run.py \
+  --facts inputs/facts.yml --annual-only --strict
+```
+
+In November and December the scheduled job checks next-year readiness. It is a
+smoke alarm, not an updater: use the skill to research primary sources, review
+the old/new table, and then apply confirmed changes. Private facts never enter
+the GitHub job. See the
+[reference-data automation runbook](docs/reference-data-automation.md) for
+manual GitHub and `gh` commands.
+
 ## 8. Model a scenario before a material change *(when applicable)*
 
 Record a reconciled baseline under `cash_flow.scenarios` and deterministic,

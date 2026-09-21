@@ -177,12 +177,12 @@ backdoor and its pro-rata trap.
 
 ### Cluster 5a — `reference-data-refresh` *(shipped)*
 
-**The repository has no mechanism for its own facts going stale**, and two of them already have:
-`lib/pf/limits.py` carries statutory contribution limits that change every year, and
-`lib/pf/jurisdiction.py` carries state insurance rules that change on legislative timescales.
-Both currently read `verified_on: unverified`. D16 — IRA contributions left at the prior year's
-limit — is exactly this failure occurring in the private data; nothing stops it occurring in the
-public tables too.
+The repository separates versioned statutory tables from year-sensitive values
+that deliberately remain in an ignored household facts file. The provenance
+registry covers the public tables; `assumptions.annual_parameter_metadata`
+records the tax year, verification date, and sources for active private groups
+without duplicating or printing their values. D16—an IRA contribution left at
+the prior year's limit—is the failure this boundary is designed to expose.
 
 A skill, not a script, because the update needs judgement: find the authoritative source,
 transcribe every field for the year, and refuse a partial update. But it needs mechanical
@@ -195,6 +195,12 @@ support alongside it:
   mechanism that reliably works.
 - **A refusal to accept a partially filled year**, already enforced by
   `test_known_years_are_fully_populated`.
+- **A weekly, read-only GitHub Actions check.** It audits the current year
+  through October and next-year readiness in November and December. It reports
+  and fails; it never researches, edits, commits, or receives private facts.
+- **A strict private-facts audit** that checks source metadata for annual tax,
+  business, healthcare, PFIC-rate, and household-estimate groups without
+  displaying their values.
 
 Scheduled ahead of clusters 6–8 because every skill already shipped depends on these tables
 being right, and the cost of them being wrong is confident, believable, incorrect output.

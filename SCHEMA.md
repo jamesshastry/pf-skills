@@ -1793,6 +1793,17 @@ structure and refuses the figure.
 
 ```yaml
 assumptions:
+  # Provenance only; values remain in their existing fields below.
+  annual_parameter_metadata:
+    federal_tax:
+      tax_year: 2026
+      verified_on: null             # ISO date after checking every active field
+      sources: []                    # exact primary-authority URLs
+    business_tax: { tax_year: 2026, verified_on: null, sources: [] }
+    healthcare: { tax_year: 2026, verified_on: null, sources: [] }
+    pfic_rates: { tax_year: 2026, verified_on: null, sources: [] }
+    household_tax: { tax_year: 2026, verified_on: null, sources: [] }
+
   # ── cluster 11: expat filing ──
   federal_brackets_as_of: "PLACEHOLDER — round numbers, not a real year's table"
   feie_exclusion_cap: 130000
@@ -1855,6 +1866,14 @@ assumptions:
 
 ⚠️ **Every figure above is invented for the example household.** Replace them with the
 published figures for the year in question before relying on any output.
+
+`annual_parameter_metadata` attests to the tax year, verification date, and
+sources without duplicating any value. The `reference-data-refresh --facts`
+audit activates a group only when at least one of its governed fields is
+present, prints no private values, and requires official groups to cite exact
+URLs. `verified_on` means every active value in that group was checked; do not
+date a partial review. Household-specific rates may cite a return, tax-software
+projection, marketplace quote, or professional rather than a public URL.
 
 ### `standard_deduction` accepts two shapes
 

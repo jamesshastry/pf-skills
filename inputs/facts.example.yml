@@ -385,6 +385,17 @@ debts:
       minimum_payment: 240, deductible_interest: true }
 
 assumptions:
+  # Provenance for year-sensitive values below. These are deliberately
+  # unverified synthetic fixture values; real facts should record the exact
+  # authority URLs (or household source) only after every active field in a
+  # group has been checked for the stated tax year.
+  annual_parameter_metadata:
+    federal_tax: { tax_year: 2026, verified_on: null, sources: [] }
+    business_tax: { tax_year: 2026, verified_on: null, sources: [] }
+    healthcare: { tax_year: 2026, verified_on: null, sources: [] }
+    pfic_rates: { tax_year: 2026, verified_on: null, sources: [] }
+    household_tax: { tax_year: 2026, verified_on: null, sources: [] }
+
   # Benchmark is a Treasury fund, so it is state-tax exempt and the holdings
   # above are not — which is what exercises the after-tax branch.
   cash_benchmark_apr: 0.042

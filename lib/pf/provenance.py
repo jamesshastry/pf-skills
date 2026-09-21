@@ -637,18 +637,23 @@ def registry() -> list[Table]:
     ]
 
 
-def check(today: _dt.date | None = None) -> list[Issue]:
+def check(
+    today: _dt.date | None = None,
+    *,
+    required_year: int | None = None,
+) -> list[Issue]:
     today = today or _dt.date.today()
+    required_year = required_year or today.year
     issues: list[Issue] = []
 
     for table in registry():
         if table.requires_current_year:
             years = {e.key for e in table.entries}
-            if str(today.year) not in years:
+            if str(required_year) not in years:
                 issues.append(Issue(
-                    table.name, str(today.year), "blocker",
-                    f"**{today.year} is missing from `{table.module}`.** Every "
-                    f"skill reading it will refuse to answer for the current "
+                    table.name, str(required_year), "blocker",
+                    f"**{required_year} is missing from `{table.module}`.** Every "
+                    f"skill reading it will refuse to answer for that "
                     f"year — which is the designed behaviour, but it means "
                     f"those skills are inert until the table is updated. "
                     f"Source: {table.authority}."))
@@ -677,5 +682,10 @@ def check(today: _dt.date | None = None) -> list[Issue]:
     return issues
 
 
-def blockers(today: _dt.date | None = None) -> list[Issue]:
-    return [i for i in check(today) if i.severity == "blocker"]
+def blockers(
+    today: _dt.date | None = None,
+    *,
+    required_year: int | None = None,
+) -> list[Issue]:
+    return [i for i in check(today, required_year=required_year)
+            if i.severity == "blocker"]

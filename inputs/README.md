@@ -12,6 +12,17 @@ This writes a short skeleton of nulls. Add only fields you have actually
 verified; use `facts.example.yml` to learn the shape, not as a starting set of
 values. See [`../SCHEMA.md`](../SCHEMA.md).
 
+Year-sensitive assumptions remain private but should carry non-value
+provenance under `assumptions.annual_parameter_metadata`. Audit them locally;
+the report shows group status and source counts without printing the values:
+
+```bash
+uv run skills/reference-data-refresh/run.py \
+  --facts inputs/facts.yml --annual-only --strict
+```
+
+This file is never supplied to the scheduled GitHub reference-data check.
+
 ---
 
 Two guards keep real data out of git: deny-all ignore rules, and a pre-commit
