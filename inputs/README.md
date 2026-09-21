@@ -33,7 +33,7 @@ inputs/
 ├── income/        pay statements and compensation summaries
 ├── debts/         cards, mortgages, student loans, and other liabilities
 ├── tax/           returns, W-2s, 1099s, and supporting schedules
-├── property/      leases, closing packages, HOA, and rental records
+├── property/      leases, closing packages, HOA, comps, and rental records
 ├── estate/        wills, trusts, directives, powers, and designations
 ├── education/     tuition, aid, and education-account records
 ├── healthcare/    coverage, Medicare, and long-term-care records
@@ -55,6 +55,11 @@ uv run skills/document-intake/run.py
 
 The former flat `documents/` drop zone remains supported for compatibility,
 but categorized inputs are the recommended layout.
+
+Put MLS sheets, appraisal extracts, and other comparable-sale evidence under
+`inputs/property/evaluations/`. That nested directory does not need its own
+ignore rule: the deny-all `inputs/property/.gitignore` already protects every
+file and subdirectory beneath it.
 
 If you keep several independent household data sets, name them anything except
 `*.example.yml`:
@@ -86,4 +91,4 @@ history:
 ```
 
 See the [history and scenario schema](../SCHEMA.md#history--immutable-local-snapshots)
-and the [quickstart](../QUICKSTART.md#7-start-a-history-only-when-you-have-a-truthful-observation-optional).
+and the [quickstart](../QUICKSTART.md#9-start-a-history-only-when-you-have-a-truthful-observation-optional).

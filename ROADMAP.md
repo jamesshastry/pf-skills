@@ -69,7 +69,7 @@ answer.
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped — closes `REVIEW.md` A1 |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |
-| 8 · Housing | `housing-affordability` · `rent-vs-buy` · `mortgage-review` · `ca-sfh-disclosure-review` · `ca-condo-hoa-disclosure-review` | ✅ shipped |
+| 8 · Housing | `housing-affordability` · `home-offer-strategy` · `rent-vs-buy` · `mortgage-review` · `ca-sfh-disclosure-review` · `ca-condo-hoa-disclosure-review` | ✅ shipped |
 | 9 · Education | `education-funding` | ✅ shipped |
 | 10 · Cross-border planning | ~~`roth-portability-check`~~ ✅ · ~~`geo-arbitrage-model`~~ ✅ · ~~`cross-border-healthcare`~~ ✅ | ✅ shipped |
 | 11 · Expat tax filing | ~~`feie-vs-ftc`~~ ✅ · ~~`foreign-presence-tests`~~ ✅ · ~~`state-domicile-exit`~~ ✅ · ~~`cfc-gilti-screen`~~ ✅ | ✅ shipped |
@@ -272,6 +272,14 @@ rental-first home as explicit tenant and owner-occupancy phases, reusing the
 investment-property underwriting and §469 gate by label. `rent-vs-buy` remains
 the economic-cost comparison for prices already shown feasible.
 
+`home-offer-strategy` owns the next decision after feasibility: what verified
+closed sales support, where to open, and where to stop. It nets concessions,
+requires explicit comp-to-subject adjustments, excludes evidence outside
+locally supplied selection limits, and caps the bid by comparable evidence,
+the existing stress-tested affordability result, and recorded appraisal-gap
+cash. It does not fetch MLS data, invent adjustment rates, or turn an asking
+price into market value.
+
 ---
 
 ## Cross-cutting infrastructure
@@ -315,20 +323,19 @@ and charitable-giving arithmetic, reads taxable loss lots, and treats Roth
 conversion as a multi-year scenario. Refunds and balances due stay separate
 from liability, and no opportunity totals are added before overlap is modeled.
 
-### Workflow chaining — next cross-cutting infrastructure
+### Workflow chaining — initial registry shipped
 
-The library has a conflict registry, but no equivalent source of truth for
-directed workflow edges. Documentation currently has to remember that property
-reviews precede umbrella sizing, portfolio policy precedes a taxable rebalance,
-or estate and protection reviews precede a continuity runbook.
+The library's first directed workflow now lives in `lib/pf/workflows.py`.
+`property-evaluation` orders affordability and rent-versus-buy, the applicable
+disclosure review, `home-offer-strategy`, then conflict and scenario checks.
+The offer report renders that same registry, and tests
+reject unknown or duplicate skill IDs and enforce the decision gates around the
+offer step.
 
-The next orchestration change should be a declarative registry, not another
-user-facing umbrella skill. Each edge should identify its type — prerequisite,
-recommended follow-up, conditional companion, or rerun trigger — and its reason.
-`household-review` can then show the relevant next chain after ranking the live
-issue. Contract tests should reject unknown skill IDs, unintended cycles, and
-chains that silently bypass `conflict-check` where an existing conflict edge is
-implicated.
+Other documented chains should move into the registry only when a consumer will
+use them; copying every README arrow into code would create a second catalog,
+not orchestration. A later `household-review` enhancement can use registered
+edges to show the relevant next chain after ranking a live issue.
 
 Three possible skill gaps remain evidence-gated rather than scheduled:
 

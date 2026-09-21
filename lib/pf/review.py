@@ -296,6 +296,7 @@ from . import expat as _expat  # noqa: E402
 from . import healthcare as _health  # noqa: E402
 from . import housing as _housing  # noqa: E402
 from . import housing_affordability as _afford  # noqa: E402
+from . import home_offer as _offer  # noqa: E402
 from . import jurisdiction as _jurisdiction  # noqa: E402
 from . import life as _life  # noqa: E402
 from . import limits as _lim  # noqa: E402
@@ -1446,21 +1447,7 @@ def _rent_vs_buy(data: dict) -> "Outcome":
 def _housing_affordability(data: dict) -> Outcome:
     skill = "housing-affordability"
     try:
-        r = _afford.assess(
-            scenarios=F._dig(data, "cash_flow.scenarios") or [],
-            purchase=F._dig(data, "housing.purchase") or {},
-            monthly_rent=float(F._dig(data, "housing.monthly_rent")),
-            balance_sheet=F._dig(data, "household.balance_sheet") or [],
-            reserve_assets=F.reserve_assets(data),
-            retirement_annual_savings=F._dig(
-                data, "retirement.annual_savings"),
-            household_income=F.household_income(data),
-            household_income_components=F.household_income_components(data),
-            affordability=F._dig(data, "housing.affordability") or {},
-            transition=F._dig(data, "housing.transition") or {},
-            rental_deals=F._dig(data, "real_estate.deals") or [],
-            portfolio_wash_sale=F._dig(data, "portfolio.wash_sale"),
-        )
+        r = _afford.assess_from_facts(data)
     except _afford.ReconciliationError as exc:
         return act(skill, f"Affordability blocked: {exc}", TIER_OPTIMISE)
     try:
@@ -1496,6 +1483,36 @@ def _housing_affordability(data: dict) -> Outcome:
         skill,
         f"Target {_money(r.target_price)} is within the stress-tested ceiling "
         f"of {_money(r.stress_tested_ceiling)}")
+
+
+# home-offer-strategy: the domain module reuses the same affordability result,
+# rejects weak comps, and keeps the opening price below every recorded ceiling.
+def _home_offer_strategy(data: dict) -> Outcome:
+    skill = "home-offer-strategy"
+    try:
+        result = _offer.assess_from_facts(data)
+    except (_offer.OfferError, _afford.ReconciliationError) as exc:
+        return act(skill, f"Offer analysis blocked: {exc}", TIER_OPTIMISE)
+    if result.blockers:
+        return act(
+            skill, "Offer strategy is blocked by evidence or affordability",
+            TIER_OPTIMISE, detail="; ".join(result.blockers))
+    if result.list_price > result.walk_away_price:
+        return act(
+            skill,
+            f"List {_money(result.list_price)} exceeds the walk-away ceiling "
+            f"of {_money(result.walk_away_price)}",
+            TIER_OPTIMISE,
+            detail=f"Adjusted comparable core: {_money(result.core_low)}–"
+                   f"{_money(result.core_high)}; binding constraint: "
+                   f"{', '.join(result.binding_constraints)}.")
+    return act(
+        skill,
+        f"Offer from {_money(result.opening_offer)} with a hard ceiling of "
+        f"{_money(result.walk_away_price)}",
+        TIER_OPTIMISE,
+        detail=f"Posture: {result.posture}; adjusted comparable core: "
+               f"{_money(result.core_low)}–{_money(result.core_high)}.")
 
 
 # ca-sfh-disclosure-review: mirrors run.py lines 65, 78 and 88 calling
@@ -2899,6 +2916,7 @@ ADAPTERS: dict[str, Callable[[dict], Outcome]] = {
     "financial-history-review": _financial_history_review,
     "financial-scenario-planner": _financial_scenario_planner,
     "geo-arbitrage-model": _geo_arbitrage_model,
+    "home-offer-strategy": _home_offer_strategy,
     "housing-affordability": _housing_affordability,
     "hsa-review": _hsa_review,
     "life-insurance-review": _life_insurance_review,

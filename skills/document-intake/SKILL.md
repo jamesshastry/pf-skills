@@ -7,7 +7,7 @@ description: Turns a pile of statements, policies and tax returns into a priorit
 
 ## The idea
 
-Sixty-two skills read a facts file. **Nothing writes one.** That gap is where
+Sixty-five skills read a facts file. **Nothing writes one.** That gap is where
 a new household actually stalls — not on understanding the schema, but on the
 hour of transcription between a folder of PDFs and the first useful report.
 

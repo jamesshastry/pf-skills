@@ -1,6 +1,6 @@
 # Household review
 
-**134 action(s)** from 63 skill(s) that run · 8 clean · 0 blocked on missing inputs.
+**135 action(s)** from 64 skill(s) that run · 8 clean · 0 blocked on missing inputs.
 
 ## 1. Things that expire
 
@@ -197,6 +197,8 @@
   - **311 days in PT against a recorded threshold of 183 — crossed.** Expect a local filing obligation and local tax on some or all income. That is not necessarily bad: foreign tax paid is what feeds the Foreign Tax Credit. It does mean a second return, and it is the point at which a treaty tie-breaker becomes relevant.
 - `foreign-reporting-audit` — Form 8938 (FATCA): cannot be determined — record what is missing *(—)*
   - Cannot be determined either. Thresholds for married_joint living in the US are $100,000 at year end **or** $150,000 at any time. Higher than FBAR, so FBAR usually binds first — but they are separate filings and both can apply to the same account.
+- `home-offer-strategy` — Offer strategy is blocked by evidence or affordability *(—)*
+  - Investment financing fails the recorded DSCR test: 0.64 is below 1.20.; The housing transition misses its savings floor in 4 phase/scenario row(s).
 - `housing-affordability` — Housing transition financing/occupancy is inconsistent *(—)*
   - Investment financing fails the recorded DSCR test: 0.64 is below 1.20.
 - `hsa-review` — $8,750 of HSA space unused; fill before taxable saving *(—)*

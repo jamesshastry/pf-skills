@@ -40,6 +40,7 @@ that run entirely on your own machine against your own data.
 | `ca-sfh-disclosure-review` | California detached home: which disclosures apply, what the package is missing, what to read the TDS and SPQ for |
 | `ca-condo-hoa-disclosure-review` | California condo: the §4525 packet, reserves and delinquency against thresholds, SB 326, warrantability |
 | `housing-affordability` | Reconciled household cash flow, current and stress-tested price ceilings, closing liquidity, and rent-first occupancy phases |
+| `home-offer-strategy` | Verified closed-sale comps, explicit adjustments, and an opening offer plus walk-away ceiling bounded by affordability and appraisal-gap cash |
 | `rent-vs-buy` | Total cost of occupancy and the break-even holding period |
 | `mortgage-review` | Removable PMI, prepayment, and the refinance break-even |
 | `education-funding` | The college gap per child, the retirement-first rule, and 529 mechanics |
@@ -148,7 +149,9 @@ Full walkthrough: **[QUICKSTART.md](QUICKSTART.md)**.
 These are routing paths, not hard software dependencies. Stop when a report is
 irrelevant or its required facts are unavailable. `household-review` chooses
 the live starting point; the chains show which neighboring reports must be read
-together before acting.
+together before acting. The property-evaluation path is also declared in
+`lib/pf/workflows.py` and rendered by `home-offer-strategy`, so its tested order
+cannot drift independently from this documentation.
 
 | Decision | Recommended chain |
 |---|---|
@@ -157,7 +160,7 @@ together before acting.
 | Estate continuity | `beneficiary-audit` + `estate-document-review` + `probate-exposure` + `digital-estate` → `continuity-plan` |
 | Retirement transition | `retirement-readiness` → `social-security-timing` + `withdrawal-sequencing` + `roth-conversion-window` → applicable ACA, Medicare, tax, and cross-border reviews → `conflict-check` → scenario |
 | Portfolio changes | `asset-allocation-review` → `rebalancing-rules` → `wash-sale-policy` → `tax-planning` → `conflict-check` |
-| Home purchase | `housing-affordability` + `rent-vs-buy` → applicable disclosure review → `mortgage-review` + `renters-homeowners-review` → `conflict-check` → scenario |
+| Home purchase | `housing-affordability` + `rent-vs-buy` → applicable disclosure review → `home-offer-strategy` → `conflict-check` → scenario |
 | Owner-operated business | `entity-structure-comparison` → `solo-retirement-plan-choice` + `depreciation-election` → `tax-planning` → `conflict-check` |
 | Cross-border move | `citizenship-status-review` → `foreign-presence-tests` + `state-domicile-exit` → applicable tax, reporting, pension, investment, healthcare, and Roth reviews → `conflict-check` |
 | Rental property | `rental-deal-underwriting` → `passive-loss-eligibility` → `cost-segregation-screen` → `1031-exchange-modeling` when disposition is considered |
@@ -210,7 +213,7 @@ difference between a number you entered and one the example came with. A null
 stops the skill and names the field; an invented number produces a confident
 report.
 
-**Step 4 is the one that saves the hour.** Sixty-two skills read a facts file
+**Step 4 is the one that saves the hour.** Sixty-five skills read a facts file
 and nothing writes one, so the real onboarding cost is transcription.
 `document-intake` makes it ordered and finite: it ranks the unset fields by how
 many skills each one unblocks, and `household.members` alone is about thirty of

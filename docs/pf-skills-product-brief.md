@@ -9,8 +9,8 @@ YAML file the user owns, runs tested arithmetic from a small Python library, and
 markdown report to stdout.
 
 There is no server, no account, and no network call. The repository is public; the numbers never
-are. Sixty-four skill directories sit under `skills/`, backed by forty-four modules under
-`lib/pf/` and 3,118 passing tests. The work was built as eighteen thematic clusters plus several
+are. Sixty-seven skill directories sit under `skills/`, backed by forty-eight modules under
+`lib/pf/` and more than 3,000 passing tests. The work was built as eighteen thematic clusters plus several
 cross-cutting ones, landed over thirty-four commits — roughly one per cluster or piece of
 shared infrastructure.
 
@@ -162,7 +162,7 @@ declares dependencies inline, every required path resolves in the example fixtur
 listed in `README.md` and `ROADMAP.md`, output is deterministic against a golden fixture, a
 missing field stops without a traceback, and nothing goes to stderr on success. Two skills —
 `document-intake` and `reference-data-refresh` — take no `--facts` and are excluded from the
-household-skill checks by name, with the reason recorded in the harness. The other sixty-two
+household-skill checks by name, with the reason recorded in the harness. The other sixty-five
 each have a golden fixture. A generated suite also asserts that every household skill has an
 adapter in `household-review` (below), which is the mechanism that keeps whole-library
 coverage whole as skills are added.
@@ -205,7 +205,7 @@ uncertainty, no hedging where the arithmetic is clear.
 
 ## Current Capabilities
 
-Sixty-four skills run today. Sixty-two read a facts file and cover property and casualty,
+Sixty-seven skills run today. Sixty-five read a facts file and cover property and casualty,
 income protection, beneficiaries and estate, tax-advantaged space, cash and debt, concentration,
 retirement adequacy, housing, education, cross-border planning, expat tax filing, offshore assets
 and pensions, owner-operator business entities, portfolio policy, charitable giving, healthcare
@@ -214,7 +214,9 @@ immigration-status and domicile review, `conflict-check` over the registry of co
 and `household-review`, which re-runs every skill's check in-process and ranks the findings
 into one worklist: expiring items first, then uncovered losses, priced drags, and optimizations.
 `housing-affordability` adds reconciled current and conservative price ceilings, lender and
-cash-only constraints, closing liquidity and rent-first occupancy phases. The cross-cutting
+cash-only constraints, closing liquidity and rent-first occupancy phases;
+`home-offer-strategy` evaluates supplied closed-sale evidence and bounds an offer by that
+affordability result. The cross-cutting
 `financial-history-review` compares immutable snapshots without mixing clocks or methodologies;
 `financial-scenario-planner`, `job-loss-stress-test` and `windfall-deployment-planner` share one
 deterministic monthly engine.
@@ -233,7 +235,7 @@ each skill's declared inputs from one copy.
 
 Supporting all of it: the schema contract in `SCHEMA.md`, a fictional example household (the
 Riveras, Austin TX) as the committed fixture, four setup, history and safety scripts, gitleaks
-plus a local pre-commit hook, and 3,118 passing tests.
+plus a local pre-commit hook, and more than 3,000 passing tests.
 
 `REVIEW.md` is the standing inventory of what is wrong, and it is worth reading as part of the
 capability statement rather than against it. The 201 asserted reference values are generated,
@@ -288,8 +290,8 @@ erosion, because a boundary that gives way under repeated asking is not a bounda
 
 ## Portfolio Summary
 
-pf-skills is a local-first library of 64 agent skills for household financial decisions, built on
-44 Python modules with 3,118 passing tests and zero network dependencies. Its organising
+pf-skills is a local-first library of 67 agent skills for household financial decisions, built on
+48 Python modules with more than 3,000 passing tests and zero network dependencies. Its organising
 idea is that skills hold procedures and thresholds while the user's own gitignored file holds
 values — which is what allows the reasoning to be public and reviewable while the data never
 leaves the machine. The engineering interest is in what the system refuses to do: it stops and

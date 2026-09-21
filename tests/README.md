@@ -58,10 +58,11 @@ uv run --with pytest --with pyyaml pytest -q \
   tests/test_timeseries.py tests/test_scenario.py \
   tests/test_time_scenario_reports.py
 
-# Focused housing-affordability checks
+# Focused housing and property-offer checks
 uv run --with pytest --with pyyaml pytest -q \
   tests/test_housing_affordability.py \
-  tests/test_housing_affordability_report.py
+  tests/test_housing_affordability_report.py \
+  tests/test_home_offer.py tests/test_workflows.py
 
 # Focused annual cash-flow checks
 uv run --with pytest --with pyyaml pytest tests/test_cashflow.py -q

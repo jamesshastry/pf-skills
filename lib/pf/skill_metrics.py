@@ -155,20 +155,7 @@ def retirement(data: dict) -> list[T.MetricObservation]:
 
 def housing_affordability(data: dict) -> list[T.MetricObservation]:
     try:
-        result = H.assess(
-            scenarios=F._dig(data, "cash_flow.scenarios") or [],
-            purchase=F._dig(data, "housing.purchase") or {},
-            monthly_rent=float(F._dig(data, "housing.monthly_rent")),
-            balance_sheet=F._dig(data, "household.balance_sheet") or [],
-            reserve_assets=F.reserve_assets(data),
-            retirement_annual_savings=F._dig(data, "retirement.annual_savings"),
-            household_income=F.household_income(data),
-            household_income_components=F.household_income_components(data),
-            affordability=F._dig(data, "housing.affordability") or {},
-            transition=F._dig(data, "housing.transition") or {},
-            rental_deals=F._dig(data, "real_estate.deals") or [],
-            portfolio_wash_sale=F._dig(data, "portfolio.wash_sale"),
-        )
+        result = H.assess_from_facts(data)
     except H.ReconciliationError as exc:
         return [_metric(
             data, "housing.stress_price_ceiling", None, unit="currency",

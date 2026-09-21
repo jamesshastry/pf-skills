@@ -964,6 +964,24 @@ def assess(
     )
 
 
+def assess_from_facts(data: dict) -> Affordability:
+    """Map one facts tree into :func:`assess` for every downstream consumer."""
+    return assess(
+        scenarios=F._dig(data, "cash_flow.scenarios") or [],
+        purchase=F._dig(data, "housing.purchase") or {},
+        monthly_rent=float(F._dig(data, "housing.monthly_rent")),
+        balance_sheet=F._dig(data, "household.balance_sheet") or [],
+        reserve_assets=F.reserve_assets(data),
+        retirement_annual_savings=F._dig(data, "retirement.annual_savings"),
+        household_income=F.household_income(data),
+        household_income_components=F.household_income_components(data),
+        affordability=F._dig(data, "housing.affordability") or {},
+        transition=F._dig(data, "housing.transition") or {},
+        rental_deals=F._dig(data, "real_estate.deals") or [],
+        portfolio_wash_sale=F._dig(data, "portfolio.wash_sale"),
+    )
+
+
 @dataclass(frozen=True)
 class HousingPhase:
     label: str

@@ -787,7 +787,7 @@ housing:
   monthly_rent: 2400
   purchase:
     label: Maple Ridge home
-    property_type: single_family
+    property_type: townhome
     price: 520000
     down_payment: 104000
     down_payment_rate: 0.20
@@ -806,6 +806,84 @@ housing:
     pmi_rate: 0
     maintenance_rate: 0.01
     expected_years: 7
+
+  # AFFORDABILITY-BLOCKED OFFER CASE — the closed sales support a price near
+  # the listing, but the existing stress-tested housing ceiling does not. The
+  # offer skill must still show the comp evidence while withholding a bid.
+  offer:
+    list_price: 525000
+    subject:
+      label: Maple Ridge home
+      property_type: townhome
+      square_feet: 1800
+    selection:
+      # Local analyst criteria, not universal appraisal rules.
+      minimum_comparables: 3
+      maximum_age_days: 180
+      maximum_distance_miles: 2.0
+      maximum_gross_adjustment_rate: 0.25
+    market:
+      competing_offers: multiple  # none | possible | multiple | unknown
+      subject_days_on_market: 8
+      market_median_days_on_market: 21
+      price_reductions: 0
+    strategy:
+      financing: mortgage         # mortgage | cash
+      maximum_premium_rate: 0.02  # explicit willingness, not inferred value
+      appraisal_gap_cash_limit: 15000
+      offer_increment: 1000
+    comparables:
+      # Adjustments are signed comp-to-subject. Positive means the subject is
+      # worth more; concessions are netted before these adjustments.
+      - id: comp-a
+        source: synthetic MLS record A
+        verified: true
+        arms_length: true
+        adjustments_supported: true
+        sale_price: 510000
+        seller_concessions: 5000
+        sale_date: 2026-07-15
+        distance_miles: 0.4
+        property_type: townhome
+        square_feet: 1700
+        adjustments: { living_area: 15000, condition: 0 }
+      - id: comp-b
+        source: synthetic MLS record B
+        verified: true
+        arms_length: true
+        adjustments_supported: true
+        sale_price: 530000
+        seller_concessions: 10000
+        sale_date: 2026-06-30
+        distance_miles: 1.1
+        property_type: townhome
+        square_feet: 1850
+        adjustments: { living_area: -10000, condition: 5000 }
+      - id: comp-c
+        source: synthetic MLS record C
+        verified: true
+        arms_length: true
+        adjustments_supported: true
+        sale_price: 515000
+        seller_concessions: 0
+        sale_date: 2026-05-15
+        distance_miles: 0.8
+        property_type: townhome
+        square_feet: 1800
+        adjustments: { hoa_and_amenities: 5000 }
+      # EXCLUDED CASE — old and outside the recorded distance limit.
+      - id: comp-old
+        source: synthetic MLS record D
+        verified: true
+        arms_length: true
+        adjustments_supported: true
+        sale_price: 600000
+        seller_concessions: 0
+        sale_date: 2025-10-01
+        distance_miles: 4.5
+        property_type: townhome
+        square_feet: 1800
+        adjustments: {}
 
   affordability:
     target_price: 520000

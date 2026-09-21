@@ -24,22 +24,7 @@ m = cli.money
 
 
 def calculate(data: dict) -> tuple[A.Affordability, A.Transition]:
-    purchase = F._dig(data, "housing.purchase") or {}
-    result = A.assess(
-        scenarios=F._dig(data, "cash_flow.scenarios") or [],
-        purchase=purchase,
-        monthly_rent=float(F._dig(data, "housing.monthly_rent")),
-        balance_sheet=F._dig(data, "household.balance_sheet") or [],
-        reserve_assets=F.reserve_assets(data),
-        retirement_annual_savings=F._dig(data, "retirement.annual_savings"),
-        household_income=F.household_income(data),
-        household_income_components=F.household_income_components(data),
-        affordability=F._dig(data, "housing.affordability") or {},
-        transition=F._dig(data, "housing.transition") or {},
-        rental_deals=F._dig(data, "real_estate.deals") or [],
-        portfolio_wash_sale=F._dig(data, "portfolio.wash_sale"),
-    )
-    return result, A.transition_from_facts(data)
+    return A.assess_from_facts(data), A.transition_from_facts(data)
 
 
 def build(data: dict, w: cli.Writer) -> None:

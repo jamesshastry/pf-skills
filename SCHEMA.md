@@ -746,6 +746,45 @@ housing:
     maintenance_rate: 0.01         # annual, of value
     expected_years: 7              # how long before selling
 
+  offer:                           # home-offer-strategy; same candidate
+    list_price: 525000
+    subject:
+      label: Maple Ridge home      # must match purchase.label
+      property_type: townhome      # must match purchase/property_review
+      square_feet: 1800
+    selection:                     # supplied local-market criteria
+      minimum_comparables: 3
+      maximum_age_days: 180
+      maximum_distance_miles: 2.0
+      maximum_gross_adjustment_rate: 0.25
+    market:
+      competing_offers: unknown    # none | possible | multiple | unknown
+      subject_days_on_market: 8
+      market_median_days_on_market: 21 # null when not established
+      price_reductions: 0
+    strategy:
+      financing: mortgage          # mortgage | cash
+      maximum_premium_rate: 0.02   # buyer-approved premium above core range
+      # Cash reserved for a low appraisal after down payment, closing costs,
+      # and the required emergency reserve; required for mortgage financing.
+      appraisal_gap_cash_limit: 15000 # explicit zero is valid
+      offer_increment: 1000
+    comparables:                   # verified, closed sales only
+      - id: comp-a                 # stable local label; an address is unnecessary
+        source: MLS record A       # citation or local file reference
+        verified: true
+        arms_length: true
+        adjustments_supported: true # material differences and basis reviewed
+        sale_price: 510000
+        seller_concessions: 5000   # explicit zero when confirmed absent
+        sale_date: 2026-07-15
+        distance_miles: 0.4
+        property_type: townhome
+        square_feet: 1700
+        adjustments:               # signed comp-to-subject dollars
+          living_area: 15000       # positive means subject is worth more
+          condition: -5000         # negative means comp is worth more
+
   affordability:
     target_price: 520000
     candidate_prices: [87500, 287500, 363750, 520000]
@@ -815,6 +854,44 @@ When absent, the report shows gross owner cash cost and explicitly excludes the
 tax benefit. The complete model also records `modeled_price`; the benefit is
 credited only at that price, never extrapolated across the affordability
 ceiling as though mortgage interest and deduction caps were fixed.
+
+### Comparable sales and offer strategy
+
+`housing.offer` identifies the same candidate as `housing.purchase` and, when a
+disclosure review is present, `property_review`. Labels and property types must
+agree so a comp set cannot silently price a different home. Store private MLS,
+appraisal, and disclosure PDFs under `inputs/property/evaluations/`; the entire
+property input tree is gitignored. Use non-identifying stable labels in the
+facts file instead of street addresses.
+
+Comparables are verified, arm's-length **closed sales**. Active and pending
+listings may inform `market.competing_offers`, but an asking price is not sale
+evidence. `seller_concessions` is required even when zero because unknown is not
+zero. The calculation first nets concessions, then adds the signed adjustment
+ledger. Each adjustment converts the comp to the subject: positive when the
+subject is worth more, negative when the comp is worth more.
+
+`verified` confirms the recorded sale facts; `adjustments_supported` separately
+confirms that material differences—such as living area, property type,
+condition, location, lot, parking, view, and HOA—were reviewed and that the
+adjustment ledger has a local evidentiary basis. Both must be true. An explicit
+zero adjustment means the factor was considered and no adjustment was
+supported; an omitted review does not mean the properties are equivalent.
+
+The library never supplies generic adjustment rates. A living-area or property-
+type difference without the corresponding explicit adjustment excludes the
+comp, as do unverified or non-arm's-length sales and sales outside the recorded
+age, distance, or gross-adjustment limits. Those limits are supplied for the
+local market; they are not universal appraisal rules. Excluded comps remain in
+the report with reasons.
+
+The median adjusted sale is the central estimate. The middle half is the core
+range, while the full range stays visible; neither is an appraisal or a
+confidence interval. The walk-away price is the lowest of the upper core value
+plus `maximum_premium_rate`, the existing stress-tested affordability ceiling,
+and—when financed—the central estimate plus `appraisal_gap_cash_limit`. It is
+rounded down to `offer_increment`. The skill never recommends waiving a
+contingency or increasing a ceiling merely because competition is recorded.
 
 The liquidation's gross proceeds, basis, holding period, and margin payoff are
 derived from the selected balance-sheet `tax_lots` and the account's

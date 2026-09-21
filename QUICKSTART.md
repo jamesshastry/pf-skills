@@ -55,7 +55,7 @@ difference between a number you entered and one the Riveras came with. A null
 fails loudly; an invented number produces a confident report.
 
 Fill in `household.members` and `meta.jurisdiction.state` first. That is about
-four lines of YAML and it unblocks roughly thirty of the sixty-two skills that
+four lines of YAML and it unblocks roughly thirty of the sixty-five skills that
 read a facts file.
 
 ## 4. Add your documents
@@ -116,6 +116,8 @@ issue selected by `household-review`. Common examples include:
   trade;
 - retirement readiness before Social Security, withdrawal, Roth, healthcare,
   and tax decisions; and
+- affordability and disclosures before `home-offer-strategy`, which evaluates
+  supplied closed sales without fetching or inventing comparable data; and
 - beneficiary, estate-document, probate, and digital-estate reviews before the
   operational `continuity-plan`.
 
