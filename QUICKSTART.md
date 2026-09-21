@@ -3,8 +3,11 @@
 From nothing to your first report. About ten minutes, most of it typing your
 own numbers.
 
-**Everything runs on your machine.** No account, no key, no network call. The
-skills read a file you own and print markdown to your terminal.
+**Every deterministic report runs on your machine.** No account or key is
+needed. The optional comparable-research stage of `home-offer-strategy` uses
+the invoking agent's web access and sends only necessary public-property search
+terms; it never uploads the facts file or local documents. All other runners
+remain offline.
 
 ---
 

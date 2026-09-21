@@ -7,7 +7,7 @@
 
 Comparable evidence is still shown below, but no opening offer or walk-away price is recommended while a blocker remains.
 
-All values are **nominal dollars**. The report uses only supplied, verified closed sales; it fetches no market data and is not an appraisal.
+All values are **nominal dollars**. This offline calculator uses only supplied, verified closed sales and is not an appraisal. A web-capable agent performs the cited research stage before this calculation.
 
 ## Subject and evidence
 
@@ -38,7 +38,7 @@ Adjustments are signed from each comparable to the subject. Seller concessions a
 |---|---|---|
 | Feasibility | housing-affordability + rent-vs-buy | Set the financial ceiling and compare ownership cost. |
 | Property diligence | ca-sfh-disclosure-review + ca-condo-hoa-disclosure-review | Review condition, title, insurability, and association evidence. Run the one applicable California review; use local professional review elsewhere. |
-| Price and bid | **home-offer-strategy** | Normalize verified closed sales and set opening and walk-away prices. |
+| Comparable research, price, and bid | **home-offer-strategy** | Research and normalize closed sales, then set opening and walk-away prices. |
 | Whole-plan check | conflict-check + financial-scenario-planner | Resolve competing uses of cash and test the balance-sheet path. Run before committing material cash or debt. |
 
 ## Terms and next checks

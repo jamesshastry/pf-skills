@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import subprocess
+import sys
 from copy import deepcopy
 from datetime import date
 from pathlib import Path
@@ -249,3 +252,23 @@ def test_report_renders_the_actionable_offer_ladder(monkeypatch):
     assert "MLS record c1" in report
     assert "Appraisal-gap cash ceiling" in report
     assert "Weakest input" in report
+
+
+def test_missing_comparables_route_a_web_capable_agent_to_research(tmp_path):
+    facts = tmp_path / "facts.json"
+    facts.write_text(json.dumps({
+        "meta": {
+            "schema_version": 1,
+            "as_of": "2026-09-20",
+            "currency": "USD",
+            "jurisdiction": {"country": "US", "state": "CA"},
+        },
+    }), encoding="utf-8")
+    completed = subprocess.run(
+        (sys.executable, str(RUNNER_PATH), "--facts", str(facts)),
+        capture_output=True, text=True, check=False,
+    )
+    assert completed.returncode == 1
+    assert "web-capable agent" in completed.stdout
+    assert "public closed-sale sources" in completed.stdout
+    assert "affordability ceiling" in completed.stdout

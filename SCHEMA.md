@@ -771,7 +771,7 @@ housing:
       offer_increment: 1000
     comparables:                   # verified, closed sales only
       - id: comp-a                 # stable local label; an address is unnecessary
-        source: MLS record A       # citation or local file reference
+        source: MLS record A       # publisher plus URL or local file reference
         verified: true
         arms_length: true
         adjustments_supported: true # material differences and basis reviewed
@@ -863,6 +863,13 @@ agree so a comp set cannot silently price a different home. Store private MLS,
 appraisal, and disclosure PDFs under `inputs/property/evaluations/`; the entire
 property input tree is gitignored. Use non-identifying stable labels in the
 facts file instead of street addresses.
+
+When comparable rows are missing, the `home-offer-strategy` agent workflow may
+search public recorder, assessor, and listing-history sources. Record the
+publisher and exact URL in `source`, keep the access date in the accompanying
+research notes, and refresh `meta.as_of` when confirmed facts are accepted.
+The deterministic runner itself makes no network calls. Do not copy a private
+address into the committed example or any tracked file.
 
 Comparables are verified, arm's-length **closed sales**. Active and pending
 listings may inform `market.competing_offers`, but an asking price is not sale

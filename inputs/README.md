@@ -61,6 +61,10 @@ Put MLS sheets, appraisal extracts, and other comparable-sale evidence under
 ignore rule: the deny-all `inputs/property/.gitignore` already protects every
 file and subdirectory beneath it.
 
+When `home-offer-strategy` uses public-web research, only the minimum property
+search terms should leave the machine. The agent must not upload files from
+this directory or send household financial facts to a listing service.
+
 If you keep several independent household data sets, name them anything except
 `*.example.yml`:
 

@@ -24,6 +24,13 @@ REQUIRED = [
     "housing.affordability", "housing.transition", "housing.offer",
     "property_review.property_type", "property_review.documents_provided",
 ]
+MISSING_HINT = (
+    "If `housing.offer` or its comparables are missing, invoke the "
+    "home-offer-strategy skill through a web-capable agent. It should "
+    "research public closed-sale sources, cite proposed facts, obtain "
+    "confirmation, and rerun this offline calculator. Never infer market "
+    "value from the asking price or affordability ceiling."
+)
 m = cli.money
 
 
@@ -61,8 +68,9 @@ def build(data: dict, w: cli.Writer) -> None:
         w(f"Posture: **{result.posture}**. The cap is set by "
           f"{', '.join(result.binding_constraints)}.")
     w()
-    w("All values are **nominal dollars**. The report uses only supplied, "
-      "verified closed sales; it fetches no market data and is not an appraisal.")
+    w("All values are **nominal dollars**. This offline calculator uses only "
+      "supplied, verified closed sales and is not an appraisal. A web-capable "
+      "agent performs the cited research stage before this calculation.")
     w()
 
     w("## Subject and evidence")
@@ -170,4 +178,5 @@ def build(data: dict, w: cli.Writer) -> None:
 
 if __name__ == "__main__":
     raise SystemExit(cli.run(
-        title="Home offer strategy", required=REQUIRED, build=build))
+        title="Home offer strategy", required=REQUIRED, build=build,
+        missing_hint=MISSING_HINT))

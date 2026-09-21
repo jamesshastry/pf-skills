@@ -46,9 +46,9 @@ PROPERTY_EVALUATION = Workflow(
             condition="Run the one applicable California review; use local professional review elsewhere.",
         ),
         WorkflowStep(
-            stage="Price and bid",
+            stage="Comparable research, price, and bid",
             skills=("home-offer-strategy",),
-            purpose="Normalize verified closed sales and set opening and walk-away prices.",
+            purpose="Research and normalize closed sales, then set opening and walk-away prices.",
         ),
         WorkflowStep(
             stage="Whole-plan check",

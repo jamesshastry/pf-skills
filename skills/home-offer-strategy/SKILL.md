@@ -1,6 +1,6 @@
 ---
 name: home-offer-strategy
-description: Evaluate verified closed-sale comparables, reconcile explicit comp-to-subject adjustments, and recommend an opening offer and walk-away ceiling bounded by market evidence, appraisal-gap cash, and stress-tested affordability. Use when preparing or revising an offer on a specific home after the relevant comparable-sale facts have been collected. Reads figures from a local facts file.
+description: Research public internet sources for closed-sale comparables, reconcile verified comp-to-subject adjustments, and recommend an opening offer and walk-away ceiling bounded by market evidence, appraisal-gap cash, and stress-tested affordability. Use when preparing or revising an offer on a specific home, including when comparable facts are not yet recorded. Reads private figures from a local facts file and may send the minimum necessary property search terms to public web services.
 requires:
   - meta.as_of
   - meta.currency
@@ -39,6 +39,23 @@ workflow in `lib/pf/workflows.py`. It follows affordability, rent-versus-buy,
 and the applicable disclosure review; conflict and whole-balance-sheet scenario
 checks follow it before material cash or debt is committed. The separate
 `mortgage-review` evaluates an existing loan, not a proposed purchase mortgage.
+
+## Research missing comparables
+
+If the recorded comparable set is absent, stale, or too weak to pass its own
+selection rules, **continue with public-web research instead of stopping at the
+missing facts**. Read [references/comparable-research.md](references/comparable-research.md)
+and follow its source, citation, privacy, and stopping rules. Search for the
+subject's public listing and nearby closed sales, verify the fields the model
+needs, and present the proposed comparable rows with citations.
+
+The Python runner remains deliberately offline. Web research is performed by
+the agent invoking this skill, not hidden inside `run.py`. Do not write
+researched values into the canonical facts file without confirmation. For a
+preliminary answer, use an ignored working copy and label the result as based on
+web-researched facts. If web access is unavailable or the public record cannot
+support enough comps, report the searches attempted and the unresolved fields;
+do not replace market value with an affordability-only negotiating range.
 
 ## Comparable evidence
 
@@ -80,13 +97,14 @@ end. Unknown competition produces a balanced posture, not a prediction.
 
 ## Boundaries
 
-This skill does not fetch MLS data, identify comparables from an address,
-estimate an appraisal, inspect disclosures, determine affordability, predict a
-seller response, draft a contract, or recommend waiving inspection, financing,
-appraisal, title, insurance, or legal protections. Run the applicable
-disclosure review before treating a condition adjustment as complete, and run
-`conflict-check` plus a housing scenario before an offer materially changes
-cash, debt, or reserves.
+This skill may research publicly accessible sale and listing records. It does
+not claim access to a private MLS, bypass authentication, CAPTCHAs, robots or
+paywalls, upload local documents, estimate an appraisal, inspect disclosures,
+determine affordability, predict a seller response, draft a contract, or
+recommend waiving inspection, financing, appraisal, title, insurance, or legal
+protections. Run the applicable disclosure review before treating a condition
+adjustment as complete, and run `conflict-check` plus a housing scenario before
+an offer materially changes cash, debt, or reserves.
 
 The weakest input is the adjustment ledger. A precise calculation over weak or
 broker-selected adjustments is still a weak valuation.

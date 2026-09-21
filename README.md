@@ -1,7 +1,8 @@
 # pf-skills
 
-Agent skills for evaluating and optimizing personal finance — insurance, liability, and risk —
-that run entirely on your own machine against your own data.
+Local-first agent skills for evaluating and optimizing personal finance — insurance, liability,
+and risk. Deterministic calculations run on your machine against your own data;
+the home-offer research workflow can query public property sources when invoked.
 
 > **Status:** eighteen clusters shipped, plus cross-cutting review infrastructure — property & casualty, income protection,
 > estate, tax-advantaged space, cash & debt, concentration, retirement, housing, education, cross-border retirement,
@@ -40,7 +41,7 @@ that run entirely on your own machine against your own data.
 | `ca-sfh-disclosure-review` | California detached home: which disclosures apply, what the package is missing, what to read the TDS and SPQ for |
 | `ca-condo-hoa-disclosure-review` | California condo: the §4525 packet, reserves and delinquency against thresholds, SB 326, warrantability |
 | `housing-affordability` | Reconciled household cash flow, current and stress-tested price ceilings, closing liquidity, and rent-first occupancy phases |
-| `home-offer-strategy` | Verified closed-sale comps, explicit adjustments, and an opening offer plus walk-away ceiling bounded by affordability and appraisal-gap cash |
+| `home-offer-strategy` | Public-web research for closed-sale comps, explicit verified adjustments, and an opening offer plus walk-away ceiling bounded by affordability and appraisal-gap cash |
 | `rent-vs-buy` | Total cost of occupancy and the break-even holding period |
 | `mortgage-review` | Removable PMI, prepayment, and the refinance break-even |
 | `education-funding` | The college gap per child, the retirement-first rule, and 529 mechanics |
@@ -105,12 +106,15 @@ a maintenance signal rather than a functional break. Run
 
 The first question anyone should ask of a personal-finance tool, answered plainly:
 
-- **There is no server.** No account, no sign-up, no upload.
+- **There is no pf-skills server.** No account, sign-up, or background upload;
+  every deterministic runner is offline.
 - **Your figures live in `inputs/facts.yml`**, gitignored, on your disk.
 - **Historical snapshots live in `history/`**, also gitignored; they are retained
   copies of private facts, so never force-add them.
-- **Skills are text.** They tell an AI agent already running on your machine how to reason about
-  the numbers you give it. Nothing in this repo transmits anything.
+- **Skills are text and runners are offline.** They tell an AI agent how to
+  reason and the Python code transmits nothing. An agent following the explicit
+  home-offer research workflow may separately use its web tools as described
+  below.
 - **Outputs are grouped by purpose** under `outputs/reports/`, `history/`,
   `scenarios/`, and `structured/`. Generated contents are gitignored.
 - **Statements go in categorized `inputs/<category>/` directories.** Their
@@ -118,6 +122,10 @@ The first question anyone should ask of a personal-finance tool, answered plainl
   them to. The legacy flat `documents/` directory remains supported.
 - **Local task briefs go in `prompts/`.** Everything there except the README is
   gitignored because prompts can quote the same private facts as their inputs.
+- **Comparable research is the explicit network exception.** When an agent runs
+  `home-offer-strategy`, it may send the minimum necessary address or property
+  search terms to public search and listing services. It must not upload local
+  documents or financial facts, and it must cite what it finds.
 
 If you install via `npx skills add`, that CLI reports an anonymous install count and nothing
 else — it never sees your data, because it isn't involved once the files are on disk.

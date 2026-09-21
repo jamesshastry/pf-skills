@@ -8,8 +8,10 @@ real-estate underwriting. Each skill is a procedure plus a set of named threshol
 YAML file the user owns, runs tested arithmetic from a small Python library, and prints a
 markdown report to stdout.
 
-There is no server, no account, and no network call. The repository is public; the numbers never
-are. Sixty-seven skill directories sit under `skills/`, backed by forty-eight modules under
+There is no pf-skills server or account, and deterministic runners make no network calls. The
+optional `home-offer-strategy` research stage uses the invoking agent's web access to query public
+property sources without uploading the facts file or local documents. The repository is public;
+the numbers never are. Sixty-seven skill directories sit under `skills/`, backed by forty-eight modules under
 `lib/pf/` and more than 3,000 passing tests. The work was built as eighteen thematic clusters plus several
 cross-cutting ones, landed over thirty-four commits — roughly one per cluster or piece of
 shared infrastructure.

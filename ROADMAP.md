@@ -277,8 +277,10 @@ closed sales support, where to open, and where to stop. It nets concessions,
 requires explicit comp-to-subject adjustments, excludes evidence outside
 locally supplied selection limits, and caps the bid by comparable evidence,
 the existing stress-tested affordability result, and recorded appraisal-gap
-cash. It does not fetch MLS data, invent adjustment rates, or turn an asking
-price into market value.
+cash. Its agent workflow searches publicly accessible property records and
+listing histories when comps are missing, cites the proposed facts, and leaves
+the calculation itself offline. It does not claim private MLS access, invent
+adjustment rates, or turn an asking price into market value.
 
 ---
 
