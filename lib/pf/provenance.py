@@ -40,6 +40,10 @@ from . import status as _sta
 from . import transitions as _tra
 from . import limits as _lim
 from . import aid as _aid
+from . import federal_return as _fed
+from . import ca_return as _ca
+from . import india_return as _ind
+from . import llc_return as _llc
 
 ANNUAL = "annual"
 LEGISLATIVE = "legislative"
@@ -230,6 +234,140 @@ def registry() -> list[Table]:
     aid_entries.append(Entry(
         "Social Security wage base", _aid.SS_WAGE_BASE_SOURCE, wb_on, wb_unver,
         values={str(k): v for k, v in _aid.SS_WAGE_BASE.items()}))
+
+    fed_entries = []
+    for year, t in sorted(_fed.FEDERAL_TABLES.items()):
+        on, unver = _parse(t.verified_on)
+        fed_entries.append(Entry(
+            str(year), t.source, on, unver,
+            values={k: getattr(t, k) for k in (
+                "brackets", "standard_deduction", "additional_standard_married",
+                "additional_standard_unmarried", "cg_zero_max", "cg_fifteen_max",
+                "amt_exemption", "amt_phaseout_start", "amt_phaseout_rate",
+                "amt_28_threshold", "ctc_per_child", "actc_refundable_max",
+                "qbi_threshold", "qbi_phase_in_range", "qbi_minimum_deduction",
+                "qbi_minimum_income", "salt_cap", "salt_phaseout_threshold",
+                "charitable_agi_floor", "nonitemizer_charitable_limit",
+                "itemized_limitation_rate", "excess_business_loss",
+                "ira_deduction_phaseout")}))
+    fs_on, fs_unver = _parse(_fed.FEDERAL_VERIFIED)
+    fed_entries.append(Entry(
+        "statutory (unindexed) thresholds",
+        "IRC §§86, 111, 1211(b), 1401, 1402, 1411, 3101(b), 3102(f), 24(b), "
+        "24(h)(4), 904(j), 6654, 151(d)(5)(C); Treas. Reg. §31.3402(g)-1",
+        fs_on, fs_unver,
+        values={k: getattr(_fed, k) for k in (
+            "CAPITAL_LOSS_LIMIT_DEFAULT", "SE_EARNINGS_FACTOR", "SE_MINIMUM_EARNINGS",
+            "ADDITIONAL_MEDICARE_THRESHOLD", "NIIT_THRESHOLD",
+            "CTC_PHASEOUT_THRESHOLD", "CTC_PHASEOUT_THRESHOLD_DEFAULT", "ODC_AMOUNT",
+            "SIMPLIFIED_FTC_LIMIT", "SIMPLIFIED_FTC_LIMIT_DEFAULT",
+            "SAFE_HARBOR_HIGH_AGI_DEFAULT", "PENALTY_DE_MINIMIS",
+            "SENIOR_DEDUCTION_AMOUNT", "SENIOR_DEDUCTION_PHASEOUT_RATE",
+            "SENIOR_DEDUCTION_THRESHOLD", "SENIOR_DEDUCTION_THRESHOLD_DEFAULT",
+            "SUPPLEMENTAL_WITHHOLDING_RATE", "MEDICAL_AGI_FLOOR",
+            "MORTGAGE_DEBT_LIMIT", "SALT_PHASEOUT_RATE", "SALT_FLOOR",
+            "SS_BASE_AMOUNT", "SS_BASE_AMOUNT_DEFAULT", "SS_ADJUSTED_BASE_EXTRA",
+            "SS_ADJUSTED_BASE_EXTRA_DEFAULT")}))
+    ca_entries = []
+    for year, t in sorted(_ca.CA_TABLES.items()):
+        on, unver = _parse(t.verified_on)
+        ca_entries.append(Entry(
+            str(year), t.source, on, unver,
+            values={"brackets": t.brackets,
+                    "standard_deduction": t.standard_deduction,
+                    "personal_exemption": t.personal_exemption,
+                    "blind_exemption": t.blind_exemption,
+                    "senior_exemption": t.senior_exemption,
+                    "dependent_exemption": t.dependent_exemption,
+                    "agi_limit": t.agi_limit,
+                    "renters": t.renters,
+                    "amt_screen": t.amt_screen}))
+    ca_on, ca_unver = _parse(_ca.CA_VERIFIED)
+    ca_entries.append(Entry(
+        "statutory constants",
+        "R&TC §17043 (BHST), §19136/§19136.1/§19136.3 (estimated tax), "
+        "§17941/§17942 (LLC tax and fee); 2026 Form 540-ES instructions; "
+        "2025 FTB 5805; 2025 Form 568 booklet; ftb.ca.gov LLC page",
+        ca_on, ca_unver,
+        values={"BHST_THRESHOLD": _ca.BHST_THRESHOLD,
+                "BHST_RATE": _ca.BHST_RATE,
+                "MEDICAL_AGI_FLOOR": _ca.MEDICAL_AGI_FLOOR,
+                "MORTGAGE_DEBT_LIMIT_DEFAULT": _ca.MORTGAGE_DEBT_LIMIT_DEFAULT,
+                "MORTGAGE_DEBT_LIMIT": _ca.MORTGAGE_DEBT_LIMIT,
+                "CHARITABLE_AGI_LIMIT": _ca.CHARITABLE_AGI_LIMIT,
+                "MISC_ITEMIZED_AGI_FLOOR": _ca.MISC_ITEMIZED_AGI_FLOOR,
+                "ITEMIZED_PHASEOUT_RATE": _ca.ITEMIZED_PHASEOUT_RATE,
+                "ITEMIZED_PHASEOUT_MAX_SHARE": _ca.ITEMIZED_PHASEOUT_MAX_SHARE,
+                "EXEMPTION_PHASEOUT_STEP": _ca.EXEMPTION_PHASEOUT_STEP,
+                "EXEMPTION_PHASEOUT_STEP_MFS": _ca.EXEMPTION_PHASEOUT_STEP_MFS,
+                "EXEMPTION_PHASEOUT_PER_STEP": _ca.EXEMPTION_PHASEOUT_PER_STEP,
+                "CAPITAL_LOSS_LIMIT": _ca.CAPITAL_LOSS_LIMIT,
+                "ES_INSTALLMENT_SHARES": _ca.ES_INSTALLMENT_SHARES,
+                "ES_CURRENT_YEAR_SHARE": _ca.ES_CURRENT_YEAR_SHARE,
+                "ES_PRIOR_YEAR_SHARE_HIGH": _ca.ES_PRIOR_YEAR_SHARE_HIGH,
+                "ES_HIGH_INCOME_AGI": _ca.ES_HIGH_INCOME_AGI,
+                "ES_NO_PRIOR_YEAR_AGI": _ca.ES_NO_PRIOR_YEAR_AGI,
+                "ES_MIN_BALANCE": _ca.ES_MIN_BALANCE,
+                "LLC_ANNUAL_TAX": _ca.LLC_ANNUAL_TAX,
+                "LLC_FIRST_YEAR_EXEMPT_YEARS": tuple(_ca.LLC_FIRST_YEAR_EXEMPT_YEARS),
+                "LLC_FEE_TIERS": _ca.LLC_FEE_TIERS}))
+    llc_entries = []
+    for year, t in sorted(_llc.LLC_TABLES.items()):
+        on, unver = _parse(t.verified_on)
+        llc_entries.append(Entry(
+            str(year), t.source, on, unver,
+            values={"nec_threshold": t.nec_threshold,
+                    "mileage_rates": t.mileage_rates,
+                    "late_penalty_per_owner_month": t.late_penalty_per_owner_month}))
+    llc_on, llc_unver = _parse(_llc.LLC_VERIFIED)
+    llc_entries.append(Entry(
+        "statutory constants", _llc.STATUTORY_SOURCE, llc_on, llc_unver,
+        values={k: getattr(_llc, k) for k in (
+            "MEALS_DEDUCTIBLE_SHARE", "SIMPLIFIED_HOME_OFFICE_RATE",
+            "SIMPLIFIED_HOME_OFFICE_MAX_SQFT", "STARTUP_IMMEDIATE",
+            "STARTUP_PHASEOUT_START", "STARTUP_AMORTIZATION_MONTHS",
+            "BACKUP_WITHHOLDING_RATE", "LATE_PENALTY_MAX_MONTHS",
+            "SMALL_PARTNERSHIP_MAX_PARTNERS", "HOBBY_PROFIT_YEARS",
+            "HOBBY_WINDOW_YEARS", "ENTITY_RETURN_MONTH", "INDIVIDUAL_RETURN_MONTH",
+            "NEC_DUE", "CA_PARTNERSHIP_RETURN_MONTH", "CA_FEE_UNDERPAYMENT_PENALTY",
+            "CA_S_CORP_RATE", "CA_MIN_FRANCHISE_TAX", "CA_CORP_ES_SHARES",
+            "CA_CORP_ES_MONTHS", "CA_DE542_THRESHOLD")}))
+    ind_entries = []
+    for fy, t in sorted(_ind.INDIA_TABLES.items()):
+        on, unver = _parse(t.verified_on)
+        ind_entries.append(Entry(
+            fy, t.source, on, unver,
+            values={"act": t.act, "new_slabs": t.new_slabs, "old_slabs": t.old_slabs,
+                    "rebate_87a": t.rebate_87a, "surcharge": t.surcharge,
+                    "new_regime_surcharge_max": t.new_regime_surcharge_max,
+                    "special_surcharge_cap": t.special_surcharge_cap, "cess": t.cess,
+                    "stcg_111a": t.stcg_111a, "ltcg_112a": t.ltcg_112a,
+                    "ltcg_112a_exemption": t.ltcg_112a_exemption,
+                    "ltcg_112": t.ltcg_112, "dividend_115a": t.dividend_115a,
+                    "hp_standard_deduction": t.hp_standard_deduction,
+                    "self_occupied_interest_cap": t.self_occupied_interest_cap,
+                    "hp_loss_setoff_cap": t.hp_loss_setoff_cap,
+                    "max_self_occupied": t.max_self_occupied,
+                    "due_date": t.due_date, "belated_deadline": t.belated_deadline,
+                    "revised_deadline": t.revised_deadline,
+                    "sections": t.sections}))
+    ind_on, ind_unver = _parse(_ind.INDIA_VERIFIED)
+    ind_entries.append(Entry(
+        "statutory constants", "Income-tax Act 1961 ss.2(42A), 6, 10(10D), 50AA, "
+        "54, 54EC, 80C, 80TTA/80TTB, 112 proviso, 208, 211, 234A-F, 288A/B",
+        ind_on, ind_unver,
+        values={k: getattr(_ind, k) for k in (
+            "RESIDENT_DAYS", "SHORT_STAY_DAYS", "PRIOR_4_YEARS_DAYS",
+            "VISITOR_HIGH_INCOME_DAYS", "INDIAN_INCOME_THRESHOLD",
+            "RNOR_NR_YEARS_OF_10", "RNOR_MAX_DAYS_PRIOR_7",
+            "LISTED_HOLDING_MONTHS", "OTHER_HOLDING_MONTHS", "DEBT_MF_CUTOFF",
+            "INDEXATION_GRANDFATHER_DATE", "S54_CAP", "S54EC_CAP",
+            "ULIP_CUTOFF", "ULIP_PREMIUM_LIMIT", "NON_ULIP_CUTOFF",
+            "NON_ULIP_PREMIUM_LIMIT", "PREMIUM_RATIO_PRE_2012",
+            "PREMIUM_RATIO_POST_2012", "CAP_80C", "CAP_80TTA", "CAP_80TTB",
+            "ADVANCE_TAX_THRESHOLD", "ADVANCE_TAX_SHORTFALL_PCT",
+            "INTEREST_PER_MONTH", "LATE_FEE", "LATE_FEE_SMALL",
+            "LATE_FEE_SMALL_INCOME")}))
 
     return [
         Table(
@@ -637,6 +775,72 @@ def registry() -> list[Table]:
                         "WORK_VEHICLE_GVWR_LBS": _dep.WORK_VEHICLE_GVWR_LBS,
                         "VEHICLE_RECOVERY_YEARS":
                         _dep.VEHICLE_RECOVERY_YEARS})],
+        ),
+        Table(
+            name="federal individual income tax parameters",
+            module="lib/pf/federal_return.py",
+            holds="Form 1040 brackets, standard deduction, capital-gain bands, "
+                  "AMT, CTC, §199A, SALT cap, charitable floor and limitation, "
+                  "excess business loss by tax year, plus unindexed statutory "
+                  "thresholds (NIIT, Additional Medicare, safe harbor, senior "
+                  "deduction, Social Security base amounts)",
+            authority="irs.gov — annual inflation-adjustment revenue procedure "
+                      "(Rev. Proc. 2024-40, 2025-32); P.L. 119-21",
+            url="https://www.irs.gov/pub/irs-drop/rp-25-32.pdf · "
+                "https://www.irs.gov/pub/irs-drop/rp-24-40.pdf",
+            cadence=ANNUAL,
+            entries=fed_entries,
+        ),
+        Table(
+            name="California resident income tax (Form 540)",
+            module="lib/pf/ca_return.py",
+            holds="CA rate schedules, standard deduction, exemption credits and "
+                  "their AGI limit, renter's credit limits, AMT screen, "
+                  "Behavioral Health Services Tax, estimated-tax safe harbors "
+                  "and installment shares, LLC annual tax and fee tiers",
+            authority="Franchise Tax Board — annual Form 540 booklet, Schedule "
+                      "CA (540) instructions, Form 540-ES, FTB 5805, Form 568 "
+                      "booklet",
+            url="https://www.ftb.ca.gov/forms/2025/2025-540-instructions.html · "
+                "https://www.ftb.ca.gov/forms/2025/2025-540-tax-rate-schedules.pdf · "
+                "https://www.ftb.ca.gov/forms/2026/2026-540-es-instructions.html · "
+                "https://www.ftb.ca.gov/forms/2025/2025-568-booklet.html",
+            cadence=ANNUAL,
+            entries=ca_entries,
+        ),
+        Table(
+            name="Indian income-tax rates and limits",
+            module="lib/pf/india_return.py",
+            holds="residence day tests, new/old regime slabs, s.87A rebate, "
+                  "surcharge and cess, capital-gains rates and holding periods, "
+                  "house-property caps, s.10(10D) tests, interest and fee rules, "
+                  "due dates, and section numbers by financial year",
+            authority="incometax.gov.in / incometaxindia.gov.in; Finance Acts "
+                      "2023-2026; CBDT FAQs; Income-tax Act 2025",
+            url="https://www.incometax.gov.in/iec/foportal/help/individual/"
+                "return-applicable-1 · https://www.incometaxindia.gov.in",
+            cadence=ANNUAL,
+            entries=ind_entries,
+        ),
+        Table(
+            name="LLC entity returns (Schedule C / 1065 / 1120-S, Form 568 / 100S)",
+            module="lib/pf/llc_return.py",
+            holds="1099-NEC threshold, standard mileage rates and the §6698/§6699 "
+                  "per-owner late-filing penalty by tax year; meals share, "
+                  "simplified home office, §195/§248/§709 amounts, backup "
+                  "withholding rate, due months, California 1.5% S-corporation "
+                  "rate, $800 minimum, 100-ES shares, LLC fee penalty and DE 542 "
+                  "threshold (LLC annual tax and fee tiers are in ca_return)",
+            authority="irs.gov — Rev. Proc. 2025-32, Instructions for Forms 1065, "
+                      "1120-S, Schedule C and 1099-NEC, standard mileage notices; "
+                      "P.L. 119-21; FTB Form 568 and 100S booklets; EDD DE 542",
+            url="https://www.irs.gov/pub/irs-drop/rp-25-32.pdf · "
+                "https://www.irs.gov/instructions/i1065 · "
+                "https://www.irs.gov/instructions/i1120s · "
+                "https://www.irs.gov/tax-professionals/standard-mileage-rates · "
+                "https://www.ftb.ca.gov/forms/2025/2025-100s-booklet.html",
+            cadence=ANNUAL,
+            entries=llc_entries,
         ),
         Table(
             name="federal need analysis (SAI) tables",

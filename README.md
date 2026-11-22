@@ -7,7 +7,7 @@ the home-offer research workflow can query public property sources when invoked.
 > **Status:** eighteen clusters shipped, plus cross-cutting review infrastructure — property & casualty, income protection,
 > estate, tax-advantaged space, cash & debt, concentration, retirement, housing, education, cross-border retirement,
 > expat tax filing, offshore assets & pensions, owner-operator business, portfolio policy, charitable giving,
-> healthcare & aging, life transitions, and real estate investing.
+> healthcare & aging, life transitions, and real estate investing — plus return-preparation workpapers (federal, California, India).
 >
 > Clusters 10 onward ship **without a real-data validation case** — the validation set does not exercise foreign
 > earned income, business ownership or investment property. `ROADMAP.md` predicted this; it is a property of those
@@ -65,6 +65,10 @@ the home-offer research workflow can query public property sources when invoked.
 | `wash-sale-policy` | Which securities are unbuyable, in which accounts — an IRA purchase deletes the loss outright |
 | `charitable-giving-strategy` | Give appreciated stock in kind, bunch into a DAF, or run a QCD — and which AGI limit binds |
 | `tax-planning` | Filed-return history plus current facts: prioritize tax-reduction candidates and expose liquidity, timing, eligibility, and future-tax tradeoffs |
+| `federal-tax-return` | Form 1040 workpaper: income, schedules triggered, credits, NIIT/additional Medicare/AMT, refund or balance due, safe harbor and next-year estimates, missing documents |
+| `ca-tax-return` | California Form 540 workpaper from federal AGI: Schedule CA differences (HSA, Treasury interest, no SALT cap, $1M mortgage), tax, Behavioral Health Services Tax, 30/40/0/30 estimates, single-member LLC $800 tax and fee |
+| `india-tax-return` | Indian ITR-2 workpaper: residential status from day counts, new vs old regime, capital gains and house property, TDS refund, and the Indian income and tax in USD for Form 1116 |
+| `llc-tax-return` | LLC workpaper by classification: Schedule C rows, Form 1065 or 1120-S with K-1s, basis and reasonable compensation, 1099-NEC, deadlines, and California Form 568 or 100S |
 | `aca-subsidy-optimization` | The pre-Medicare gap, the premium tax credit against MAGI as a share of FPL, and the taper as a marginal rate |
 | `medicare-enrollment-timing` | Which enrolment window applies, what a late Part B costs permanently, and the two-year IRMAA lookback |
 | `long-term-care-funding` | A multi-year care episode against investable assets, and whether the surviving spouse's retirement survives it |

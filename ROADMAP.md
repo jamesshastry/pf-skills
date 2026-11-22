@@ -66,6 +66,7 @@ answer.
 | 5e · History *(cross-cutting)* | `financial-history-review` | ✅ shipped |
 | 5f · Scenario planning *(cross-cutting)* | `financial-scenario-planner` · `job-loss-stress-test` · `windfall-deployment-planner` | ✅ shipped |
 | 5g · Tax planning *(cross-cutting)* | `tax-planning` | ✅ shipped |
+| 5h · Return preparation *(workpapers, not filings)* | `federal-tax-return` · `ca-tax-return` · `india-tax-return` · `llc-tax-return` | ✅ shipped |
 | 0 · Status *(cross-cutting)* | `citizenship-status-review` | ✅ shipped — closes `REVIEW.md` A1 |
 | 6 · Concentration | `employer-concentration-risk` · `equity-comp-review` | ✅ shipped |
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |

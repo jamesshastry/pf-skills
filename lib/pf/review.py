@@ -996,6 +996,146 @@ def _education_funding(data: dict) -> "Outcome":
 
 
 
+# federal-tax-return: mirrors run.py via _fed.compute; tier because a missed
+# safe harbor or balance due is real but the module prices no annual drag and
+# carries no deadline object.
+def _federal_tax_return(data: dict) -> "Outcome":
+    skill = "federal-tax-return"
+    from . import federal_return as _fed  # noqa: PLC0415
+    try:
+        r = _fed.compute(F._dig(data, "tax_return"))
+    except _fed.FederalReturnError as exc:
+        return act(skill, f"Federal return blocked: {exc}", TIER_OPTIMISE)
+    h = r.penalty_safe_harbor
+    if h.get("met") is False:
+        return act(skill, "Estimated payments miss the federal safe harbor: "
+                   f"{h['reason']}", TIER_OPTIMISE,
+                   detail=f"Required ${h['required_annual']:,.0f}; "
+                          f"paid ${h['paid']:,.0f}.")
+    if r.refund_or_due is None:
+        return act(skill, "Federal refund or balance due cannot be determined",
+                   TIER_OPTIMISE, detail=", ".join(r.missing))
+    if r.refund_or_due < 0:
+        ny = r.next_year_estimates
+        return act(skill, f"Federal balance due of ${-r.refund_or_due:,.0f}; set "
+                   f"{ny['tax_year']} estimates at ${ny['quarterly']:,.0f} per quarter",
+                   TIER_OPTIMISE, detail="; ".join(r.findings[:3]))
+    return ok(skill, f"Federal refund of ${r.refund_or_due:,.0f}; safe harbor met")
+
+
+# ca-tax-return: mirrors run.py (federal compute -> from_federal -> CA compute).
+# A household that is not a California resident files no Form 540, which is
+# a normal result rather than an action; a balance due or missing inputs is.
+def _ca_tax_return(data: dict) -> "Outcome":
+    skill = "ca-tax-return"
+    from . import ca_return as _ca  # noqa: PLC0415
+    tr = F._dig(data, "tax_return") or {}
+    if str(tr.get("state") or "").upper() != "CA":
+        return ok(skill, "No California resident return: tax_return.state is "
+                  f"{tr.get('state')!r}")
+    try:
+        from . import federal_return as _fr  # noqa: PLC0415
+        fr = _fr.compute(tr)
+        r = _ca.compute(tr, _ca.from_federal(fr))
+    except ValueError as exc:   # CAReturnError and FederalReturnError subclass it
+        return act(skill, f"California return blocked: {exc}", TIER_OPTIMISE)
+    # California starts from federal AGI, so a federal gap is a California gap.
+    gaps = ([f"(federal) {x}" for x in (getattr(fr, "missing", None) or [])]
+            + [f"(federal bound) {x}" for x in (getattr(fr, "bounds", None) or [])]
+            + list(r.missing))
+    if gaps:
+        return act(skill, f"California return incomplete: {len(gaps)} "
+                   "figure(s) missing or bounded", TIER_OPTIMISE,
+                   detail="; ".join(gaps[:5]))
+    if r.balance_due:
+        return act(skill, f"California balance due {_money(r.balance_due)} for "
+                   f"{r.tax_year}", TIER_OPTIMISE, detail="; ".join(r.findings[:3]))
+    return ok(skill, f"California refund {_money(r.refund)} for {r.tax_year}")
+
+
+# india-tax-return: mirrors run.py via _ind.compute; tier because an Indian
+# refund or payable is real money but the deadline is far and the report is a
+# workpaper, not a filing.
+def _india_tax_return(data: dict) -> "Outcome":
+    skill = "india-tax-return"
+    from . import india_return as _ind  # noqa: PLC0415
+    try:
+        r = _ind.compute(F._dig(data, "india_tax_return"),
+                         members=F._dig(data, "household.members") or [])
+    except _ind.IndiaReturnError as exc:
+        return act(skill, f"Indian return blocked: {exc}", TIER_OPTIMISE)
+    bal = r.credits.balance
+    if bal is not None and bal > 0:
+        return act(skill, f"Indian tax payable of ₹{bal:,.0f} for FY "
+                   f"{r.financial_year}; file by {r.filing.due_date}",
+                   TIER_OPTIMISE, detail="; ".join(r.findings[:2]))
+    if bal is not None and bal < 0:
+        return act(skill, f"Indian refund of ₹{-bal:,.0f} for FY "
+                   f"{r.financial_year} — claimable only by filing, due "
+                   f"{r.filing.due_date}", TIER_OPTIMISE,
+                   detail="; ".join(r.findings[:2]))
+    if bal is None:
+        unknown = ", ".join(r.credits.tds_unknown)
+        return act(skill, f"Indian return for FY {r.financial_year}: balance cannot "
+                   f"be determined (not recorded: {unknown})"
+                   + (f"; filing is mandatory by {r.filing.due_date}"
+                      if r.filing.mandatory else ""),
+                   TIER_OPTIMISE, detail="; ".join(r.findings[:2]))
+    if r.filing.mandatory:
+        return act(skill, f"Indian return for FY {r.financial_year} must be filed by "
+                   f"{r.filing.due_date}", TIER_OPTIMISE,
+                   detail="; ".join(r.filing.reasons))
+    out = Outcome(skill=skill, status="ok", headline=r.findings[0])
+    for f in r.findings[1:]:
+        out.findings.append(f)
+    return out
+
+
+# llc-tax-return: mirrors run.py (one _llc.compute per llc_returns entry).
+# Tier because an entity return is a filing obligation with penalties, but
+# the deadlines are dated in the report rather than here.
+def _llc_tax_return(data: dict) -> "Outcome":
+    skill = "llc-tax-return"
+    from . import llc_return as _llc  # noqa: PLC0415
+    year = F._dig(data, "tax_return.tax_year")
+    llcs = F._dig(data, "llc_returns") or []
+    if not isinstance(llcs, list):
+        return act(skill, "LLC returns blocked: llc_returns must be a list of LLCs",
+                   TIER_OPTIMISE)
+    members = F._dig(data, "household.members") or []
+    p = [x.get("id") for x in members if x.get("role") == "primary"]
+    sp = [x.get("id") for x in members if x.get("role") == "spouse"]
+    spouses = (p[0], sp[0]) if p and sp else None
+    hh_state = F._dig(data, "meta.jurisdiction.state")
+    issues: list[str] = []
+    for i, llc in enumerate(llcs):
+        name = (llc.get("name") if isinstance(llc, dict) else None) or f"#{i}"
+        try:
+            r = _llc.compute(llc, tax_year=year, spouses=spouses,
+                             household_state=hh_state)
+        except ValueError as exc:   # LLCReturnError subclasses it
+            issues.append(f"{name} blocked: {exc}")
+            continue
+        if r.reasonable_comp and r.reasonable_comp["status"] != "no flag":
+            issues.append(f"{name}: officer wages need a reasonable-compensation "
+                          f"{r.reasonable_comp['status']}")
+        if r.nec["backup_withholding"]:
+            issues.append(f"{name}: payees without a W-9 — "
+                          f"{_money(r.nec['backup_withholding'])} of backup "
+                          "withholding exposure")
+        if r.ca and r.ca.get("fee_penalty"):
+            issues.append(f"{name}: California LLC fee estimate short — "
+                          f"{_money(r.ca['fee_penalty'])} penalty")
+        suspended = sum(b["suspended"] or 0 for b in r.basis)
+        if suspended:
+            issues.append(f"{name}: {_money(suspended)} of loss suspended for lack "
+                          "of basis")
+    if not issues:
+        return ok(skill, f"{len(llcs)} LLC workpaper(s) for {year}: nothing to act on")
+    return act(skill, f"LLC returns for {year}: {issues[0]}", TIER_OPTIMISE,
+               detail="; ".join(issues[1:4]))
+
+
 # student-aid-index: mirrors run.py via _aid.household; tier because a wrong
 # belief about aid drives housing and savings timing but prices no dollars.
 def _student_aid_index(data: dict) -> "Outcome":
@@ -2921,6 +3061,10 @@ ADAPTERS: dict[str, Callable[[dict], Outcome]] = {
     "divorce-asset-split": _divorce_asset_split,
     "education-funding": _education_funding,
     "student-aid-index": _student_aid_index,
+    "federal-tax-return": _federal_tax_return,
+    "ca-tax-return": _ca_tax_return,
+    "india-tax-return": _india_tax_return,
+    "llc-tax-return": _llc_tax_return,
     "emergency-fund-sizing": _emergency_fund_sizing,
     "employer-concentration-risk": _employer_concentration_risk,
     "employer-match-audit": _employer_match_audit,

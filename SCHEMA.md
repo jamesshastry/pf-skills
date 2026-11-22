@@ -1014,6 +1014,507 @@ U.S. citizen or eligible noncitizen) — listed, not computed.
 
 ---
 
+## `tax_return`
+
+Required by `federal-tax-return` (and read by `ca-tax-return`). One tax year's
+return inputs, transcribed from the source documents. Figures are nominal
+dollars of `tax_year`.
+
+```yaml
+tax_return:
+  tax_year: 2026
+  filing_status: mfj            # single | mfj | mfs | hoh | qss
+  state: TX                     # state of residence for the year
+  residency: resident           # optional; nonresident / dual_status stop the skill
+  taxpayers:                    # one entry (two for mfj); age on Dec 31
+    - { member: a1, age: 41, blind: false, covered_by_workplace_plan: true }
+    - { member: a2, age: 39, blind: false }
+  dependents:                   # age on Dec 31; months lived with you
+    - { member: c1, age: 8, months_lived: 12, student: false }
+    # optional per dependent: ssn: false (no CTC), unearned_income (flags Form 8615),
+    # born_or_died_in_year: true with months_alive (residency test)
+  spouse_itemizes: null         # MFS only: true forces itemizing (§63(c)(6)(A))
+  w2:
+    - { employer: Northwind, owner: a1, wages: 155500, federal_withheld: 21500,
+        ss_wages: 180000, ss_withheld: 11160, medicare_wages: 180000,
+        medicare_withheld: 2610, state: TX, state_wages: 0, state_withheld: 0,
+        sdi_withheld: 0, supplemental_wages: 47300,
+        box12: { D: 24500, W: 1500, DD: 18000, AA: 0 } }
+  interest:                     # amount = 1099-INT box 1 (excludes box 3)
+    - { payer: Bank, amount: 1200, us_treasury: 0, tax_exempt: 0 }
+  dividends:
+    - { payer: Brokerage, ordinary: 1900, qualified: 1500,
+        capital_gain_distributions: 300, foreign_tax_paid: 45 }
+    # optional: foreign_source_income (needed for Form 1116 when it applies)
+  capital_transactions:
+    - { description: lot, proceeds: 6000, basis: 9000, term: long,
+        wash_sale_disallowed: 0, basis_reported: true }
+  capital_loss_carryover: { short: 1500, long: 0 }    # from last year's worksheet
+  schedule_c:
+    - { owner: a2, business: Design, gross_receipts: 265000,
+        expenses: { supplies: 14000, other: 9200 },  # any category names
+        vehicle: 3800, home_office: 2400, home_office_method: regular,
+        sstb: false, w2_wages: 0, ubia: 18000 }
+  qbi_loss_carryforward: 0      # optional; prior-year qualified business loss
+  k1:                           # optional; partnership / S-corp K-1s (llc-tax-return)
+    - { entity: Example LLC, form: "1065", owner: a2,   # form: "1065" | "1120S"
+        ordinary_business_income: 40000, guaranteed_payments: 12000,
+        se_earnings: 52000, interest: 300, dividends: 0, distributions: 25000,
+        qbi_income: 40000, qbi_w2_wages: 0, qbi_ubia: 6000, sstb: false,
+        material_participation: true }
+  hsa: { owner: a1, contributions_personal: 8000, employer_contributions: 1500,
+         coverage: family, eligible_months: 12, distributions: 1200,
+         qualified_expenses: 1200 }
+  ira:
+    - { owner: a1, traditional_contributions: 7500, deductible: false,
+        nondeductible_basis_prior: 0, conversions_to_roth: 7500,
+        year_end_traditional_balance: 0 }
+  itemized: { medical: 2500, property_tax: 0, other_state_local_taxes: 0,
+              mortgage_interest: 0, mortgage_balance: null,
+              charitable_cash: 9000, charitable_noncash: 0 }
+  state_income_tax_paid: 0      # null = W-2 state withholding + state estimates
+  foreign:                      # foreign-source passive income NOT on a U.S. 1099, USD
+    country: IN
+    accounts: true              # foreign financial accounts held -> Schedule B Part III
+    interest: 5179              # incl. NRE/FCNR (exempt in India, U.S.-taxable) -> line 2b
+    dividends: 0                # -> line 3b
+    qualified_dividends: 0      # part of dividends -> line 3a
+    capital_transactions:       # same shape as capital_transactions -> Schedule D
+      - { description: plot, proceeds: 104046, basis: 58960, term: long }
+    rent: 0                     # non-zero is refused (Schedule E)
+    foreign_tax_paid: { passive: 3645, general: 0 }   # general non-zero is refused
+    reported_on_1099: false
+    category: passive
+  estimated_payments: { federal: [9000, 9000, 9000, 9000], state: [0, 0, 0, 0],
+                        applied_from_prior_year: 0 }
+  prior_year: { agi: 172000, federal_total_tax: 26000, state_total_tax: 0 }
+    # optional, for a state/local refund received this year (1099-G):
+    # state_refund_received, itemized_prior, itemized_deduction_prior,
+    # standard_deduction_prior, salt_paid_prior, salt_deducted_prior
+  social_security_benefits:     # optional; one SSA-1099 per recipient
+    - { recipient: a1, net_benefits: 0, federal_withheld: 0 }   # boxes 5 and 6
+  mfs_lived_apart_all_year: null   # required only for MFS with benefits
+```
+
+### Absent, zero and `null` mean three different things
+
+| Written | Read as |
+|---|---|
+| A list or field left out | none on file (no 1099-INT, no Schedule C) |
+| `0` | checked, and zero |
+| `null` | **nobody looked** — listed in the report's *Not recorded* section |
+
+A `null` that determines tax — W-2 `wages`, a transaction's `proceeds` or
+`basis`, any Schedule C amount, `nondeductible_basis_prior`,
+`year_end_traditional_balance` when converting, `qbi_loss_carryforward`, or a
+whole `capital_loss_carryover`, `hsa` or `foreign` section — **stops** the
+report. A `null` deduction (an `itemized` amount or the whole `itemized`
+section, `hsa.coverage`, a W-2 or K-1 `owner` needed for SE tax,
+`covered_by_workplace_plan`, `dependents`) is left out and the result is
+labelled an upper bound on tax. A `null` withholding, estimate or
+`estimated_payments` section leaves the refund undetermined. A list or section
+set to `null` (`interest: null`) is unknown, not empty. Wrong-shaped input
+(text where a number belongs, a scalar where a list belongs) stops with a
+message, never a traceback.
+
+### Fields that carry a rule
+
+- **`owner`** on W-2s is needed on a joint return with Schedule C income: the
+  Social Security wage base is per person, so the owner's W-2 SS wages reduce
+  the SE-tax base. It also attributes excess SS withholding across two
+  employers. With one taxpayer it defaults to that person.
+- **`supplemental_wages`** (or `rsu_income`) is the part of box 1 withheld at
+  the 22% flat rate — bonus and RSU vesting. Used only to explain a balance due.
+- **`box12`**: `D`/`AA` are checked against the elective-deferral limit; `W`
+  is used for HSA employer contributions when `hsa.employer_contributions` is
+  `null`.
+- **`wash_sale_disallowed`** is the 1099-B code-W amount; it is added back to
+  the gain.
+- **`home_office_method: simplified`** loses any excess over the business's
+  income; `regular` (Form 8829) carries it forward.
+- **`sstb`, `w2_wages`, `ubia`** are needed only when taxable income is above
+  the §199A threshold; above it without them the skill refuses.
+- **`k1`** takes partnership (`form: "1065"`) and S-corporation (`"1120S"`)
+  K-1s for an owner who **materially participates**:
+  - `ordinary_business_income` (box 1, may be negative) plus
+    `guaranteed_payments` (1065 box 4) go to Schedule E part II and Schedule 1.
+    A loss is allowed on the assumption that basis and at-risk amounts cover
+    it — the entity skill must confirm that.
+  - `interest` and `dividends` join Form 1040 lines 2b and 3b. K-1 dividends
+    are taxed as ordinary, because the entry does not split out qualified
+    dividends.
+  - `se_earnings` (1065 box 14 code A) feeds Schedule SE with the same per-owner
+    wage-base netting as Schedule C, so `owner` matters on a joint return. A
+    missing owner leaves SE tax as an upper bound. S-corporation income gets no
+    SE tax, and guaranteed payments on an 1120S stop the report (shareholder pay
+    is W-2 wages).
+  - `qbi_income`, `qbi_w2_wages`, `qbi_ubia` and `sstb` (box 20 code Z / box
+    17 code V) feed the §199A computation. The wage/UBIA limit applies above
+    the threshold, where a missing one stops the report. QBI is reduced by the
+    half SE tax attributable to the ordinary income, but not to guaranteed
+    payments.
+  - `distributions` are informational only. Whether a distribution exceeds
+    basis is the entity skill's question, not this return's.
+  - `material_participation: false` (passive) stops the report and points to
+    `passive-loss-eligibility`; `null` stops as unknown. Any other key —
+    rental income, §179, other box codes — stops it. So does a form other than
+    1065/1120S (a trust K-1).
+  - A `null` amount that determines tax stops the report.
+  - K-1 ordinary losses count with Schedule C toward the excess business loss
+    threshold, and exceeding it stops the report.
+- **`deductible: true`** on an IRA contribution is tested against the §219(g)
+  phase-out using `taxpayers[].covered_by_workplace_plan` for the owner and,
+  on a joint return, the spouse. W-2 box 12 `D`/`AA` deferrals count as
+  coverage. Unknown coverage is listed, no deduction is taken (an upper bound
+  on tax) and the contribution becomes Form 8606 basis. MAGI for the test
+  excludes the Roth conversion (Pub. 590-A).
+- **`ira`** entries are **aggregated per owner**, because Form 8606 works per
+  person, not per account. List one entry per account. Give
+  `nondeductible_basis_prior` (last year's 8606 line 14) on **one** entry only;
+  more than one stops the report. When an owner converts,
+  `year_end_traditional_balance` is required on every entry for that owner,
+  and they are summed (8606 line 6). Non-conversion `distributions` are
+  refused.
+- **`hsa.owner`** is the account holder. Self-only coverage gets the age-55
+  catch-up only for the owner. Family coverage gets one for each spouse aged
+  55+, and each must go into that spouse's own HSA. The 20% additional tax
+  depends on the owner's age (§223(f)(4)(C)). `eligible_months` prorates the
+  limit; the last-month rule is not modelled.
+- **`born_or_died_in_year: true`** with `months_alive` applies the residency
+  test against the months the child was alive.
+- **Charitable gifts** are limited to 60% of AGI (cash) and 30% (non-cash,
+  treated as capital-gain property), with 50% overall. The excess carries
+  forward five years (`carryforwards.charitable`). Itemizing is chosen only
+  when it beats the standard deduction **plus** the §170(p) amount.
+- **1099-DIV** keys `section_199a_dividends`, `unrecaptured_1250`,
+  `collectibles_gain`, `section_1202_gain` stop the report if non-zero.
+- **`state_income_tax_paid`** is the state income tax deductible on Schedule A
+  for the calendar year (withholding, estimates, and a prior-year balance paid
+  this year). `sdi_withheld` is added as a state income tax.
+- **`foreign`** is foreign-source passive income *not* already on a 1099, in
+  USD for the U.S. calendar year on U.S. rules (the `india-tax-return` U.S.
+  hand-off emits these names). Each part is routed to its real line:
+  - `interest` goes to line 2b and includes NRE/FCNR interest.
+  - `dividends` and `qualified_dividends` go to lines 3b and 3a.
+  - `capital_transactions` go through Schedule D at 0/15/20%; a row marked
+    `pfic: true` is refused.
+  Schedule B Part III is triggered whenever a `country`, `accounts` or any
+  foreign income is present. A non-zero `rent` is refused (Schedule E,
+  depreciation, Form 8582 — `passive-loss-eligibility`), as is general-category
+  tax (`feie-vs-ftc`), any other non-zero key, and the old single `income`
+  total (it cannot be routed). The Form 1116 limit uses the routed
+  foreign-source income less a ratable share of the deductions, with the
+  capital-gain rate adjustment at the household's effective preferential
+  rate. `reported_on_1099: true` allows the simplified (no Form 1116) election.
+- **`social_security_benefits`** feed the Form 1040 Social Security Benefits
+  Worksheet (§86): up to 50% taxable above the base amount ($25,000; $32,000
+  joint) and up to 85% above the adjusted base ($34,000; $44,000 joint). On a
+  married-filing-separately return `mfs_lived_apart_all_year` decides the base
+  (living together at any time makes both zero) and a `null` stops the report.
+  Box 6 withholding counts as a payment. A deductible IRA contribution alongside
+  benefits stops the report (the Pub. 590-A worksheet is circular). Negative net
+  benefits (a repayment) are flagged, not computed. The result is
+  `taxable_social_security`.
+- **`prior_year.state_refund_received`** is a state or local income tax refund
+  received this year. It is taxable only to the extent last year's deduction
+  saved tax (tax-benefit rule, Pub. 525). The taxable amount is the least of:
+  the refund; `itemized_deduction_prior` minus `standard_deduction_prior`; and
+  `salt_deducted_prior` minus (`salt_paid_prior` minus the refund), which is
+  where the SALT cap usually makes it zero. `itemized_prior: false` makes it
+  zero. A missing `state_refund_received` means none was received. A `null`
+  refund stops the report, and so does a refund received with
+  `itemized_prior` or, when itemized, any of the four amounts unknown. The
+  result is `state_refund_taxable` (Schedule 1 line 1).
+- **`prior_year`** drives the penalty safe harbor. `agi` above $150,000
+  ($75,000 MFS) makes it 110% of `federal_total_tax`.
+
+### Out of scope — the skill stops with a pointer
+
+`rental_properties`, `schedule_e` (Schedule E part I) (→ `passive-loss-eligibility`);
+`schedule_k1` (→ use `k1`; passive and trust K-1s are not modelled),
+a `k1` entry that is passive, carries rental, §179 or other codes, or is not
+a 1065/1120S;
+`depreciation` (→ `depreciation-election`), `pfic` (→ `pfic-divest-or-comply`),
+`iso_exercises`, `amt_preferences`, `residency: nonresident | dual_status`, a
+capital transaction marked `collectible` or `section_1250`.
+
+---
+
+### `tax_return.ca` — optional, read by `ca-tax-return`
+
+`ca-tax-return` reads the shared `tax_return` block (see above) through the
+federal return, then these California-only fields. Every field is optional.
+**Absent** means "none" for amounts the household would know they had, such as
+LLCs, credits and other withholding. **`null`** means "nobody looked". It is
+listed under *Missing documents* along with which way it biases the result.
+
+```yaml
+tax_return:
+  interest:
+    - { payer: State muni fund, amount: 0, us_treasury: 0, tax_exempt: 400,
+        ca_exempt: false }          # required when tax_exempt > 0
+  ca:
+    residency: resident              # part_year / nonresident are refused (540NR)
+    renter: true                     # paid rent on a CA principal residence ≥ 6 months
+    hsa_earnings: 85                 # HSA interest, dividends, gains for the year
+    prior_year_ca_agi: 171000        # prior Form 540 line 17
+    next_year_agi_estimate: null     # next year's CA AGI, if known ($1M rule)
+    us_obligation_dividends: 0       # fund dividends from U.S. obligations (CA-exempt)
+    home_equity_interest: 0          # allowable CA home-equity interest ($100K debt)
+    foreign_real_property_tax: 0     # deductible in CA, not federally
+    use_tax: 0                       # Form 540 line 91
+    full_year_health_coverage: true  # Form 540 line 92
+    spouse_itemizes: null            # MFS only; overrides tax_return.spouse_itemizes
+    amt_preferences: false           # ISO exercise or other Schedule P items
+    depreciation_adjustment: null    # FTB 3885A difference; + adds, − subtracts
+    ca_capital_loss_carryover: null  # {short, long}; null = same as federal
+    miscellaneous_itemized: 0        # 2%-floor miscellaneous, before the floor
+    nonrefundable_credits: []        # [{name, amount, carryover}] computed elsewhere
+    other_ca_withholding: 0          # 1099 CA withholding
+    withholding_592b_593: 0
+    prior_year_overpayment_applied: 0
+    extension_payment: 0
+    other_taxes: 0                   # Form 540 line 63
+    other_adjustments: []            # [{line, description, amount}]
+    llc:
+      - { name: Example LLC, gross_receipts_total_income: 310000,
+          formed_year: 2019, formed_on: null }
+```
+
+| Field | Effect |
+|---|---|
+| `interest[].ca_exempt` | `tax_exempt` is the box 8 dollar amount, as in the shared block. With `ca_exempt: false` that amount is added as CA income; `null` on a row with `tax_exempt > 0` is missing |
+| `hsa.employer_contributions` | Added back (Schedule CA line 1h) when no W-2 records box 12 W. If both are absent while an `hsa` block exists, it is missing |
+| `prior_year.state_total_tax` | Prior Form 540 lines 48 + 61 + 62 (tax after credits, AMT, BHST), the 540-ES safe-harbor base |
+| `next_year_agi_estimate` | At $1M or more ($500K MFS), no prior-year safe harbor next year, so no schedule is printed. When absent, the schedule is printed on that condition |
+| `nonrefundable_credits[].carryover` | `false` orders the credit with the renter's credit, before credits that carry over (R&TC §17039). Default: carries over |
+| `hsa_earnings` | Schedule CA addition. Required once any HSA activity exists, because CA taxes HSA earnings every year |
+| `prior_year_ca_agi` | Picks 100% or 110% for the prior-year safe harbor. Falls back to `prior_year.agi`, with a flag |
+| `depreciation_adjustment` | Required when a `schedule_c` claims `depreciation`, `section_179` or `bonus_depreciation`. CA allows no bonus depreciation |
+| `ca_capital_loss_carryover` | When set, CA capital gain or loss is recomputed from `capital_transactions` with this carryover. The difference from federal becomes a Schedule CA line 7 entry |
+| `llc[]` | Disregarded single-member LLCs only. `gross_receipts_total_income` is Form 568 line 1 and sets the fee. Tax-year formation needs `formed_on` to date the first $800 |
+| `renter` | `null` with AGI under the limit means the credit is not claimed, and the report says so |
+
+`itemized` is read as for the federal return, with two CA rules. A key that is
+absent counts as zero. A key that is `null` makes itemized unknown, so the
+standard deduction is used and the tax becomes an upper bound. `medical` should
+exclude anything paid from an HSA; the skill adds back qualified HSA
+distributions itself. `other_state_local_taxes` must exclude state income tax,
+SDI and sales tax, none of which CA allows.
+
+**Refused** (the skill stops and names the form that applies):
+
+- `state` other than CA
+- `ca.residency` part-year or nonresident
+- `ca.other_state_tax_paid > 0`, or a non-CA W-2 with state withholding
+- `ca.ftb3800` / `ca.ftb3803`
+- `rental`, `schedule_e`, `k1` or `passive` present
+- a taxpayer with `can_be_claimed_as_dependent: true`
+- `ca.rdp: true`
+
+---
+
+## `india_tax_return` — required by `india-tax-return`
+
+One Indian financial year (1 April – 31 March), all amounts in **INR**
+regardless of `meta.currency`. The rate is used only for the U.S. hand-off.
+
+```yaml
+india_tax_return:
+  financial_year: 2025-26            # tables keyed by this; unpublished -> nearest, flagged
+  taxpayer:
+    member: a1                       # household.members id; citizenship read from there
+    person_of_indian_origin: true    # decides the 182/120-day visitor rule
+    indian_citizen: null             # optional override; else "IN" in member citizenship
+    birth_date: null                 # optional; else member birth_year (age band)
+    days_in_india_this_fy: 40        # required
+    days_in_india_prior_4_fy: 300    # needed when this year is 60-181 days
+    days_in_india_prior_7_fy: 520    # needed if resident (RNOR test)
+    nri_years_in_prior_10: 10        # needed if resident (RNOR test)
+    liable_to_tax_elsewhere: true    # needed for an Indian citizen with Indian income > ₹15 lakh
+    visiting_india: true             # default true
+    left_india_for_employment_this_fy: false
+    fema_resident_outside_india: true  # decides NRE exemption (s.10(4)(ii)); required if resident and NRE interest exists
+  regime: null                       # null = compare and recommend; new | old to force
+  usd_inr_rate: 86.5                 # INR per USD — supplied, never fetched (required)
+  usd_inr_rate_basis: "IRS yearly average"   # stated in the report
+  expected_filing_date: 2026-07-20   # optional; drives s.234A/B, s.234F and the regime (after the due date: new only). Default: due date
+  interest:
+    - { account: NRO savings, kind: nro_savings, amount_inr: 18000, tds_inr: 5616 }
+    # kind: nro_savings | nro_fd | nre_savings | nre_fd | fcnr | other
+  house_property:
+    - { name: Pune flat, status: let_out, gross_rent_inr: 360000,
+        municipal_tax_paid_inr: 12000, home_loan_interest_inr: 0, tds_inr: 0,
+        co_owner_share: 1.0 }
+    # status: let_out (gross_rent_inr) | deemed_let_out (expected_rent_inr) | self_occupied
+    # amounts are for the whole property; co_owner_share scales them; tds_inr is yours
+  capital_gains:
+    - { name: listed shares, asset: listed_equity, acquired: 2019-05-10,
+        sold: 2025-09-15, sale_inr: 1200000, cost_inr: 800000,
+        transfer_expenses_inr: 0, stt_paid: true, tds_inr: 34375 }
+    # asset: listed_equity | equity_mf | debt_mf | property | unlisted | gold
+    # stt_paid is required for listed_equity / equity_mf (null stops; never assumed true)
+    # sold must fall inside the financial year
+    # property only: residential (needed for s.54), exemption_54_inr, exemption_54ec_inr
+    # (s.54EC: ₹50 lakh per year across all sales)
+    # optional, for the U.S. hand-off only: us_proceeds_usd, us_basis_usd
+    # (U.S. basis uses the purchase-date rate; without it basis is emitted as null)
+  insurance_maturities:
+    - { policy: growth ULIP, kind: ulip, issued: 2021-03-01, matured: 2026-03-01,
+        equity_oriented: true, annual_premium_inr: 300000, sum_assured_inr: 3000000,
+        maturity_inr: 1750000, total_premiums_inr: 1500000, tds_inr: 0 }
+    # kind: ulip | endowment | money_back; on_death: true -> always exempt
+    # a ULIP is a capital gain (s.45(1B)) only when it fails the ₹2.5 lakh test;
+    # failing the premium-to-sum-assured test makes it other income, floored at nil
+  dividends:
+    - { payer: XYZ Ltd, amount_inr: 0, tds_inr: 0 }
+  deductions_old_regime: { 80c_inr: 150000, 80d_inr: 25000, other_inr: 0 }
+  advance_tax_paid_inr: 0            # null -> balance "cannot be determined"
+  advance_tax_instalments: null      # [{number: 1-4, amount_inr}] — needed for s.234C if advance tax > 0
+  self_assessment_tax_paid_inr: 0    # null -> balance "cannot be determined"
+  brought_forward_losses: { house_property_inr: 0, stcl_inr: 0, ltcl_inr: 0 }  # absent -> tax is an upper bound
+```
+
+**Status is computed, never entered.** Indian income for the ₹15 lakh tests is
+the return's own total income with NRE/FCNR interest exempt.
+
+**s.80TTA/80TTB are computed**, not entered: s.80TTA from `nro_savings`
+interest; s.80TTB (resident seniors) from all taxable deposit interest.
+
+**Loss set-off is chosen to minimise tax** within ss.70/71/74 (intra-head
+first, then house property across heads, then brought-forward losses). The
+freedom to choose the order rests on tribunal rulings and the report says so.
+
+**Filing after the due date** (`expected_filing_date`) locks the return into
+the new regime (s.115BAC(6)), adds s.234A interest and the s.234F fee, and stops
+this year's capital losses carrying forward (s.80).
+
+**Unknown is not zero.** A `null` amount, sale, cost, date, premium or sum
+assured stops the report and lists every such field. A `null` `tds_inr`,
+`advance_tax_paid_inr` or `self_assessment_tax_paid_inr` does not stop it: the
+tax is computed and the refund or balance is reported as "cannot be
+determined". Unknown Indian citizenship stops it when citizenship decides the
+status (deemed residence, the employment-leaver rule). A required prior-year day count that is `null` stops the report
+only when it decides the status.
+
+**Stops rather than guesses** when: more than two homes are `self_occupied`;
+s.54 is claimed on a sale not marked `residential: true`; a ULIP outside
+s.10(10D) lacks `matured` or `equity_oriented`; a `kind`/`asset`/`status` is not
+in the lists above; `usd_inr_rate` is not positive; a sale or maturity date
+falls outside the financial year; a day count is out of range; an advance-tax
+instalment is malformed; the financial year predates the shipped tables.
+
+**Refused** (top-level keys under `india_tax_return`): `business_income`,
+`salary`, `vda`, `crypto`, `clubbing`, `foreign_income`; s.54F/54B claims on a
+capital-gains row. `agricultural_income_inr` is flagged, not computed.
+
+**U.S. hand-off.** The report emits a `tax_return.foreign` block in the
+shape `federal-tax-return` reads: `interest` (NRE/FCNR included — India-exempt
+is still U.S.-taxable), `dividends`, `qualified_dividends` (`null` when there
+are dividends — holding period not recorded), `capital_transactions` (listed
+shares, property, unlisted shares, gold; U.S. term by >1-year holding;
+`basis: null` unless `us_basis_usd` is recorded), `rent` (gross — the federal
+skill refuses it and points to `passive-loss-eligibility`) and
+`foreign_tax_paid: {passive, general: 0}` (Indian tax finally borne). Indian
+fund units (PFICs) and insurance maturities are left out and listed. Amounts
+use the one supplied rate and cover the Indian financial year; re-split to the
+U.S. calendar year before using them.
+
+---
+
+## `llc_returns` — required by `llc-tax-return`
+
+One entry per LLC, for the year in `tax_return.tax_year`. Figures are the
+LLC's own books for that year, in nominal dollars; a calendar tax year is
+assumed.
+
+```yaml
+llc_returns:
+  - name: Example Studio LLC
+    state: CA                       # state of organization / registration
+    classification: partnership     # disregarded | partnership | s_corp
+    s_election_effective: null      # required for s_corp (Form 2553 date)
+    formed_on: 2026-02-10
+    owners:                         # shares sum to 1; member = household id or a label
+      - { member: a1, share: 0.4, active: false, material_participation: false }
+      - { member: m3, share: 0.6, active: true, material_participation: true }
+      # spouses' disregarded LLC only: se_share splits the Schedule C (default share)
+    accounting_method: cash         # cash | accrual
+    gross_receipts: 310000
+    returns_and_allowances: 4000
+    cost_of_goods_sold: 0           # one figure; inventory detail is refused
+    other_income: 0
+    interest_income: 0              # optional; separately stated on the K-1
+    dividend_income: 0              # optional
+    expenses: { rent: 36000, supplies: 12000, software: 18000 }   # category: amount
+    meals: 3000                     # before the 50% limit
+    home_office: { method: actual, amount: 2400 }   # or { method: simplified, sq_ft: 200 }
+    vehicle: { method: standard, business_miles: [4000, 5000] }   # or { method: actual, amount: 3800 }
+    startup_costs: { incurred: 54000, business_began: 2026-03-01 }
+    organizational_costs: 4000
+    depreciation: 22000             # the amount from depreciation-election
+    sstb: false                     # §199A items passed to the owners
+    ubia: 40000
+    contractors:
+      - { name: Dana Wu, amount: 24000, w9_on_file: false, entity_type: individual }
+      # entity_type: individual | sole_proprietor | partnership | llc |
+      #              corporation | s_corp | c_corp; attorney: true always reports
+      # paid_via: card | third_party_network → Form 1099-K, not 1099-NEC
+    guaranteed_payments: [ { member: m3, amount: 180000 } ]   # partnership only
+    officer_wages:                                            # s_corp only
+      - { member: a2, amount: 30000, federal_withheld: 3000, ss_withheld: 1860,
+          medicare_withheld: 435 }
+    payroll_taxes_employer: 2337    # s_corp only: employer FICA + FUTA + state
+    reasonable_salary_floor: null   # s_corp, optional: ASSERTED comparable pay
+    distributions: [ { member: m3, amount: 10000 } ]
+    owner_basis_start: [ { member: a1, amount: 8000 } ]   # optional; outside / stock+debt basis
+    contributions: [ { member: a1, amount: 0 } ]          # optional; capital put in this year
+    prior_year_results: [ { year: 2025, net: -4000 } ]    # optional; §183 test
+    estimated_payments: [800, 0, 0, 0]   # California entity payments, by slot
+    prior_year_fee: null            # CA: last year's LLC fee (penalty safe harbor)
+    did_business_in_short_year: null   # CA: first year of 15 days or less only
+```
+
+| Field | Effect |
+|---|---|
+| `classification` | Decides the return: Schedule C figures (no entity return), Form 1065, or Form 1120-S. A two-owner `disregarded` LLC is accepted only for spouses in a community property state (Rev. Proc. 2002-69, read from `household.members` roles and `meta.jurisdiction.state`); a one-owner partnership is an error. `c_corp` is refused |
+| `owners[].active` | General vs limited partner for SE (§1402(a)(13)). Partnership: decides box 14A (share of income plus guaranteed payments when `true`, guaranteed payments only when `false`) and box 19 code F (partner providing services, 2025 instructions) or A; `null` is listed. S corp: `false` exempts the owner from the reasonable-compensation check |
+| `owners[].material_participation` | §469 material participation, passed to `tax_return.k1[]`. Separate from `active`: a limited member can still materially participate. `null` is listed, and `federal-tax-return` stops on it; `false` sends the K-1 to `passive-loss-eligibility` |
+| `owners[].se_share` | Spouses' disregarded LLC (Rev. Proc. 2002-69) only: splits the Schedule C between them (§1402(a)(5)(A)); defaults to `share`. Must sum to 1 |
+| `expenses` | Any category names. Known names map to their line (advertising, commissions_and_fees, contract_labor, employee_benefit_programs, insurance, mortgage_interest, interest, legal_and_professional, office_expense, retirement_plans, rent_vehicles_equipment, rent, repairs, supplies, taxes_and_licenses, travel, utilities, wages, bad_debts); others are other expenses / other deductions |
+| `vehicle.business_miles` | A number, or a list with one entry per rate period when the IRS changed the rate mid-year (2026: Jan–Jun, Jul–Dec). One total in a split year uses the lower rate and says the deduction is a lower bound |
+| `startup_costs.business_began` | The month amortization starts, and the month organizational costs start too. Before the tax year ends nothing is deductible |
+| `depreciation` | A number. Asset detail (a list or mapping) is refused with a pointer to `depreciation-election`. `null` is listed and net income becomes an upper bound |
+| `contractors` | 1099-NEC at or above the year's threshold ($600 for 2025 payments, $2,000 from 2026), except corporations unless `attorney: true`, and except `paid_via: card` / `third_party_network` (Form 1099-K). `w9_on_file: false` → 24% backup withholding flag; absent or `null` → listed and bounded. `null` list = cannot be determined |
+| `officer_wages[]` | `ss_withheld` and `medicare_withheld` feed the W-2 hand-off in `federal-tax-return`'s field names (`ss_wages` = wages up to the wage base, `medicare_wages` = wages). Absent withholding is unknown, not zero |
+| `contributions` | Increase basis before distributions; with nondeductible expenses (the disallowed half of meals, K-1 18C / 16C) decreasing it before losses (Reg. §1.1367-1(f)) |
+| `prior_year_fee` | No 10% fee-estimate penalty if the timely estimate is at least last year's fee (Form 568 booklet, General Information G). Absent after the first year: the penalty is an upper bound |
+| `did_business_in_short_year` | A first taxable year of 15 days or less with no California business owes no return, $800 or fee (R&TC §17946). `null` keeps the $800 as an upper bound |
+| `owner_basis_start` | Partnership outside basis (including share of liabilities) or S-corp stock plus debt basis at the start of the year. Missing or `null` makes the loss and distribution checks bounded |
+| `estimated_payments` | California payments by slot. Form 568: slot 1 is the $800 (FTB 3522), slot 2 the timely LLC fee estimate (FTB 3536, due the 15th day of the 6th month of the LLC's taxable year — counted from formation in the first year, and not due at all if that year ends first); the 10% penalty is tested against slot 2. Form 100S: the four 100-ES installments (required cumulatively 30/70/70/100%, the first at least $800; a tax of $800 or less is all due with the first). `null` leaves the balance undetermined |
+
+**Absent, zero and `null`.** As for `tax_return`: absent is none, `0` is
+checked and zero, `null` is nobody looked. A `null` that determines income
+(receipts, COGS, an expense, `meals`, guaranteed payments, officer wages,
+`payroll_taxes_employer`) stops that LLC; other `null`s are listed and bound
+the affected check.
+
+**Refused** (that LLC stops with a pointer): `rental`, `rental_properties`,
+`real_estate` or `activity: rental`; `assets`, `section_179` or asset-level
+`depreciation`; `inventory`; `apportionment`, `other_states`;
+`special_allocations`, `section_754`, `section_704c`; `payroll_filings`;
+`withholding_1446` or an owner with `foreign: true`; an entity owner of an S
+corporation; an S election effective after the first day of the year.
+
+**Hand-off.** The report prints rows to paste: `tax_return.schedule_c[]`
+(disregarded), `tax_return.k1[]` with `{owner, entity, form, ordinary_business_income,
+guaranteed_payments, se_earnings, interest, dividends, distributions,
+qbi_income, qbi_w2_wages, qbi_ubia, sstb, material_participation}`
+(partnership, S corp), officer W-2s for `tax_return.w2[]`, and
+`tax_return.ca.llc[]` for a disregarded California LLC.
+
+---
+
 ## Status fields: `citizenship`, `us_status`, `domicile`
 
 Required by `citizenship-status-review`. Not a top-level section — these sit inside `household`.

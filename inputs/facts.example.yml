@@ -1550,3 +1550,301 @@ real_estate:
       property_type: residential
       study_cost: 6500
       hold_years: 10
+
+# ─────────────────────────────────────────────────────────────────────
+# FEDERAL RETURN — the Riveras' 2026 Form 1040 workpaper inputs (fictional).
+# Read by federal-tax-return; the CA sibling reads the same block. Every
+# figure is invented. Field definitions: SCHEMA.md `tax_return`.
+# State is TX to match meta.jurisdiction — TX has no income tax, so the
+# state fields are zero and the SALT line is property tax only.
+# ─────────────────────────────────────────────────────────────────────
+tax_return:
+  tax_year: 2026
+  filing_status: mfj
+  state: TX
+  taxpayers:
+    - { member: a1, age: 41, blind: false }
+    - { member: a2, age: 39, blind: false }
+  # CTC CASE — both children under 17 and lived at home all year.
+  dependents:
+    - { member: c1, age: 8, months_lived: 12, student: false }
+    - { member: c2, age: 5, months_lived: 12, student: false }
+  w2:
+    # SUPPLEMENTAL-SHORTFALL CASE — bonus and RSU vesting withheld at the
+    # 22% flat rate while the household's marginal rate is higher, which
+    # (with a2's self-employment) produces a balance due.
+    - { employer: Northwind, owner: a1, wages: 155500, federal_withheld: 21500,
+        ss_wages: 180000, ss_withheld: 11160, medicare_wages: 180000,
+        medicare_withheld: 2610, state: TX, state_wages: 0, state_withheld: 0,
+        sdi_withheld: 0, supplemental_wages: 47300,
+        box12: { D: 24500, W: 1500, DD: 18000, AA: 0 } }
+  interest:
+    # TREASURY CASE — federally taxable, exempt for any state return.
+    - { payer: Online Savings, amount: 1200, us_treasury: 0, tax_exempt: 0 }
+    - { payer: TreasuryDirect, amount: 0, us_treasury: 800, tax_exempt: 0 }
+  dividends:
+    # FUND FOREIGN TAX — $45 on a 1099. On its own it would fit the $600
+    # simplified election; with the India tax it joins Form 1116, which needs
+    # the fund's foreign-source income (from the fund's year-end statement).
+    - { payer: Index Brokerage, ordinary: 1900, qualified: 1500,
+        capital_gain_distributions: 300, foreign_tax_paid: 45,
+        foreign_source_income: 400 }
+  capital_transactions:
+    # LONG-TERM LOSS CASE — harvested; basis reported.
+    - { description: intl_fund lot, proceeds: 6000, basis: 9000, term: long,
+        wash_sale_disallowed: 0, basis_reported: true }
+    # WASH-SALE CASE — repurchased within 30 days; $400 of the loss is
+    # disallowed and moves into the replacement lot.
+    - { description: tech ETF lot, proceeds: 4200, basis: 5600, term: short,
+        wash_sale_disallowed: 400, basis_reported: true }
+    # NONCOVERED CASE — old shares whose basis the broker never reported.
+    - { description: legacy shares, proceeds: 2500, basis: 1800, term: long,
+        wash_sale_disallowed: 0, basis_reported: false }
+  # CARRYOVER CASE — prior losses push the net past the $3,000 limit, so
+  # some carries again to 2027.
+  capital_loss_carryover: { short: 1500, long: 0 }
+  schedule_c:
+    # SE + QBI CASE — profit below the §199A threshold (simple 20%); a2 has
+    # no W-2, so the full Social Security wage base applies to SE tax.
+    - { owner: a2, business: Rivera Design, gross_receipts: 265000,
+        expenses: { supplies: 14000, software: 9000, contract_labor: 22000,
+                    insurance: 3000, other: 9200 },
+        vehicle: 3800, home_office: 2400, home_office_method: regular,
+        sstb: false, w2_wages: 0, ubia: 18000 }
+  # HSA EXCESS CASE — personal plus employer exceeds the family limit.
+  hsa: { owner: a1, contributions_personal: 8000, employer_contributions: 1500,
+         coverage: family, distributions: 1200, qualified_expenses: 1200 }
+  ira:
+    # CLEAN BACKDOOR CASE — nothing left in traditional IRAs on Dec 31.
+    - { owner: a1, traditional_contributions: 7500, deductible: false,
+        nondeductible_basis_prior: 0, conversions_to_roth: 7500,
+        year_end_traditional_balance: 0 }
+    # PRO-RATA CASE — an old rollover IRA makes most of the conversion taxable.
+    - { owner: a2, traditional_contributions: 7500, deductible: false,
+        nondeductible_basis_prior: 0, conversions_to_roth: 7500,
+        year_end_traditional_balance: 22500 }
+  # NON-ITEMIZER CASE — renters in a no-income-tax state: the standard
+  # deduction wins, and cash gifts still earn the §170(p) deduction.
+  itemized: { medical: 2500, property_tax: 0, other_state_local_taxes: 0,
+              mortgage_interest: 0, mortgage_balance: null,
+              charitable_cash: 9000, charitable_noncash: 0 }
+  state_income_tax_paid: 0
+  # FOREIGN ROUTING + FORM 1116 CASE — the india-tax-return U.S. hand-off
+  # (86.5 INR/USD), routed to its real lines, with two household edits:
+  #   interest 5179 = NRO savings + NRO FD + NRE FD + FCNR (NRE/FCNR exempt in
+  #     India, U.S.-taxable) -> line 2b and Schedule B Part III;
+  #   proceeds gross, as the hand-off emits them. EDIT: the hand-off leaves
+  #     basis null (U.S. basis needs the 2019/2015 purchase-date rates, which
+  #     the facts lack); the bases below are APPROXIMATIONS at the year's
+  #     86.5 rate (₹8,00,000; ₹50,00,000 cost + ₹1,00,000 transfer expenses),
+  #     standing in for the household's us_basis_usd.
+  #   rent 0, as the hand-off emits it: the Pune rent ($4,162 gross) is listed
+  #     there as left out, because the federal skill refuses foreign rent
+  #     (Schedule E, U.S. depreciation -> passive-loss-eligibility). A real
+  #     return cannot omit it.
+  # Indian fund units (PFICs) and insurance maturities never reach the hand-off.
+  # Indian tax finally borne $3,554 is above the $600 simplified limit, so
+  # Form 1116 applies with the capital-gain rate adjustment. Stand-in only:
+  # the amounts cover India's Apr-Mar year, not the U.S. calendar year.
+  foreign:
+    country: IN
+    accounts: true
+    interest: 5179
+    dividends: 0
+    qualified_dividends: 0
+    capital_transactions:
+      - { description: listed shares (India), proceeds: 13873, basis: 9249,
+          term: long, wash_sale_disallowed: 0, basis_reported: false }
+      - { description: Nagpur plot, proceeds: 104046, basis: 58960, term: long,
+          wash_sale_disallowed: 0, basis_reported: false }
+    rent: 0
+    foreign_tax_paid: { passive: 3554, general: 0 }
+    reported_on_1099: false
+    category: passive
+  estimated_payments: { federal: [9000, 9000, 9000, 9000], state: [0, 0, 0, 0] }
+  # SAFE-HARBOR CASE — prior AGI above $150,000, so 110% of prior tax.
+  prior_year: { agi: 172000, federal_total_tax: 26000, state_total_tax: 0 }
+
+# ── llc-tax-return ───────────────────────────────────────────────────────
+# One ledger per LLC; the tax year is tax_return.tax_year. Every figure is
+# synthetic. m3 is an outside partner, not a household member.
+llc_returns:
+  # DISREGARDED CASE — the same figures as tax_return.schedule_c, so the
+  # hand-off reproduces that row. Profit above the $400 SE floor; Texas, so
+  # state obligations are reported as not modelled. 1099-NEC: one payee above
+  # the 2026 $2,000 threshold with a W-9, a corporation (exempt) and two
+  # payees below the threshold.
+  - name: Rivera Design LLC
+    state: TX
+    classification: disregarded
+    formed_on: 2021-04-01
+    owners: [ { member: a2, share: 1.0, active: true } ]
+    accounting_method: cash
+    gross_receipts: 265000
+    returns_and_allowances: 0
+    cost_of_goods_sold: 0
+    other_income: 0
+    expenses: { supplies: 14000, software: 9000, contract_labor: 22000,
+                insurance: 3000, other: 9200 }
+    meals: 0
+    home_office: { method: actual, amount: 2400 }
+    vehicle: { method: actual, amount: 3800 }
+    depreciation: 0
+    sstb: false
+    ubia: 18000
+    contractors:
+      - { name: Lena Park, amount: 15000, w9_on_file: true, entity_type: individual }
+      - { name: Brightline Studio Inc, amount: 5000, w9_on_file: false,
+          entity_type: corporation }
+      - { name: Sam Ortiz, amount: 1500, w9_on_file: false, entity_type: individual }
+      - { name: Rae Quinn, amount: 500, w9_on_file: true, entity_type: individual }
+      # CARD CASE — paid through a card network: 1099-K, not 1099-NEC.
+      - { name: Pixel Stock Co, amount: 3000, entity_type: llc, paid_via: card }
+    estimated_payments: [0, 0, 0, 0]
+
+  # PARTNERSHIP CASE — California, formed this year. Guaranteed payments to
+  # the active member turn a profit into a loss; a1 (inactive) has recorded
+  # basis below his share, so part is SUSPENDED; m3's basis is unknown, so
+  # the check is BOUNDED. Start-up costs above $50,000 exercise the §195
+  # phase-out; organizational costs under $5,000 are expensed in full.
+  # California: total income above $250,000 incurs the LLC fee, and the
+  # estimate (due the 15th day of the 6th month counted from formation) was
+  # never paid — 10% penalty, no prior-year safe harbor in year one; the $800
+  # is owed in year one.
+  # 1099-NEC: an individual paid above the threshold with no W-9 (backup
+  # withholding) and an LLC payee with one.
+  - name: Harbor Lane Studio LLC
+    state: CA
+    classification: partnership
+    formed_on: 2026-02-10
+    owners:
+      - { member: a1, share: 0.4, active: false, material_participation: false }
+      - { member: m3, share: 0.6, active: true, material_participation: true }
+    accounting_method: cash
+    gross_receipts: 310000
+    returns_and_allowances: 4000
+    cost_of_goods_sold: 0
+    other_income: 0
+    expenses: { rent: 36000, supplies: 12000, software: 18000, advertising: 9000,
+                contract_labor: 30000, insurance: 4000, legal_and_professional: 6000,
+                utilities: 5000 }
+    meals: 3000
+    startup_costs: { incurred: 54000, business_began: 2026-03-01 }
+    organizational_costs: 4000
+    depreciation: 22000
+    sstb: false
+    ubia: 40000
+    guaranteed_payments: [ { member: m3, amount: 180000 } ]
+    distributions: [ { member: m3, amount: 10000 } ]
+    owner_basis_start: [ { member: a1, amount: 8000 }, { member: m3, amount: null } ]
+    contractors:
+      - { name: Dana Wu, amount: 24000, w9_on_file: false, entity_type: individual }
+      - { name: Coastline Print LLC, amount: 6000, w9_on_file: true, entity_type: llc }
+    estimated_payments: [800, 0, 0, 0]
+
+  # S-CORPORATION CASE — California LLC with an S election in force all year.
+  # Officer wages are well below distributions: the REVIEW branch of the
+  # reasonable-compensation check (no floor recorded, so it is listed).
+  # Form 100S at 1.5% above the $800 minimum; 100-ES installments on the
+  # cumulative 30/70/70/100% schedule, the fourth paid short. No SE tax on the
+  # K-1.
+  - name: Rivera Print Co LLC
+    state: CA
+    classification: s_corp
+    s_election_effective: 2023-01-01
+    formed_on: 2022-05-01
+    owners: [ { member: a2, share: 1.0, active: true, material_participation: true } ]
+    accounting_method: cash
+    gross_receipts: 180000
+    returns_and_allowances: 0
+    cost_of_goods_sold: 30000
+    other_income: 0
+    expenses: { supplies: 6000, software: 3000, taxes_and_licenses: 1200,
+                insurance: 2500 }
+    meals: 0
+    depreciation: 0
+    sstb: false
+    ubia: 26000
+    officer_wages: [ { member: a2, amount: 30000, federal_withheld: 3000,
+                       ss_withheld: 1860, medicare_withheld: 435 } ]
+    payroll_taxes_employer: 2337
+    distributions: [ { member: a2, amount: 90000 } ]
+    owner_basis_start: [ { member: a2, amount: 20000 } ]
+    contractors: []
+    estimated_payments: [800, 700, 0, 0]
+
+# ── india-tax-return ─────────────────────────────────────────────────────
+# Hypothetical, like the expat cluster: an invented Indian financial year for
+# a1, who for this block is a person of Indian origin holding Indian assets.
+# Every figure is synthetic. Read no conclusion about the household from it.
+india_tax_return:
+  financial_year: 2025-26
+  taxpayer:
+    member: a1                       # citizenship [US] on the member -> not an Indian citizen
+    person_of_indian_origin: true
+    # NON-RESIDENT CASE — 40 days is under 60, so the prior-year counts never
+    # decide anything; they are recorded so the RNOR branch has data if the
+    # day count changes.
+    days_in_india_this_fy: 40
+    days_in_india_prior_4_fy: 300
+    days_in_india_prior_7_fy: 520
+    nri_years_in_prior_10: 10
+    liable_to_tax_elsewhere: true    # U.S. resident — rules out deemed residence
+    visiting_india: true
+    # FEMA status decides the NRE exemption; recorded so it is not assumed.
+    fema_resident_outside_india: true
+  regime: null                       # compare both; recommend the lower
+  usd_inr_rate: 86.5                 # INR per USD, supplied — never fetched
+  usd_inr_rate_basis: "synthetic yearly average for the example"
+  expected_filing_date: 2026-07-20   # before the due date: old regime still open
+  interest:
+    # TAXABLE CASE — NRO interest, TDS under s.195.
+    - { account: NRO savings, kind: nro_savings, amount_inr: 18000, tds_inr: 5616 }
+    - { account: NRO fixed deposit, kind: nro_fd, amount_inr: 150000, tds_inr: 46800 }
+    # EXEMPT CASE — NRE and FCNR interest are exempt for a non-resident, but
+    # stay U.S.-taxable with no Indian tax to credit.
+    - { account: NRE fixed deposit, kind: nre_fd, amount_inr: 220000, tds_inr: 0 }
+    - { account: FCNR deposit, kind: fcnr, amount_inr: 60000, tds_inr: 0 }
+  house_property:
+    # LET-OUT CASE — 30% standard deduction; the tenant deducted no TDS, which
+    # the report flags.
+    - { name: Pune flat, status: let_out, gross_rent_inr: 360000,
+        municipal_tax_paid_inr: 12000, home_loan_interest_inr: 0, tds_inr: 0,
+        co_owner_share: 1.0 }
+    # SELF-OCCUPIED CASE — interest above ₹2 lakh: capped in the old regime,
+    # disallowed entirely in the new one. That is what makes the regimes differ.
+    - { name: family flat, status: self_occupied, home_loan_interest_inr: 240000,
+        tds_inr: 0, co_owner_share: 1.0 }
+  capital_gains:
+    # LTCG s.112A CASE — listed equity, STT paid, above the ₹1.25 lakh exemption.
+    - { name: listed shares, asset: listed_equity, acquired: 2019-05-10,
+        sold: 2025-09-15, sale_inr: 1200000, cost_inr: 800000,
+        transfer_expenses_inr: 0, stt_paid: true, tds_inr: 34375 }
+    # s.50AA CASE — debt fund bought after 1 Apr 2023: slab, whatever the holding.
+    - { name: debt fund, asset: debt_mf, acquired: 2023-06-01, sold: 2025-11-20,
+        sale_inr: 580000, cost_inr: 500000, stt_paid: false, tds_inr: 24960 }
+    # SHORT-TERM LOSS CASE — set off where it saves most tax: against the
+    # 12.5% plot gain, not the debt-fund gain sitting in the 0-5% slabs.
+    - { name: equity fund, asset: equity_mf, acquired: 2025-04-15, sold: 2026-01-10,
+        sale_inr: 240000, cost_inr: 300000, stt_paid: true, tds_inr: 0 }
+    # PROPERTY CASE — acquired before 23 Jul 2024 but a non-resident, so 12.5%
+    # without indexation; part of the gain sheltered by s.54EC bonds.
+    - { name: Nagpur plot, asset: property, residential: false,
+        acquired: 2015-08-01, sold: 2025-12-05, sale_inr: 9000000,
+        cost_inr: 5000000, transfer_expenses_inr: 100000, stt_paid: false,
+        tds_inr: 487500, exemption_54ec_inr: 2000000 }
+  insurance_maturities:
+    # TAXABLE ULIP CASE — issued after 1 Feb 2021 with premium above ₹2.5 lakh;
+    # equity-oriented, so the gain is s.112A long-term.
+    - { policy: growth ULIP, kind: ulip, issued: 2021-03-01, matured: 2026-03-01,
+        equity_oriented: true, annual_premium_inr: 300000, sum_assured_inr: 3000000,
+        maturity_inr: 1750000, total_premiums_inr: 1500000, tds_inr: 0 }
+    # EXEMPT CASE — pre-2012 endowment, premium 8% of sum assured (< 20%).
+    - { policy: endowment plan, kind: endowment, issued: 2010-06-01,
+        annual_premium_inr: 40000, sum_assured_inr: 500000,
+        maturity_inr: 900000, total_premiums_inr: 600000, tds_inr: 0 }
+  dividends: []
+  deductions_old_regime: { 80c_inr: 150000, 80d_inr: 25000, other_inr: 0 }
+  advance_tax_paid_inr: 0
+  self_assessment_tax_paid_inr: 0
+  brought_forward_losses: { house_property_inr: 0, stcl_inr: 0, ltcl_inr: 0 }
