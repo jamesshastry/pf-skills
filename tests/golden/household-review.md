@@ -1,6 +1,6 @@
 # Household review
 
-**135 action(s)** from 64 skill(s) that run · 8 clean · 0 blocked on missing inputs.
+**135 action(s)** from 65 skill(s) that run · 9 clean · 0 blocked on missing inputs.
 
 ## 1. Things that expire
 
@@ -263,6 +263,7 @@
 - `financial-scenario-planner` — 5 hypothetical scenario(s) recorded; excluded from the current-action worklist
 - `job-loss-stress-test` — 1 job-loss stress case(s) recorded; hypothetical results are not current findings
 - `life-insurance-review` — Life cover meets the survivor need with no closing expiries
+- `student-aid-index` — Need-based aid is plausible at the listed costs. Asset placement matters at the margin: up to $564 of SAI per $10,000 of reportable parent assets (529s included, whoever owns them), and $2,000 per $10,000 in the student's own non-529 accounts.
 - `tax-planning` — 4 tax-planning candidate(s) summarized; excluded from the action worklist to avoid duplicating the specialist skills
 - `windfall-deployment-planner` — 4 windfall deployment case(s) recorded; hypothetical results are not current findings
 

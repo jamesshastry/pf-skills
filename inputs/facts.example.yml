@@ -947,7 +947,30 @@ education:
   accounts:
     # POOLED CASE — no beneficiary recorded, and two children. A 529 names
     # one person; the skill reports this unallocated rather than halving it.
-    - { name: college_529, value: 28000, owner: a1, glide_path: age_based }
+    # LINKED CASE — the same money as the balance-sheet row, so the aid
+    # skill counts it once.
+    - { name: college_529, value: 28000, owner: a1, glide_path: age_based,
+        vehicle: "529", balance_sheet_row: education-529 }
+  # FINANCIAL AID — read by student-aid-index. The award year is ten years
+  # out, so the latest published tables are used and the report says so
+  # (projection branch). Income alone gives a parent contribution just under
+  # the in-state cost, and assets push it over; the private cost is higher
+  # still, so the report lands on "aid plausible". The brokerage's margin
+  # debt is netted. UNRECORDED CASE — c2's income is missing, so its SAI is
+  # flagged as a lower bound rather than computed on a silent zero.
+  financial_aid:
+    award_year: 2036-37
+    income_year: 2034
+    parent_total_income: 157000        # AGI after pre-tax 401(k) deferrals
+    parent_federal_income_tax: 15300
+    parent_earned_income: 180000
+    family_size: 4
+    older_parent_age: 51
+    two_parents: true
+    include_foreign_assets: true
+    cost_of_attendance: { in_state_public: 28000, private: 60000 }
+    students:
+      c1: { income: 0, federal_income_tax: 0, earned_income: 0 }
 
 # UNRESOLVED CASE — one account with a recorded maximum, one without, and a
 # PFIC. Exercises the "cannot be determined" branch, which is the state most

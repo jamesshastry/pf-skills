@@ -45,6 +45,7 @@ the home-offer research workflow can query public property sources when invoked.
 | `rent-vs-buy` | Total cost of occupancy and the break-even holding period |
 | `mortgage-review` | Removable PMI, prepayment, and the refinance break-even |
 | `education-funding` | The college gap per child, the retirement-first rule, and 529 mechanics |
+| `student-aid-index` | Federal SAI per student, and whether need-based aid — or any asset move made for aid — is reachable |
 | `citizenship-status-review` | Citizenship, visa status and domicile — and which other conclusions depend on them |
 | `foreign-reporting-audit` | FBAR · FATCA · PFIC · Form 3520 — does an obligation already exist |
 | `roth-portability-check` | Does the destination honour the Roth wrapper — and the conversion advice that inverts where it does not |

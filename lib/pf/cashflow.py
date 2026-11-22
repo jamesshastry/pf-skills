@@ -131,13 +131,155 @@ class PayrollTaxRules:
 
 
 @dataclass(frozen=True)
+class ItemizedDeductionRules:
+    """Federal itemized-deduction limits supplied for one tax year.
+
+    ``salt_cap`` limits state and local taxes (income, payroll, property).
+    When ``salt_phaseout_threshold`` is set, the cap falls by
+    ``salt_phaseout_rate`` of AGI above the threshold, but not below
+    ``salt_cap_floor``. Medical expenses count only above
+    ``medical_agi_floor`` x AGI. Mortgage interest is prorated when the
+    balance exceeds ``mortgage_interest_debt_limit``.
+
+    Rules from tax year 2026 (P.L. 119-21), all optional so earlier years
+    are unchanged: charitable gifts count only above ``charitable_agi_floor``
+    x AGI; a household taking the standard deduction may still deduct
+    charitable gifts up to ``nonitemizer_charitable_limit``; and itemized
+    deductions are reduced by ``limitation_rate`` (2/37) x the lesser of the
+    itemized total or AGI above ``limitation_threshold`` (where the 37%
+    bracket starts, expressed as taxable income).
+
+    Approximations, stated rather than hidden: the SALT phase-out uses AGI,
+    not modified AGI (they differ only for excluded foreign income), and
+    state income tax enters SALT as the year's liability, not the amount
+    paid in the calendar year.
+    """
+
+    salt_cap: float
+    medical_agi_floor: float
+    mortgage_interest_debt_limit: float
+    salt_phaseout_threshold: float | None = None
+    salt_phaseout_rate: float = 0.0
+    salt_cap_floor: float = 0.0
+    charitable_agi_floor: float = 0.0
+    nonitemizer_charitable_limit: float = 0.0
+    limitation_rate: float = 0.0
+    limitation_threshold: float | None = None
+
+    def __post_init__(self) -> None:
+        _nonnegative(self.salt_cap, "SALT cap")
+        _rate(self.medical_agi_floor, "medical AGI floor")
+        _nonnegative(
+            self.mortgage_interest_debt_limit, "mortgage interest debt limit")
+        if self.salt_phaseout_threshold is not None:
+            _nonnegative(self.salt_phaseout_threshold, "SALT phase-out threshold")
+        _rate(self.salt_phaseout_rate, "SALT phase-out rate")
+        _nonnegative(self.salt_cap_floor, "SALT cap floor")
+        if self.salt_cap_floor > self.salt_cap:
+            raise CashFlowError("SALT cap floor exceeds the SALT cap")
+        _rate(self.charitable_agi_floor, "charitable AGI floor")
+        _nonnegative(self.nonitemizer_charitable_limit,
+                     "non-itemizer charitable limit")
+        _rate(self.limitation_rate, "itemized limitation rate")
+        if self.limitation_rate and self.limitation_threshold is None:
+            raise CashFlowError(
+                "itemized limitation rate needs a limitation threshold")
+        if self.limitation_threshold is not None:
+            _nonnegative(self.limitation_threshold, "itemized limitation threshold")
+
+    def limitation(self, itemized: float, adjusted_gross_income: float) -> float:
+        """Reduction of the itemized total for top-bracket households."""
+        if not self.limitation_rate or self.limitation_threshold is None:
+            return 0.0
+        over = max(0.0, adjusted_gross_income - self.limitation_threshold)
+        return self.limitation_rate * min(itemized, over)
+
+    def effective_salt_cap(self, adjusted_gross_income: float) -> float:
+        if self.salt_phaseout_threshold is None:
+            return self.salt_cap
+        excess = max(0.0, adjusted_gross_income - self.salt_phaseout_threshold)
+        return max(self.salt_cap_floor,
+                   self.salt_cap - excess * self.salt_phaseout_rate)
+
+
+@dataclass(frozen=True)
+class StateItemizedDeductionRules:
+    """State itemized deductions layered on the state tax anchor.
+
+    The anchor is assumed to reflect ``standard_deduction``; itemizing above
+    it lowers state tax by the anchor's marginal rate. Defaults follow the
+    common pattern of states (such as California) that do not allow their
+    own income tax or payroll tax as a deduction and do not cap property
+    tax. ``phaseout_*`` optionally reduces itemized deductions above an AGI
+    threshold by ``phaseout_rate`` of the excess, limited to
+    ``phaseout_max_share`` of the itemized total.
+    """
+
+    standard_deduction: float
+    medical_agi_floor: float
+    mortgage_interest_debt_limit: float
+    salt_cap: float | None = None
+    phaseout_threshold: float | None = None
+    phaseout_rate: float = 0.0
+    phaseout_max_share: float = 0.0
+
+    def __post_init__(self) -> None:
+        _nonnegative(self.standard_deduction, "state standard deduction")
+        _rate(self.medical_agi_floor, "state medical AGI floor")
+        _nonnegative(self.mortgage_interest_debt_limit,
+                     "state mortgage interest debt limit")
+        if self.salt_cap is not None:
+            _nonnegative(self.salt_cap, "state SALT cap")
+        if self.phaseout_threshold is not None:
+            _nonnegative(self.phaseout_threshold, "state phase-out threshold")
+        _rate(self.phaseout_rate, "state phase-out rate")
+        _rate(self.phaseout_max_share, "state phase-out maximum share")
+
+
+@dataclass(frozen=True)
+class ItemizedDeductionInputs:
+    """A household's itemizable amounts for one year, in nominal dollars.
+
+    State income tax and state payroll tax come from the estimate itself and
+    are added to the SALT total automatically; list only other state and
+    local taxes here.
+    """
+
+    medical_expenses: float = 0.0
+    property_tax: float = 0.0
+    other_state_local_taxes: float = 0.0
+    mortgage_interest: float = 0.0
+    #: Average acquisition debt for the year. Required whenever
+    #: ``mortgage_interest`` is positive — an unknown balance is not zero,
+    #: and zero would silently skip the debt-limit proration.
+    mortgage_balance: float | None = None
+    charitable: float = 0.0
+    other_itemized: float = 0.0
+
+    def __post_init__(self) -> None:
+        for name, value in vars(self).items():
+            if value is None:
+                continue
+            _nonnegative(value, name.replace("_", " "))
+        if self.mortgage_interest > 0 and self.mortgage_balance is None:
+            raise CashFlowError(
+                "mortgage interest needs a mortgage balance for the debt limit")
+
+
+@dataclass(frozen=True)
 class TaxRules:
-    """Explicit rules for a deterministic annual tax estimate."""
+    """Explicit rules for a deterministic annual tax estimate.
+
+    ``itemized`` is optional. Without it, or without itemized inputs, the
+    estimate uses the standard deduction exactly as before.
+    """
 
     federal_standard_deduction: float
     federal_brackets: tuple[Bracket, ...]
     state_anchor: StateTaxAnchor
     payroll: PayrollTaxRules
+    itemized: ItemizedDeductionRules | None = None
+    state_itemized: StateItemizedDeductionRules | None = None
 
     def __post_init__(self) -> None:
         _nonnegative(
@@ -158,6 +300,12 @@ class TaxEstimate:
     state_payroll_tax: float
     federal_payroll_tax: float
     total: float
+    itemized_deduction: float = 0.0
+    deduction: float = 0.0
+    itemizes: bool = False
+    state_itemized_deduction: float = 0.0
+    state_deduction: float = 0.0
+    state_itemizes: bool = False
 
     @property
     def effective_rate(self) -> float:
@@ -279,26 +427,109 @@ def progressive_tax(taxable_income: float, brackets: Sequence[Bracket]) -> float
     return total
 
 
+def itemized_deduction(
+    *,
+    adjusted_gross_income: float,
+    state_income_tax: float,
+    state_payroll_tax: float,
+    rules: ItemizedDeductionRules,
+    inputs: ItemizedDeductionInputs,
+) -> float:
+    """Federal itemized total under the supplied caps and floors."""
+    agi = max(0.0, _finite_number(adjusted_gross_income, "adjusted gross income"))
+    salt = min(
+        rules.effective_salt_cap(agi),
+        _nonnegative(state_income_tax, "state income tax")
+        + _nonnegative(state_payroll_tax, "state payroll tax")
+        + inputs.property_tax
+        + inputs.other_state_local_taxes,
+    )
+    medical = max(0.0, inputs.medical_expenses - rules.medical_agi_floor * agi)
+    interest = _prorate_interest(inputs.mortgage_interest,
+                                 inputs.mortgage_balance,
+                                 rules.mortgage_interest_debt_limit)
+    charitable = max(0.0, inputs.charitable - rules.charitable_agi_floor * agi)
+    return salt + medical + interest + charitable + inputs.other_itemized
+
+
+def _prorate_interest(interest: float, balance: float | None, limit: float) -> float:
+    if interest == 0 or limit == 0:
+        return 0.0
+    if balance is not None and balance > limit:
+        return interest * limit / balance
+    return interest
+
+
+def state_itemized_deduction(
+    *,
+    adjusted_gross_income: float,
+    rules: StateItemizedDeductionRules,
+    inputs: ItemizedDeductionInputs,
+) -> float:
+    """State itemized total. State income and payroll tax are excluded."""
+    agi = max(0.0, _finite_number(adjusted_gross_income, "adjusted gross income"))
+    local = inputs.property_tax + inputs.other_state_local_taxes
+    if rules.salt_cap is not None:
+        local = min(local, rules.salt_cap)
+    medical = max(0.0, inputs.medical_expenses - rules.medical_agi_floor * agi)
+    interest = _prorate_interest(inputs.mortgage_interest,
+                                 inputs.mortgage_balance,
+                                 rules.mortgage_interest_debt_limit)
+    total = local + medical + interest + inputs.charitable + inputs.other_itemized
+    if rules.phaseout_threshold is not None and agi > rules.phaseout_threshold:
+        # The share cap excludes medical expenses (as in former IRC §68(c)).
+        reduction = min((agi - rules.phaseout_threshold) * rules.phaseout_rate,
+                        (total - medical) * rules.phaseout_max_share)
+        total -= reduction
+    return total
+
+
 def estimate_tax(
     gross: float,
     *,
     pre_tax_contributions: float,
     rules: TaxRules,
+    itemized_inputs: ItemizedDeductionInputs | None = None,
+    agi_adjustments: float = 0.0,
 ) -> TaxEstimate:
-    """Estimate federal, state, and employee payroll taxes from explicit rules."""
+    """Estimate federal, state, and employee payroll taxes from explicit rules.
+
+    ``agi_adjustments`` moves AGI and state taxable income without touching
+    payroll tax — for example a business loss (negative) or non-wage income
+    (positive). Itemizing is used only when ``rules.itemized`` and
+    ``itemized_inputs`` are both supplied and the itemized total exceeds the
+    standard deduction. State itemizing applies when ``rules.state_itemized``
+    and ``itemized_inputs`` are supplied: the anchor is assumed to reflect
+    the state standard deduction, and any excess lowers state tax at the
+    anchor's marginal rate. State tax is computed first, so the federal SALT
+    deduction sees the post-itemizing state figure.
+    """
     gross = _nonnegative(gross, "gross income")
     pre_tax = _nonnegative(pre_tax_contributions, "pre-tax contributions")
     if pre_tax > gross:
         raise CashFlowError("pre-tax contributions exceed gross income")
+    adjustment = _finite_number(agi_adjustments, "AGI adjustments")
 
-    adjusted_gross = gross - pre_tax
-    taxable = max(0.0, adjusted_gross - rules.federal_standard_deduction)
-    federal = progressive_tax(taxable, rules.federal_brackets)
+    adjusted_gross = gross - pre_tax + adjustment
 
     anchor = rules.state_anchor
     reference_taxable = (
         anchor.reference_gross - anchor.reference_pre_tax_contributions)
-    current_taxable = gross - pre_tax
+    state_itemized = 0.0
+    state_extra = 0.0
+    state_deduction = 0.0
+    if rules.state_itemized is not None and itemized_inputs is not None:
+        state_itemized = state_itemized_deduction(
+            adjusted_gross_income=adjusted_gross,
+            rules=rules.state_itemized,
+            inputs=itemized_inputs,
+        )
+        state_deduction = max(rules.state_itemized.standard_deduction,
+                              state_itemized)
+        state_extra = state_deduction - rules.state_itemized.standard_deduction
+    elif rules.state_itemized is not None:
+        state_deduction = rules.state_itemized.standard_deduction
+    current_taxable = adjusted_gross - state_extra
     state_income = max(
         0.0,
         anchor.reference_tax
@@ -307,6 +538,27 @@ def estimate_tax(
 
     payroll = rules.payroll
     state_payroll = gross * payroll.state_payroll_rate
+
+    itemized = 0.0
+    if rules.itemized is not None and itemized_inputs is not None:
+        itemized = itemized_deduction(
+            adjusted_gross_income=adjusted_gross,
+            state_income_tax=state_income,
+            state_payroll_tax=state_payroll,
+            rules=rules.itemized,
+            inputs=itemized_inputs,
+        )
+    if itemized and rules.itemized is not None:
+        itemized -= rules.itemized.limitation(itemized, adjusted_gross)
+    standard = rules.federal_standard_deduction
+    if (rules.itemized is not None and itemized_inputs is not None
+            and itemized <= standard):
+        standard += min(itemized_inputs.charitable,
+                        rules.itemized.nonitemizer_charitable_limit)
+    deduction = max(standard, itemized)
+    taxable = max(0.0, adjusted_gross - deduction)
+    federal = progressive_tax(taxable, rules.federal_brackets)
+
     social_security = (
         min(gross, payroll.social_security_wage_base)
         * payroll.social_security_rate
@@ -329,6 +581,12 @@ def estimate_tax(
         state_payroll_tax=state_payroll,
         federal_payroll_tax=federal_payroll,
         total=total,
+        itemized_deduction=itemized,
+        deduction=deduction,
+        itemizes=itemized > standard,
+        state_itemized_deduction=state_itemized,
+        state_deduction=state_deduction,
+        state_itemizes=state_extra > 0,
     )
 
 
@@ -337,8 +595,15 @@ def build_cash_flow_scenarios(
     *,
     tax_rules: TaxRules,
     cash: CashFlowInputs,
+    itemized_inputs: ItemizedDeductionInputs | None = None,
+    agi_adjustments: float = 0.0,
 ) -> dict[str, CashFlowScenario]:
-    """Build reconciled scenarios from named gross incomes and shared uses."""
+    """Build reconciled scenarios from named gross incomes and shared uses.
+
+    ``itemized_inputs`` and ``agi_adjustments`` pass through to
+    ``estimate_tax``. A business loss belongs in ``agi_adjustments`` for its
+    tax effect; its cash cost belongs in ``cash.other_committed``.
+    """
     if not incomes:
         raise CashFlowError("income scenarios are missing")
 
@@ -349,6 +614,8 @@ def build_cash_flow_scenarios(
             gross,
             pre_tax_contributions=cash.pre_tax_retirement_contributions,
             rules=tax_rules,
+            itemized_inputs=itemized_inputs,
+            agi_adjustments=agi_adjustments,
         )
         after_tax = gross - taxes.total
         after_payroll_and_retirement = (

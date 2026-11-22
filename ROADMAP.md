@@ -71,6 +71,7 @@ answer.
 | 7 · Retirement adequacy | `retirement-readiness` · `withdrawal-sequencing` · `roth-conversion-window` · `social-security-timing` | ✅ shipped |
 | 8 · Housing | `housing-affordability` · `home-offer-strategy` · `rent-vs-buy` · `mortgage-review` · `ca-sfh-disclosure-review` · `ca-condo-hoa-disclosure-review` | ✅ shipped |
 | 9 · Education | `education-funding` | ✅ shipped |
+| 9 · Education | `student-aid-index` | ✅ shipped |
 | 10 · Cross-border planning | ~~`roth-portability-check`~~ ✅ · ~~`geo-arbitrage-model`~~ ✅ · ~~`cross-border-healthcare`~~ ✅ | ✅ shipped |
 | 11 · Expat tax filing | ~~`feie-vs-ftc`~~ ✅ · ~~`foreign-presence-tests`~~ ✅ · ~~`state-domicile-exit`~~ ✅ · ~~`cfc-gilti-screen`~~ ✅ | ✅ shipped |
 | 12 · Offshore assets & pensions | ~~`foreign-reporting-audit`~~ ✅ · ~~`pfic-divest-or-comply`~~ ✅ · ~~`foreign-pension-classification`~~ ✅ | ✅ shipped |

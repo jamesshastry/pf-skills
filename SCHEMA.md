@@ -956,6 +956,62 @@ rather than an assumption.
 
 Tuition, fees, housing, books. The skill inflates it. Entering a future figure double-counts.
 
+### `financial_aid` — required by `student-aid-index`
+
+```yaml
+education:
+  accounts:
+    # vehicle decides FAFSA treatment for an account the student owns:
+    # 529 / coverdell -> parent asset; utma_custodial or anything else ->
+    # student asset. balance_sheet_row says the sheet already includes it.
+    - { name: college_529, value: 28000, owner: a1, beneficiary: c1,
+        vehicle: "529", balance_sheet_row: education-529 }
+  financial_aid:
+    award_year: 2036-37              # aid year; tables are looked up by this
+    income_year: 2034                # must be award year start minus 2
+    parent_total_income: 157000      # AGI plus untaxed income the FAFSA asks for
+    parent_federal_income_tax: 15300 # income tax paid, after credits
+    parent_earned_income: 180000     # wages and SE earnings of both parents
+    family_size: 4
+    older_parent_age: 51
+    two_parents: true
+    include_foreign_assets: true     # default true; false is a household choice
+    cost_of_attendance: { in_state_public: 28000, private: 60000 }
+    students:                        # student income, by member id
+      c1: { income: 0, federal_income_tax: 0, earned_income: 0 }
+```
+
+Income and tax are **supplied, not estimated** — take them from the return for
+`income_year` or a tax projection.
+
+**Assets** come from `household.balance_sheet` plus `education.accounts` the
+sheet does not already include:
+
+| Item | FAFSA treatment |
+|---|---|
+| Retirement (`tier: age_restricted`), insurance cash value, pension | not reported |
+| Row with `primary_residence: true`, a personal vehicle (`vehicle: car`), a pending item | not reported |
+| Negative row (a liability) | not netted against assets |
+| Row with `margin_debt` | counted net of the margin debt |
+| Business or farm row (`vehicle: business_equity` / `farm`) | counted at recorded value, flagged |
+| 529 or Coverdell, **whoever owns it** | parent asset |
+| Student-owned custodial or ordinary account | student asset (20%) |
+| Account owned outside the household | not reported |
+
+An education account is "already on the sheet" when its `balance_sheet_row`
+names a row (by `id` or `name`) or a row has its exact name; several accounts
+may point at one aggregate row.
+
+**Stops rather than guesses** when: `income_year` is not the prior-prior
+year; an unlinked education account sits beside an unclaimed
+`earmark: education` row (it may be the same money); a student-owned account
+has no `vehicle`; an account has no `owner`. A `null` balance-sheet value or
+cost of attendance, or a missing `students` entry, is listed and flagged as
+making the result a lower bound — never read as zero.
+
+On `household.members`, a dependent may carry `fafsa_eligible: false` (not a
+U.S. citizen or eligible noncitizen) — listed, not computed.
+
 ---
 
 ## Status fields: `citizenship`, `us_status`, `domicile`

@@ -39,6 +39,7 @@ from . import ssa as _ssa
 from . import status as _sta
 from . import transitions as _tra
 from . import limits as _lim
+from . import aid as _aid
 
 ANNUAL = "annual"
 LEGISLATIVE = "legislative"
@@ -212,6 +213,23 @@ def registry() -> list[Table]:
     aca_on, aca_unver = _parse(_hc.ACA_VERIFIED)
     pre_on, pre_unver = _parse(_pre.PRESENCE_VERIFIED)
     dep_on, dep_unver = _parse(_dep.DEPRECIATION_VERIFIED)
+
+    aid_entries = []
+    for year, t in sorted(_aid.AID_TABLES.items()):
+        on, unver = _parse(t.verified_on)
+        aid_entries.append(Entry(
+            year, t.source, on, unver,
+            values={"parent_ipa": t.parent_ipa,
+                    "parent_ipa_additional": t.parent_ipa_additional,
+                    "student_ipa": t.student_ipa, "eea_cap": t.eea_cap,
+                    "eea_rate": t.eea_rate, "apa": t.apa,
+                    "negative_aai_floor": t.negative_aai_floor,
+                    "negative_floor_contribution": t.negative_floor_contribution,
+                    "schedule": t.schedule}))
+    wb_on, wb_unver = _parse(_aid.SS_WAGE_BASE_VERIFIED)
+    aid_entries.append(Entry(
+        "Social Security wage base", _aid.SS_WAGE_BASE_SOURCE, wb_on, wb_unver,
+        values={str(k): v for k, v in _aid.SS_WAGE_BASE.items()}))
 
     return [
         Table(
@@ -619,6 +637,19 @@ def registry() -> list[Table]:
                         "WORK_VEHICLE_GVWR_LBS": _dep.WORK_VEHICLE_GVWR_LBS,
                         "VEHICLE_RECOVERY_YEARS":
                         _dep.VEHICLE_RECOVERY_YEARS})],
+        ),
+        Table(
+            name="federal need analysis (SAI) tables",
+            module="lib/pf/aid.py",
+            holds="income and asset protection allowances, employment expense "
+                  "allowance, parents' assessment schedule by award year, and "
+                  "the Social Security wage base used in the payroll allowance",
+            authority="Department of Education — annual Federal Register notice; "
+                      "ssa.gov",
+            url="https://www.federalregister.gov/d/2025-10243 · "
+                "https://www.ssa.gov/oact/cola/cbb.html",
+            cadence=ANNUAL,
+            entries=aid_entries,
         ),
         Table(
             name="§911 physical presence test",

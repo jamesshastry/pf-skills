@@ -996,6 +996,23 @@ def _education_funding(data: dict) -> "Outcome":
 
 
 
+# student-aid-index: mirrors run.py via _aid.household; tier because a wrong
+# belief about aid drives housing and savings timing but prices no dollars.
+def _student_aid_index(data: dict) -> "Outcome":
+    skill = "student-aid-index"
+    from . import aid as _aid  # noqa: PLC0415
+    try:
+        h = _aid.household(F._dig(data, "education.financial_aid"),
+                           balance_sheet=F._dig(data, "household.balance_sheet") or [],
+                           members=F._dig(data, "household.members") or [],
+                           accounts=F._dig(data, "education.accounts") or [])
+    except _aid.AidError as exc:
+        return act(skill, f"Student Aid Index blocked: {exc}", TIER_OPTIMISE)
+    out = Outcome(skill=skill, status="ok", headline=h.findings[0] if h.findings else "")
+    for f in h.findings[1:]:
+        out.findings.append(f)
+    return out
+
 # retirement-readiness: mirrors run.py lines 19-30 calling _retire.assess_readiness/_retire.sensitivity; tier because the projection prices no dollars per year and carries no expiry, so a plan that does not close is real but neither expiring nor priced.
 def _retirement_readiness(data: dict) -> "Outcome":
     skill = "retirement-readiness"
@@ -2903,6 +2920,7 @@ ADAPTERS: dict[str, Callable[[dict], Outcome]] = {
     "digital-estate": _digital_estate,
     "divorce-asset-split": _divorce_asset_split,
     "education-funding": _education_funding,
+    "student-aid-index": _student_aid_index,
     "emergency-fund-sizing": _emergency_fund_sizing,
     "employer-concentration-risk": _employer_concentration_risk,
     "employer-match-audit": _employer_match_audit,
